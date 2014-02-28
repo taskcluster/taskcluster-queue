@@ -7,7 +7,7 @@ before_script:
 - sudo -u postgres psql -c "CREATE DATABASE queue_v1 OWNER queue";
 services:
 - rabbitmq
-- postgres
+- postgresql
 deploy:
   provider: heroku
   api_key:
