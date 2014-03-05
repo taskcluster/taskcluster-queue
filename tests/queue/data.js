@@ -43,8 +43,8 @@ exports['Create and delete task'] = function(test) {
   // Task structure to insert
   var task = {
     "taskId":             slugid.v4(),
-    "provisionerId":      "jonasfj-test-aws-provisioner",
-    "workerType":         "map-this-to-my-cool-ami",
+    "provisionerId":      "jonasfj-test-provid",
+    "workerType":         "jonasfj-test-worker",
     "runs":               [], // This will be ignored by createTask
     "state":              "pending",
     "reason":             "none",
@@ -80,9 +80,9 @@ exports['Create, load and delete task'] = function(test) {
 
   // Task structure to insert
   var task = {
-    "taskId":             "c4a88130-d9ac-421e-beae-7139d11472a4",
-    "provisionerId":      "jonasfj-test-aws-provisioner",
-    "workerType":         "map-this-to-my-cool-ami",
+    "taskId":             "w1mNqBW9QLGD5TL1srCK8w",
+    "provisionerId":      "jonasfj-test-provid",
+    "workerType":         "jonasfj-test-worker",
     "runs":               [], // This will be ignored by createTask
     "state":              "pending",
     "reason":             "none",
@@ -136,8 +136,8 @@ exports['Create, claim and delete task'] = function(test) {
   // Task structure to insert
   var task = {
     "taskId":             slugid.v4(),
-    "provisionerId":      "jonasfj-test-aws-provisioner",
-    "workerType":         "map-this-to-my-cool-ami",
+    "provisionerId":      "jonasfj-test-provid",
+    "workerType":         "jonasfj-test-worker",
     "runs":               [], // This will be ignored by createTask
     "state":              "pending",
     "reason":             "none",
@@ -183,8 +183,8 @@ exports['Create, claim, complete and delete task'] = function(test) {
   // Task structure to insert
   var task = {
     "taskId":             slugid.v4(),
-    "provisionerId":      "jonasfj-test-aws-provisioner",
-    "workerType":         "map-this-to-my-cool-ami",
+    "provisionerId":      "jonasfj-test-provid",
+    "workerType":         "jonasfj-test-worker",
     "runs":               [], // This will be ignored by createTask
     "state":              "pending",
     "reason":             "none",
