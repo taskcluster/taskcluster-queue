@@ -2,9 +2,8 @@ var server        = require('../../server'); // include for configuration
 var data          = require('../../queue/data');
 var debug         = require('debug')('tests:queue:data');
 var _             = require('lodash');
-var uuid          = require('uuid');
 var validate      = require('../../utils/validate');
-
+var slugid        = require('../../utils/slugid');
 
 
 var setupDatabase = false;
@@ -43,7 +42,7 @@ exports['Create and delete task'] = function(test) {
 
   // Task structure to insert
   var task = {
-    "taskId":             uuid.v4(),
+    "taskId":             slugid.v4(),
     "provisionerId":      "jonasfj-test-aws-provisioner",
     "workerType":         "map-this-to-my-cool-ami",
     "runs":               [], // This will be ignored by createTask
@@ -136,7 +135,7 @@ exports['Create, claim and delete task'] = function(test) {
 
   // Task structure to insert
   var task = {
-    "taskId":             uuid.v4(),
+    "taskId":             slugid.v4(),
     "provisionerId":      "jonasfj-test-aws-provisioner",
     "workerType":         "map-this-to-my-cool-ami",
     "runs":               [], // This will be ignored by createTask
@@ -183,7 +182,7 @@ exports['Create, claim, complete and delete task'] = function(test) {
 
   // Task structure to insert
   var task = {
-    "taskId":             uuid.v4(),
+    "taskId":             slugid.v4(),
     "provisionerId":      "jonasfj-test-aws-provisioner",
     "workerType":         "map-this-to-my-cool-ami",
     "runs":               [], // This will be ignored by createTask
