@@ -31,6 +31,9 @@ var testCases = [
 // define a test for each test file
 testCases.forEach(function(testCase) {
   exports[testCase.path] = function(test) {
+    // Ensure that validate is setup
+    validate.setup();
+
     // Load test data
     var filePath = path.join(__dirname, testCase.path);
     var data = fs.readFileSync(filePath, {encoding: 'utf-8'});
