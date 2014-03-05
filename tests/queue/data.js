@@ -11,6 +11,7 @@ var setupDatabase = false;
 /** Setup database */
 exports.setUp = function(callback)  {
   if (!setupDatabase) {
+    validate.setup();
     setupDatabase = true;
     debug("Setting up database");
     data.setupDatabase().then(function(server) {
