@@ -124,7 +124,7 @@ exports['POST invalid task to v1/task/new'] = function(test) {
   });
 };
 
-/** Test message publication */
+/** Test define tasks */
 exports['GET task put url using v1/define-tasks'] = function(test) {
   test.expect(2);
 
