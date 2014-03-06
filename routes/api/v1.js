@@ -186,7 +186,7 @@ api.declare({
   method:     'post',
   route:      '/task/:taskId/schedule',
   input:      undefined, // No input accepted
-  output:     'http://schemas.taskcluster.net/queue/v1/create-task-response.json#',
+  output:     'http://schemas.taskcluster.net/queue/v1/task-schedule-response.json#',
   title:      "Schedule Defined Task",
   desc: [
     "If you've uploaded task definitions to PUT URLs obtained from",
@@ -212,7 +212,7 @@ api.declare({
       .get(task_bucket_url(taskId + '/task.json'))
       .end(function(res) {
         if (!res.ok) {
-          return reject(res.body);
+          return accept(null);
         }
         accept(res.body);
       });
@@ -243,6 +243,14 @@ api.declare({
     got_resolution,
     got_status
   ).spread(function(task, resolution, task_status) {
+    // If task wasn't present on S3 then that is a problem too
+    if (task === null) {
+      return res.json(400, {
+        message:  "Task definition not uploaded!",
+        error:    "Couldn't fetch: " + task_bucket_url(taskId + '/task.json')
+      });
+    }
+
     // If we have a task status in database or resolution on S3, then the task
     // can't be scheduled. But for simplicity we let this operation be
     // idempotent, hence, we just ignore the request to schedule the task, and
@@ -264,8 +272,8 @@ api.declare({
     if (errors) {
       debug("task.json attempted schemed didn't follow schema");
       return res.json(400, {
-        'message':  "Request payload must follow the schema: " + schema,
-        'error':    errors
+        message:  "Request payload must follow the schema: " + schema,
+        error:    errors
       });
     }
 
@@ -590,7 +598,6 @@ api.declare({
   });
 });
 
-
 /** Fetch work for a worker */
 api.declare({
   method:   'get',
@@ -712,6 +719,138 @@ api.declare({
   });
 });
 
+
+/** Rerun a previously resolved task */
+api.declare({
+  method:     'post',
+  route:      '/task/:taskId/rerun',
+  input:      undefined, // No input accepted
+  output:     'http://schemas.taskcluster.net/queue/v1/rerun-task-response.json#',
+  title:      "Rerun a Resolved Task",
+  desc: [
+    "This method _reruns_ a previously resolved task, even if it was",
+    "_completed_. This is useful if your task completes unsuccessfully, and",
+    "you just want to run it from scratch again. This will also reset the",
+    "number of `retries` allowed.",
+    "",
+    "Remember that `retries` in the task status counts the number of runs that",
+    "the queue have started because the worker stopped responding, for example",
+    "because a spot node died.",
+    "",
+    "**Remark** this operation is idempotent, if you try to rerun a task that",
+    "isn't either `failed` or `completed`, this operation will just return the",
+    "current task status."
+  ].join('\n')
+}, function(req, res) {
+  // Get taskId from parameter
+  var taskId = req.params.taskId;
+
+  // Load task.json
+  var got_task = new Promise(function(accept, reject) {
+    request
+      .get(task_bucket_url(taskId + '/task.json'))
+      .end(function(res) {
+        if (!res.ok) {
+          return accept(null);
+        }
+        accept(res.body);
+      });
+  });
+
+  // Check for resolution
+  var got_resolution = new Promise(function(accept, reject) {
+    request
+      .get(task_bucket_url(taskId + '/resolution.json'))
+      .end(function(res) {
+        if (!res.ok) {
+          return accept(false);
+        }
+        accept(res.body);
+      });
+  });
+
+  // Load task status from database
+  var got_status = data.loadTask(taskId).then(function(task_status) {
+    return task_status;
+  }, function() {
+    return false;
+  });
+
+  // When state is loaded check what to do
+  Promise.all(
+    got_task,
+    got_resolution,
+    got_status
+  ).spread(function(task, resolution, task_status) {
+    // Check that the task exists and have been scheduled before!
+    if (task === null) {
+      return res.json(400, {
+        message:  "Task definition not uploaded and never scheuled!",
+        error:    "Couldn't fetch: " + task_bucket_url(taskId + '/task.json')
+      });
+    }
+    if (task_status === false && resolution === false) {
+      return res.json(400, {
+        message:  "This task have never been scheduled before, can't rerun it",
+        error:    "There is no resolution or status for " + taskId
+      });
+    }
+
+    // Make a promise that task_status is pending again
+    var task_status_pending = null;
+
+    // If task_status was deleted from database we create it again
+    if (task_status === false) {
+      // Restore task status structure from resolution
+      task_status = resolution.status;
+
+      // Make the task pending again
+      task_status.state       = 'pending';
+      task_status.reason      = 'rerun-requested';
+      task_status.retries     = task.retries;
+      task_status.takenUntil  = (new Date(0)).toJSON();
+
+      // Insert into database
+      task_status_pending = data.createTask(task_status).then(function() {
+        return task_status;
+      })
+    } else if (task_status.state == 'running' ||
+               task_status.state == 'pending') {
+      // If the task isn't resolved, we do nothing letting this function be
+      // idempotent
+      debug("Attempt to rerun a task with state: '%s' ignored",
+            task_status.state);
+      return res.reply({
+        status:     task_status
+      })
+    } else {
+      // Rerun the task again
+      task_status_pending = data.rerunTask(taskId, task.retries);
+    }
+
+    // When task is pending again
+    return task_status_pending.then(function(task_status) {
+      // Publish message through events
+      var event_published = events.publish('task-pending', {
+        version:    '0.2.0',
+        status:     task_status
+      });
+
+      // Reply with created task status
+      res.reply({
+        status:   task_status
+      });
+    });
+  }).then(undefined, function(err) {
+    debug(
+      "Failed to rerun task, error %s, as JSON: %j",
+      err, err, err.stack
+    );
+    res.json(500, {
+      message:        "Internal Server Error"
+    });
+  });
+});
 
 
 /** Fetch pending tasks */
