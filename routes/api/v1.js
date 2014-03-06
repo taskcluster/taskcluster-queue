@@ -1,10 +1,12 @@
-var nconf   = require('nconf');
-var utils   = require('./utils');
-var Promise = require('promise');
-var aws     = require('aws-sdk');
-var _       = require('lodash');
-var debug   = require('debug')('routes:api:0.2.0');
-var slugid  = require('../../utils/slugid');
+var nconf     = require('nconf');
+var utils     = require('./utils');
+var Promise   = require('promise');
+var request   = require('superagent');
+var aws       = require('aws-sdk');
+var _         = require('lodash');
+var debug     = require('debug')('routes:api:0.2.0');
+var slugid    = require('../../utils/slugid');
+var validate  = require('../../utils/validate');
 
 var data    = require('../../queue/data');
 var events  = require('../../queue/events');
@@ -179,6 +181,138 @@ api.declare({
 });
 
 
+/** Schedule previously defined tasks */
+api.declare({
+  method:     'post',
+  route:      '/task/:taskId/schedule',
+  input:      undefined, // No input accepted
+  output:     'http://schemas.taskcluster.net/queue/v1/create-task-response.json#',
+  title:      "Schedule Defined Task",
+  desc: [
+    "If you've uploaded task definitions to PUT URLs obtained from",
+    "`/define-tasks`, then you can schedule the tasks using this method.",
+    "This will down fetch and validate the task definition against the",
+    "required JSON schema.",
+    "",
+    "This method has the same response as `/task/new`, using this method in",
+    "combination with `/define-tasks` is just an efficient way of storing",
+    "and defining a set of tasks you want to schedule later.",
+    "",
+    "**Note** this operation is **idempotent** and will not fail or complain",
+    "if called with `taskId` that is already scheduled, or even resolved.",
+    "To reschedule a task previously resolved, use `/task/:taskId/rerun`."
+  ].join('\n')
+}, function(req, res) {
+  // Get taskId from parameter
+  var taskId = req.params.taskId;
+
+  // Load task.json
+  var got_task = new Promise(function(accept, reject) {
+    request
+      .get(task_bucket_url(taskId + '/task.json'))
+      .end(function(res) {
+        if (!res.ok) {
+          return reject(res.body);
+        }
+        accept(res.body);
+      });
+  });
+
+  // Check for resolution
+  var got_resolution = new Promise(function(accept, reject) {
+    request
+      .get(task_bucket_url(taskId + '/resolution.json'))
+      .end(function(res) {
+        if (!res.ok) {
+          return accept(false);
+        }
+        accept(res.body);
+      });
+  });
+
+  // Load task status from database
+  var got_status = data.loadTask(taskId).then(function(task_status) {
+    return task_status;
+  }, function() {
+    return false;
+  });
+
+  // When state is loaded check what to do
+  Promise.all(
+    got_task,
+    got_resolution,
+    got_status
+  ).spread(function(task, resolution, task_status) {
+    // If we have a task status in database or resolution on S3, then the task
+    // can't be scheduled. But for simplicity we let this operation be
+    // idempotent, hence, we just ignore the request to schedule the task, and
+    // return the latest task status
+    if (task_status !== false) {
+      return res.reply({
+        status:     task_status
+      });
+    }
+    if (resolution !== false) {
+      return res.reply({
+        status:     resolution.status
+      });
+    }
+
+    // Validate task.json
+    var schema = 'http://schemas.taskcluster.net/queue/v1/task.json#';
+    var errors = validate(task, schema);
+    if (errors) {
+      debug("task.json attempted schemed didn't follow schema");
+      return res.json(400, {
+        'message':  "Request payload must follow the schema: " + schema,
+        'error':    errors
+      });
+    }
+
+    // Task status structure to reply with in case of success
+    task_status = {
+      taskId:               taskId,
+      provisionerId:        task.provisionerId,
+      workerType:           task.workerType,
+      runs:                 [],
+      state:                'pending',
+      reason:               'none',
+      routing:              task.routing,
+      retries:              task.retries,
+      priority:             task.priority,
+      created:              task.created,
+      deadline:             task.deadline,
+      takenUntil:           (new Date(0)).toJSON()
+    };
+
+    // Insert into database
+    var added_to_database = data.createTask(task_status);
+
+    // Publish message through events
+    var event_published = events.publish('task-pending', {
+      version:    '0.2.0',
+      status:     task_status
+    });
+
+    // Return a promise that everything happens
+    return Promise.all(added_to_database, event_published).then(function() {
+      // Reply with created task status
+      res.reply({
+        status:   task_status
+      });
+    });
+  }).then(undefined, function(err) {
+    debug(
+      "Failed to schedule task, error %s, as JSON: %j",
+      err, err, err.stack
+    );
+    res.json(500, {
+      message:        "Internal Server Error"
+    });
+  });
+});
+
+
 /** Get task status */
 api.declare({
   method:   'get',
@@ -191,7 +325,7 @@ api.declare({
   ].join('\n')
 }, function(req, res) {
   // Load task
-  var task_loaded = data.loadTask(req.params.taskId)
+  var task_loaded = data.loadTask(req.params.taskId);
 
   // When loaded reply with task status structure, if found
   task_loaded.then(function(task_status) {
