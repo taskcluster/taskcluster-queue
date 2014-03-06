@@ -124,3 +124,27 @@ exports['POST invalid task to v1/task/new'] = function(test) {
   });
 };
 
+/** Test message publication */
+exports['GET task put url using v1/define-tasks'] = function(test) {
+  test.expect(2);
+
+  // Post request to server
+  debug("GET from define/tasks to server");
+  request({
+    method: 'GET',
+    url:    'http://' + nconf.get('server:hostname') + ':' +
+            nconf.get('server:port') + '/v1/define-tasks',
+    json:   {
+      tasksRequested:   5
+    }
+  }, function(err, response, body) {
+    debug("Server replied: %j", body);
+    test.equal(response.statusCode, 200, "Request didn't fail as expected");
+    test.ok(
+      Object.keys(body.tasks).length == 5,
+      "Didn't generate number of tasks requested"
+    );
+    test.done();
+  });
+};
+

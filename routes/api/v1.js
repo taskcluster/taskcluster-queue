@@ -112,6 +112,72 @@ api.declare({
   });
 });
 
+/** Define tasks */
+api.declare({
+  method:     'get',
+  route:      '/define-tasks',
+  input:      'http://schemas.taskcluster.net/queue/v1/define-tasks-request.json#',
+  output:     'http://schemas.taskcluster.net/queue/v1/define-tasks-response.json#',
+  title:      "Define Tasks",
+  desc: [
+    "Request a number of `taskId`s and signed URL to which the tasks can be",
+    "uploaded. The tasks will not be scheduled, to do this you must called the",
+    "`/task/:taskId/schedule` API end-point.",
+    "",
+    "The purpose of this API end-point is allow schedulers to upload a set of",
+    "tasks to S3 without the tasks becoming _pending_ immediately. This useful",
+    "if you have a set of dependent tasks. Then you can upload all the tasks",
+    "and when the dependencies of a tasks have been resolved, you can schedule",
+    "the task by calling `/task/:taskId/schedule`. This eliminates the need to",
+    "store tasks somewhere else while waiting for dependencies to resolve.",
+    "",
+    "**Remark** the queue does not track tasks before they have been ",
+    "_scheduled_, hence, you'll not able to call `/task/:taskId/status` with",
+    "`taskId`s assigned here, before they are scheduled with",
+    "`/task/:taskId/schedule`."
+  ].join('\n')
+}, function(req, res) {
+  var tasksRequested = req.body.tasksRequested;
+
+  // Set expires to now + 20 min
+  var expires = new Date();
+  var timeout = 20 * 60;
+  expires.setSeconds(expires.getSeconds() + timeout);
+
+  // Mapping from tasks to URLs
+  var tasks = {};
+
+  var signature_promises = [];
+  while(signature_promises.length < tasksRequested) {
+    signature_promises.push((function() {
+      var taskId = slugid.v4();
+      return sign_put_url({
+        Bucket:         nconf.get('queue:taskBucket'),
+        Key:            taskId + '/task.json',
+        ContentType:    'application/json',
+        Expires:        timeout
+      }).then(function(url) {
+        tasks[taskId] = {
+          taskPutUrl:     url
+        };
+      });
+    })());
+  }
+
+  // When all signatures have been generated we
+  Promise.all(signature_promises).then(function() {
+    res.reply({
+      expires:  expires.toJSON(),
+      tasks:    tasks
+    });
+  }, function(err) {
+    debug("Failed to generate taskIds and PUT URLs, error %s, as JSON: %j", err, err);
+    res.json(500, {
+      message:        "Internal Server Error"
+    });
+  });
+});
+
 
 /** Get task status */
 api.declare({
