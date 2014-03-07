@@ -7,6 +7,7 @@ var _         = require('lodash');
 var debug     = require('debug')('routes:api:0.2.0');
 var slugid    = require('../../utils/slugid');
 var validate  = require('../../utils/validate');
+var assert    = require('assert');
 
 var data    = require('../../queue/data');
 var events  = require('../../queue/events');
@@ -224,18 +225,14 @@ api.declare({
       .get(task_bucket_url(taskId + '/resolution.json'))
       .end(function(res) {
         if (!res.ok) {
-          return accept(false);
+          return accept(null);
         }
         accept(res.body);
       });
   });
 
   // Load task status from database
-  var got_status = data.loadTask(taskId).then(function(task_status) {
-    return task_status;
-  }, function() {
-    return false;
-  });
+  var got_status = data.loadTask(taskId);
 
   // When state is loaded check what to do
   Promise.all(
@@ -255,12 +252,12 @@ api.declare({
     // can't be scheduled. But for simplicity we let this operation be
     // idempotent, hence, we just ignore the request to schedule the task, and
     // return the latest task status
-    if (task_status !== false) {
+    if (task_status !== null) {
       return res.reply({
         status:     task_status
       });
     }
-    if (resolution !== false) {
+    if (resolution !== null) {
       return res.reply({
         status:     resolution.status
       });
@@ -725,7 +722,7 @@ api.declare({
   method:     'post',
   route:      '/task/:taskId/rerun',
   input:      undefined, // No input accepted
-  output:     'http://schemas.taskcluster.net/queue/v1/rerun-task-response.json#',
+  output:     'http://schemas.taskcluster.net/queue/v1/task-rerun-response.json#',
   title:      "Rerun a Resolved Task",
   desc: [
     "This method _reruns_ a previously resolved task, even if it was",
@@ -830,15 +827,17 @@ api.declare({
 
     // When task is pending again
     return task_status_pending.then(function(task_status) {
-      // Publish message through events
-      var event_published = events.publish('task-pending', {
-        version:    '0.2.0',
-        status:     task_status
-      });
+      assert(task_status, "task_status cannot be null here!");
 
       // Reply with created task status
       res.reply({
         status:   task_status
+      });
+
+      // Publish message through events
+      return events.publish('task-pending', {
+        version:    '0.2.0',
+        status:     task_status
       });
     });
   }).then(undefined, function(err) {
