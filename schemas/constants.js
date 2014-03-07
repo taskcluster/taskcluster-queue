@@ -56,7 +56,8 @@ module.exports = {
   // Timeout for task
   "timeout": {
     "title":          "Timeout",
-    "description":    "Timeout (in seconds) in which a task run is expired unless reclaimed.",
+    "description":    "The queue will take the `timeout` value as an advice, but reserves the right to ignore it." +
+                      "So workers and other interested parties should **not** rely on the value of the `timeout` property.",
     "type":           "integer",
     "minimum":        30,
     "maximum":        1200
