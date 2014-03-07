@@ -110,8 +110,8 @@ var ensureAuthenticated = function(req, res, next) {
 
 // Route configuration
 var routes = require('./routes');
-app.get('/',                                                      routes.index);
-app.get('/unauthorized',                                          routes.unauthorized);
+app.get('/',                                routes.index);
+app.get('/unauthorized',                    routes.unauthorized);
 
 /** Launch the server */
 exports.launch = function() {
