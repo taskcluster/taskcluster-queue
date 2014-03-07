@@ -53,6 +53,15 @@ module.exports = {
     "type":         "number"
   },
 
+  // Timeout for task
+  "timeout": {
+    "title":          "Timeout",
+    "description":    "Timeout (in seconds) in which a task run is expired unless reclaimed.",
+    "type":           "integer",
+    "minimum":        30,
+    "maximum":        1200
+  },
+
   // Deadline of task
   "deadline": {
     "title":        "Deadline",
