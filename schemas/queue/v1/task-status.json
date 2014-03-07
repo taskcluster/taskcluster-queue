@@ -64,6 +64,7 @@
       ]
     },
     "routing":          {"$const": "routing"},
+    "timeout":          {"$const": "timeout"},
     "retries": {
       "description":    "Number of retries left for the task in case of infrastructure issues",
       "type":           "integer",

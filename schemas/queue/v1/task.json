@@ -27,6 +27,7 @@
       "pattern":        {"$const": "identifier-pattern"}
     },
     "routing":          {"$const": "routing"},
+    "timeout":          {"$const": "timeout"},
     "retries": {
       "title":          "Retries",
       "description":    "Number of times to retry the task in case of infrastructure issues",
