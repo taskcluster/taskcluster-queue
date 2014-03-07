@@ -440,7 +440,7 @@ exports.rerunTask = function(taskId, retries) {
                   'takenUntil = $2 WHERE taskid = $3 AND ' +
                   '(state = \'completed\' OR state = \'failed\')';
     var params  = [retries, (new Date(0)).toJSON(), slugid.decode(taskId)];
-    client.promise(sql, params).then(function() {
+    return client.promise(sql, params).then(function() {
       client.release();
       return exports.loadTask(taskId);
     });
