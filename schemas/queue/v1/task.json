@@ -88,6 +88,6 @@
   "additionalProperties":   false,
   "required": [
     "version", "provisionerId", "workerType", "routing", "retries",
-    "priority", "created", "deadline", "payload", "metadata", "tags"
+    "priority", "timeout", "created", "deadline", "payload", "metadata", "tags"
   ]
 }

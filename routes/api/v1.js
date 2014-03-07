@@ -10,9 +10,6 @@ var data    = require('../../queue/data');
 var events  = require('../../queue/events');
 
 
-// default timeout for tasks
-var DEFAULT_TIMEOUT_SECONDS = 60 * 20;
-
 // Create S3 instance
 var s3 = new aws.S3();
 
@@ -69,7 +66,7 @@ api.declare({
     state:                'pending',
     reason:               'none',
     routing:              req.body.routing,
-    timeout:              req.body.timeout || DEFAULT_TIMEOUT_SECONDS,
+    timeout:              req.body.timeout,
     retries:              req.body.retries,
     priority:             req.body.priority,
     created:              req.body.created,
@@ -167,7 +164,7 @@ api.declare({
 }, function(req, res) {
   // Get the taskId
   var taskId = req.params.taskId;
-  var timeout = res.body.timeout || DEFAULT_TIMEOUT_SECONDS;
+  var timeout = res.body.timeout;
 
   // Set takenUntil to now + 20 min
   var takenUntil = new Date();
@@ -439,7 +436,7 @@ api.declare({
 
     // Set takenUntil to now + 20 min
     var takenUntil = new Date();
-    var timeout = task.timeout || DEFAULT_TIMEOUT_SECONDS;
+    var timeout = task.timeout;
     takenUntil.setSeconds(takenUntil.getSeconds() + timeout);
 
     // Claim task without runId if this is a new claim

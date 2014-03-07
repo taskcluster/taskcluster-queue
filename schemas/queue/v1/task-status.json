@@ -83,6 +83,6 @@
   "additionalProperties":   false,
   "required": [
     "taskId", "provisionerId", "workerType", "runs", "state", "reason",
-    "routing", "retries", "priority", "created", "deadline", "takenUntil"
+    "routing", "retries", "timeout", "priority", "created", "deadline", "takenUntil"
   ]
 }
