@@ -48,7 +48,7 @@ var DEFAULT_CONFIG_VALUES = {
 
     // Drop database table if they already exist, this is mainly useful for
     // debugging when given as command-line argument: --database:dropTables
-    dropTables:                     true
+    dropTables:                     false
   },
 
   // AMQP configuration as given to `amqp.createConnection`
