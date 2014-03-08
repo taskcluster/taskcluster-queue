@@ -107,4 +107,12 @@ exports.load = function(default_only) {
 
   // Set configuration for aws-sdk
   aws.config.update(nconf.get('aws'));
+
+
+  if(nconf.get('queue:taskBucketIsCNAME')) {
+    console.log("----------------------------------- Travis ENV Not doing hte right thing!!!!");
+  } else {
+    console.log("-------------------- Thank you ENV");
+  }
+  process.exit(1);
 };
