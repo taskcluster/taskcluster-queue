@@ -12,10 +12,7 @@ then
 else
   echo "Running tests which require s3 credentials"
 
-  DEBUG=* ./node_modules/.bin/mocha \
-    test/api/rerun_test.js
-
-  DEBUG=* ./node_modules/.bin/mocha             \
+  ./node_modules/.bin/mocha             \
     test/api/claim_timeout.js           \
     test/api/define_schedule_task.js    \
     test/api/post_task.js               \

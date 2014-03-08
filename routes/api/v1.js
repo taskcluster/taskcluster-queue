@@ -1,7 +1,6 @@
 var nconf     = require('nconf');
 var utils     = require('./utils');
 var Promise   = require('promise');
-var request   = require('superagent');
 var aws       = require('aws-sdk');
 var _         = require('lodash');
 var debug     = require('debug')('routes:api:0.2.0');
@@ -11,7 +10,6 @@ var assert    = require('assert');
 
 var data    = require('../../queue/data');
 var events  = require('../../queue/events');
-
 
 // Create S3 instance
 var s3 = new aws.S3();
@@ -211,27 +209,28 @@ api.declare({
   var taskId = req.params.taskId;
 
   // Load task.json
-  var got_task = new Promise(function(accept, reject) {
-    request
-      .get(task_bucket_url(taskId + '/task.json'))
-      .end(function(res) {
-        if (!res.ok) {
-          return accept(null);
-        }
-        accept(res.body);
-      });
+  var got_task = s3.getObject({
+    Bucket:               nconf.get('queue:taskBucket'),
+    Key:                  taskId + '/task.json'
+  }).promise().then(function(response) {
+    var data = response.data.Body.toString('utf8');
+    return JSON.parse(data);
+  }, function(err) {
+    return null;
   });
 
   // Check for resolution
-  var got_resolution = new Promise(function(accept, reject) {
-    request
-      .get(task_bucket_url(taskId + '/resolution.json'))
-      .end(function(res) {
-        if (!res.ok) {
-          return accept(null);
-        }
-        accept(res.body);
-      });
+  var got_resolution = s3.getObject({
+    Bucket:               nconf.get('queue:taskBucket'),
+    Key:                  taskId + '/resolution.json'
+  }).promise().then(function(response) {
+    var data = response.data.Body.toString('utf8');
+    return JSON.parse(data);
+  }, function(err) {
+    if (err.code == 'NoSuchKey') {
+      return null;
+    }
+    throw err;
   });
 
   // Load task status from database
@@ -757,27 +756,28 @@ api.declare({
   var taskId = req.params.taskId;
 
   // Load task.json
-  var got_task = new Promise(function(accept, reject) {
-    request
-      .get(task_bucket_url(taskId + '/task.json'))
-      .end(function(res) {
-        if (!res.ok) {
-          return accept(null);
-        }
-        accept(res.body);
-      });
+  var got_task = s3.getObject({
+    Bucket:               nconf.get('queue:taskBucket'),
+    Key:                  taskId + '/task.json'
+  }).promise().then(function(response) {
+    var data = response.data.Body.toString('utf8');
+    return JSON.parse(data);
+  }, function(err) {
+    return null;
   });
 
   // Check for resolution
-  var got_resolution = new Promise(function(accept, reject) {
-    request
-      .get(task_bucket_url(taskId + '/resolution.json'))
-      .end(function(res) {
-        if (!res.ok) {
-          return accept(false);
-        }
-        accept(res.body);
-      });
+  var got_resolution = s3.getObject({
+    Bucket:               nconf.get('queue:taskBucket'),
+    Key:                  taskId + '/resolution.json'
+  }).promise().then(function(response) {
+    var data = response.data.Body.toString('utf8');
+    return JSON.parse(data);
+  }, function(err) {
+    if (err.code == 'NoSuchKey') {
+      return null;
+    }
+    throw err;
   });
 
   // Load task status from database
