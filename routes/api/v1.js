@@ -286,6 +286,7 @@ api.declare({
       state:                'pending',
       reason:               'none',
       routing:              task.routing,
+      timeout:              task.timeout,
       retries:              task.retries,
       priority:             task.priority,
       created:              task.created,
@@ -603,10 +604,19 @@ api.declare({
   method:   'post',
   route:    '/claim-work/:provisionerId/:workerType',
   input:    'http://schemas.taskcluster.net/queue/v1/claim-work-request.json#',
-  output:   undefined,  // TODO: define schema later
+  output:   'http://schemas.taskcluster.net/queue/v1/claim-work-response.json#',
   title:    "Claim work for a worker",
   desc: [
-    "Documented later..."
+    "Claim work for a worker, returns information about an appropriate task",
+    "claimed for the worker. Similar to `/v1/task/:taskId/claim`, which can be",
+    "used to claim a specific task, or reclaim a specific task extending the",
+    "`takenUntil` timeout for the run.",
+    "",
+    "**Note**, that if no tasks are _pending_ this method will not assign a",
+    "task to you. Instead it will return `204` with a timeout you should wait",
+    "before polling the queue again. The response has the following form:",
+    "`{sleep: <seconds to sleep>}`. To avoid this declare a RabbitMQ queue for",
+    "your `workerType` claim work using `/v1/task/:taskId/claim`."
   ].join('\n')
 }, function(req, res) {
   // Get input
