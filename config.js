@@ -10,7 +10,9 @@ var DEFAULT_CONFIG_VALUES = {
 
     // True, if taskBucket is CNAME'd like task.taskcluster.net, note, that
     // bucket name always has to be equal to CNAME, so this is just a boolean
-    taskBucketIsCNAME:              true,
+    // encoding as string to ENV can set it without having to provide
+    // environment variable as empty string.
+    taskBucketIsCNAME:              'true',
 
     // Bucket to which schemas should be published
     schemaBucket:                   'schemas.taskcluster.net',
@@ -107,12 +109,4 @@ exports.load = function(default_only) {
 
   // Set configuration for aws-sdk
   aws.config.update(nconf.get('aws'));
-
-
-  if(nconf.get('queue:taskBucketIsCNAME')) {
-    console.log("----------------------------------- Travis ENV Not doing hte right thing!!!!");
-  } else {
-    console.log("-------------------- Thank you ENV");
-  }
-  process.exit(1);
 };
