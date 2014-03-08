@@ -8,7 +8,7 @@
     "url":    "https://github.com/taskcluster/taskcluster-queue.git"
   },
   "scripts": {
-    "test":                             "./test.sh"
+    "test":                             "./test/runtests.sh"
   },
   "dependencies": {
     "express":                          "3.4.8",
