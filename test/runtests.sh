@@ -11,6 +11,9 @@ then
   echo "Skipping running test that require s3";
 else
   echo "Running tests which require s3 credentials"
+
+  DEBUG=* ./node_modules/.bin/mocha test/api/rerun_test.js
+
   DEBUG=* ./node_modules/.bin/mocha             \
     test/api/claim_timeout.js           \
     test/api/define_schedule_task.js    \
