@@ -116,5 +116,5 @@ exports.load = function(default_only) {
 
     console.log("Location: " + data.LocationConstraint);
     console.log("------ END OF Bucket  location ------");
-  }
+  });
 };
