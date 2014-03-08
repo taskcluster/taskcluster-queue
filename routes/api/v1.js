@@ -216,7 +216,12 @@ api.declare({
     var data = response.data.Body.toString('utf8');
     return JSON.parse(data);
   }, function(err) {
-    return null;
+    if (err.code == 'NoSuchKey') {
+      return null;
+    }
+    debug("Failed to get task.json for taskId: %s with error: %s, as JSON: %j",
+          err, err, err.stack);
+    throw err;
   });
 
   // Check for resolution
@@ -230,6 +235,8 @@ api.declare({
     if (err.code == 'NoSuchKey') {
       return null;
     }
+    debug("Failed to get resolution for taskId: %s with error: %s, as JSON: %j",
+          err, err, err.stack);
     throw err;
   });
 
@@ -763,7 +770,12 @@ api.declare({
     var data = response.data.Body.toString('utf8');
     return JSON.parse(data);
   }, function(err) {
-    return null;
+    if (err.code == 'NoSuchKey') {
+      return null;
+    }
+    debug("Failed to get task.json for taskId: %s with error: %s, as JSON: %j",
+      err, err, err.stack);
+    throw err;
   });
 
   // Check for resolution
@@ -777,6 +789,8 @@ api.declare({
     if (err.code == 'NoSuchKey') {
       return null;
     }
+    debug("Failed to get resolution for taskId: %s with error: %s, as JSON: %j",
+      err, err, err.stack);
     throw err;
   });
 
