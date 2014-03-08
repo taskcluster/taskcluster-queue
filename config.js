@@ -107,4 +107,14 @@ exports.load = function(default_only) {
 
   // Set configuration for aws-sdk
   aws.config.update(nconf.get('aws'));
+
+  var s3 = new aws.S3();
+  s3.getBucketLocation({Bucket: 'travis-ci-testing'}, function(err, data) {
+    console.log("------ Bucket  location------");
+    if (err) console.log(err, err.stack); // an error occurred
+    else     console.log(data);           // successful response
+
+    console.log("Location: " + data.LocationConstraint);
+    console.log("------ END OF Bucket  location ------");
+  }
 };
