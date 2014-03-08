@@ -6,10 +6,7 @@ var DEFAULT_CONFIG_VALUES = {
   // TaskCluster Queue configuration
   queue: {
     // Name of S3 bucket where all task and artifacts will be stored
-    taskBucket:                     process.env.TASKCLUSTER_TEST_TASK_BUCKET ||
-                                    // XXX: big hack to allow CI to override
-                                    //      test bucket.
-                                    'tasks.taskcluster.net',
+    taskBucket:                     'tasks.taskcluster.net',
 
     // True, if taskBucket is CNAME'd like task.taskcluster.net, note, that
     // bucket name always has to be equal to CNAME, so this is just a boolean
@@ -82,6 +79,8 @@ exports.load = function(default_only) {
     nconf.env({
       separator:  '__',
       whitelist:  [
+        'queue__taskBucket',
+        'queue__taskBucketIsCNAME',
         'queue__publishSchemas',
         'server__hostname',
         'server__port',
