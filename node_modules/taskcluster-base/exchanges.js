@@ -217,9 +217,10 @@ Exchanges.prototype.declare = function(options) {
   // Check that `exchange` and `name` are unique
   this._entries.forEach(function(entry) {
     assert(entry.exchange !== options.exchange,
-           "Cannot have two declarations with exchange: '" + exchange + "'");
+           "Cannot have two declarations with exchange: '" +
+           entry.exchange + "'");
     assert(entry.name !== options.name,
-           "Cannot have two declarations with name: '" + name + "'");
+           "Cannot have two declarations with name: '" + entry.name + "'");
   });
 
   // Add options to set of options

@@ -50,6 +50,88 @@ suite("Exchanges", function() {
   });
 
 
+  test("declare two", function() {
+    // Create an exchanges
+    var exchanges = new base.Exchanges({
+      title:              "Title for my Events",
+      description:        "Test exchanges used for testing things only"
+    });
+    // Check that we can declare an exchange
+    exchanges.declare({
+      exchange:           'test-exchange',
+      name:               'testExchange',
+      title:              "Test Exchange",
+      description:        "Place we post message for **testing**.",
+      routingKey: [
+        {
+          name:           'testId',
+          summary:        "Identifier that we use for testing",
+          multipleWords:  false,
+          required:       true,
+          maxSize:        22
+        }, {
+          name:           'taskRoutingKey',
+          summary:        "Test specific routing-key: `test.key`",
+          multipleWords:  true,
+          required:       true,
+          maxSize:        128
+        }, {
+          name:           'state',
+          summary:        "State of something",
+          multipleWords:  false,
+          required:       false,
+          maxSize:        16
+        }
+      ],
+      schema: 'http://schemas.taskcluster.net/base/tests/exchanges-test.json',
+      messageBuilder:     function(test) { return test; },
+      routingKeyBuilder:  function(test, state) {
+        return {
+          testId:           test.id,
+          taskRoutingKey:   test.key,
+          state:            state
+        }
+      }
+    });
+    exchanges.declare({
+      exchange:           'test-exchange2',
+      name:               'testExchange2',
+      title:              "Test Exchange",
+      description:        "Place we post message for **testing**.",
+      routingKey: [
+        {
+          name:           'testId',
+          summary:        "Identifier that we use for testing",
+          multipleWords:  false,
+          required:       true,
+          maxSize:        22
+        }, {
+          name:           'taskRoutingKey',
+          summary:        "Test specific routing-key: `test.key`",
+          multipleWords:  true,
+          required:       true,
+          maxSize:        128
+        }, {
+          name:           'state',
+          summary:        "State of something",
+          multipleWords:  false,
+          required:       false,
+          maxSize:        16
+        }
+      ],
+      schema: 'http://schemas.taskcluster.net/base/tests/exchanges-test.json',
+      messageBuilder:     function(test) { return test; },
+      routingKeyBuilder:  function(test, state) {
+        return {
+          testId:           test.id,
+          taskRoutingKey:   test.key,
+          state:            state
+        }
+      }
+    });
+  });
+
+
   test("reference", function() {
     // Create an exchanges
     var exchanges = new base.Exchanges({
