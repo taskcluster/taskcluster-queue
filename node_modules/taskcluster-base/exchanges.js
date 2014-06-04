@@ -58,7 +58,12 @@ var Publisher = function(conn, channel, entries, options) {
             if (!key.required) {
               word = word || '_';
             }
-            assert(word, "Missing routingKey entry: " + key.name);
+            // Convert numbers to strings
+            if (typeof(word) === 'number') {
+              word = '' + word;
+            }
+            assert(typeof(word) === 'string', "non-string routingKey entry: "
+                                              + key.name);
             assert(word.length <= key.maxSize,
                    "routingKey word: '" + word + "' for '" + key.name +
                    "' is longer than maxSize: " + key.maxSize);
