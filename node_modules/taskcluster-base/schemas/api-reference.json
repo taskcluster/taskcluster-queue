@@ -85,8 +85,7 @@
         },
         "additionalProperties":   false,
         "required": [
-          "type", "method", "route", "args", "name", "scopes",
-          "title", "description"
+          "type", "method", "route", "args", "name", "title", "description"
         ]
       }
     }
