@@ -1,4 +1,4 @@
-suite('Test reruns', function() {
+suite('Test define/schedule', function() {
   var debug       = require('debug')('define_schedule_test');
   var assert      = require('assert');
   var Promise     = require('promise');
@@ -60,7 +60,7 @@ suite('Test reruns', function() {
     return got_tasks.then(function(res) {
       assert(res.ok, "This should have succeeded");
       assert(
-        Object.keys(res.body.tasks).length == 5,
+        res.body.tasks.length == 5,
         "Didn't generate number of tasks requested"
       );
     });
@@ -81,8 +81,8 @@ suite('Test reruns', function() {
         Object.keys(res.body.tasks).length == 1,
         "Didn't generate number of tasks requested"
       );
-      taskId = Object.keys(res.body.tasks)[0];
-      return res.body.tasks[taskId].taskPutUrl;
+      taskId = res.body.tasks[0].taskId;
+      return res.body.tasks[0].taskPutUrl;
     });
 
     // Create datetime for created and deadline as 3 days later
