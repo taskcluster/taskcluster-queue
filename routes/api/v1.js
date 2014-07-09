@@ -126,18 +126,19 @@ api.declare({
   var timeout = 20 * 60;
   expires.setSeconds(expires.getSeconds() + timeout);
 
-  // Mapping from tasks to URLs
-  var tasks = {};
-
-  var signaturePromises = [];
-  while(signaturePromises.length < tasksRequested) {
-    signaturePromises.push((function() {
+  // Promises for task definitions
+  var taskDefinitionPromises = [];
+  while(taskDefinitionPromises.length < tasksRequested) {
+    taskDefinitionPromises.push((function() {
+      // Generate taskId
       var taskId = slugid.v4();
-      return ctx.bucket.signedPutUrl(
-        taskId + '/task.json',
-        timeout
-      ).then(function(url) {
-        tasks[taskId] = {
+      var prefix = taskId + '/task.json';
+      // Get signed Url
+      return ctx.bucket.signedPutUrl(prefix, timeout).then(function(url) {
+        // Return object for output
+        return {
+          taskId:     taskId,
+          taskUrl:    ctx.bucket.publicUrl(prefix),
           taskPutUrl: url
         };
       });
@@ -145,7 +146,7 @@ api.declare({
   }
 
   // When all signatures have been generated we
-  return Promise.all(signaturePromises).then(function() {
+  return Promise.all(taskDefinitionPromises).then(function(tasks) {
     return res.reply({
       expires:  expires.toJSON(),
       tasks:    tasks
