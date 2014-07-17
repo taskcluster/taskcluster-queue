@@ -18,15 +18,23 @@ module.exports = {
       errorLimit:                 5
     },
 
-    // Configuration of task storage
-    tasks: {
-      // S3 bucket to store tasks in
-      bucket:                     'tasks.taskcluster.net',
+    // Number of seconds before the claim to a run expires
+    claimTimeout:                 20 * 60,
 
-      // Public base url for keys in the bucket, if cnamed, otherwise, leave it
-      // null, and bucket URL will be used.
-      publicBaseUrl:              'http://tasks.taskcluster.net'
-    },
+    // S3 bucket where artifacts are stored
+    artifactBucket:               'taskcluster-artifacts',
+
+    // Azure blob container for logs
+    logContainer:                 'logs',
+
+    // Azure task storage container (for task information and archived status)
+    taskContainer:                'tasks',
+  },
+
+  // TaskCluster configuration
+  taskcluster: {
+    // BaseUrl for auth, if default built-in baseUrl isn't to be provided
+    authBaseUrl:                  undefined,
 
     // TaskCluster credentials for this server, these must have scopes:
     // auth:credentials
@@ -52,6 +60,19 @@ module.exports = {
     connectionString:               undefined
   },
 
+  // Azure table configuration
+  azureTable: {
+    accountUrl:                     undefined,
+    accountName:                    undefined,
+    accountKey:                     undefined
+  },
+
+  // Azure blob store configuration
+  azureBlob: {
+    accountUrl:                     undefined,
+    accountName:                    undefined,
+    accountKey:                     undefined
+  },
 
   // AMQP configuration
   amqp: {

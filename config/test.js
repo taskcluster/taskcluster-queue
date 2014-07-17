@@ -7,22 +7,23 @@ module.exports = {
       // Don't want to see error
       errorLimit:                 0
     },
+    artifactBucket:               'test-bucket-for-any-garbage',
+    logContainer:                 'logs',
+    taskContainer:                'tasks'
+  },
 
-    tasks: {
-      // Use the test garbage bucket
-      bucket:                     'test-bucket-for-any-garbage',
-      publicBaseUrl:              null
-    },
+  taskcluster: {
+    authBaseUrl:                  'http://localhost:1207/v1',
 
     credentials: {
-      clientId:                   'zIroSzcvRPezmco_cecVmA',
-      accessToken:                'Rj7z_GDMSaKWGadgs-je1Am7z5Q4zuQgOj6AZa0wzSSgAIkKQpB1RTG328W1Ls6WTA'
+      clientId:                   "test-server",
+      accessToken:                "none"
     }
   },
 
   server: {
-    publicUrl:                    'http://localhost:600235',
-    port:                         600235
+    publicUrl:                    'http://localhost:1208',
+    port:                         1208
   },
 
   // Local database

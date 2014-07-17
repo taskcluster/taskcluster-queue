@@ -9,13 +9,14 @@
  */
 module.exports = {
 
-  // Task State
+  // Run State
   "state": {
-    "description":  "Task state, this enum is **frozen** new values will " +
+    "description":  "Run state, this enum is **frozen** new values will " +
                     "**not** be added. Please, note, that `completed` does " +
                     "not imply task-specfic success, and `failed` means that " +
-                    "we were unable to run the task to completion on " +
-                    "available infrastructure. See `reason` for explanation.",
+                    "we were unable to execute the run to completion on " +
+                    "available infrastructure. See `reasonResolved` for " +
+                    "explanation.",
     "enum":         ["pending", "running", "completed", "failed"]
   },
 
@@ -30,7 +31,7 @@ module.exports = {
 
   // Run identifier limitations, these are also somewhat founded in RabbitMQ
   // routing key limitations
-  "min-run-id":     1,
+  "min-run-id":     0,
   "max-run-id":     1000,
 
   // Task-specific routing key
@@ -53,22 +54,12 @@ module.exports = {
     "type":         "number"
   },
 
-  // Timeout for task
-  "timeout": {
-    "title":          "Timeout",
-    "description":    "The queue will take the `timeout` value as an advice, but reserves the right to ignore it." +
-                      "So workers and other interested parties should **not** rely on the value of the `timeout` property.",
-    "type":           "integer",
-    "minimum":        30,
-    "maximum":        1200
-  },
-
   // Deadline of task
   "deadline": {
     "title":        "Deadline",
-    "description":  "Deadline of the task, a task is resolved as **failed** " +
-                    "if it haven't be resolved by other means before the " +
-                    "deadline",
+    "description":  "Deadline of the task, `pending` and `running` runs are " +
+                    "resolved as **failed** if not resolved by other means " +
+                    "before the deadline",
     "type":         "string",
     "format":       "date-time"
   },
