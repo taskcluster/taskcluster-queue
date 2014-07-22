@@ -1,4 +1,4 @@
-suite('pending tasks', function() {
+suite('Query tasks', function() {
   var debug       = require('debug')('test:api:create');
   var assert      = require('assert');
   var slugid      = require('slugid');

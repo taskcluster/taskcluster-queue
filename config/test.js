@@ -8,7 +8,7 @@ module.exports = {
       errorLimit:                 0
     },
     artifactBucket:               'test-bucket-for-any-garbage',
-    logContainer:                 'logs',
+    artifactContainer:            'artifacts',
     taskContainer:                'tasks'
   },
 

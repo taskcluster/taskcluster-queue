@@ -6,9 +6,10 @@ var path        = require('path');
 var Promise     = require('promise');
 var exchanges   = require('../queue/exchanges');
 var TaskModule  = require('../queue/task.js')
-var aws         = require('aws-sdk-promise');
 var _           = require('lodash');
 var BlobStore   = require('../queue/blobstore');
+var data        = require('../queue/data');
+var Bucket      = require('../queue/bucket');
 
 /** Launch server */
 var launch = function(profile) {
@@ -26,12 +27,8 @@ var launch = function(profile) {
       'aws_secretAccessKey',
       'queue_credentials_clientId',
       'queue_credentials_accessToken',
-      'azureBlob_accountUrl',
-      'azureBlob_accountName',
-      'azureBlob_accountKey',
-      'azureTable_accountUrl',
-      'azureTable_accountName',
-      'azureTable_accountKey'
+      'azure_accountName',
+      'azure_accountKey',
     ],
     filename:     'taskcluster-queue'
   });
@@ -64,20 +61,25 @@ var launch = function(profile) {
   });
 
   // Create artifact bucket instance for API implementation
-  var artifactBucket = new aws.S3(_.defaults({
-    params: {
-      Bucket:       cfg.get('queue:artifactBucket')
-    }
-  }, cfg.get('aws')));
-
-  // Create taskstore and logstore
-  var taskstore = new BlobStore({
-    container:          cfg.get('queue:taskContainer'),
-    credentials:        cfg.get('azureBlob')
+  var artifactBucket = new Bucket({
+    bucket:             cfg.get('queue:artifactBucket'),
+    credentials:        cfg.get('aws')
   });
-  var logstore  = new BlobStore({
-    container:          cfg.get('queue:logContainer'),
-    credentials:        cfg.get('azureBlob')
+
+  // Create taskstore and artifactStore
+  var taskstore     = new BlobStore({
+    container:          cfg.get('queue:taskContainer'),
+    credentials:        cfg.get('azure')
+  });
+  var artifactStore = new BlobStore({
+    container:          cfg.get('queue:artifactContainer'),
+    credentials:        cfg.get('azure')
+  });
+
+  // Create artifacts table
+  var Artifact = data.Artifact.configure({
+    tableName:          cfg.get('queue:artifactTableName'),
+    credentials:        cfg.get('azure')
   });
 
   // Create Task subclass wrapping database access
@@ -90,7 +92,8 @@ var launch = function(profile) {
   return Promise.all(
     publisherCreated,
     taskstore.createContainer(),
-    logstore.createContainer(),
+    artifactStore.createContainer(),
+    Artifact.createTable(),
     Task.ensureTables()
   ).then(function() {
     // Create API router and publish reference if needed
@@ -99,13 +102,13 @@ var launch = function(profile) {
       context: {
         Task:           Task,
         taskstore:      taskstore,
-        logstore:       logstore,
         artifactBucket: artifactBucket,
+        artifactStore:  artifactStore,
         publisher:      publisher,
         validator:      validator,
-        Artifacts:      null, // To be implemented
-        Logs:           null, // To be implemented
-        cfg:            cfg   // To be deprecated and replaced with variables
+        Artifact:       Artifact,
+        claimTimeout:   cfg.get('queue:claimTimeout'),
+        cfg:            cfg   // To be deprecated
       },
       validator:        validator,
       authBaseUrl:      cfg.get('taskcluster:authBaseUrl'),

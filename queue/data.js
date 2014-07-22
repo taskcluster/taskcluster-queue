@@ -1,51 +1,51 @@
-var base  = require('taskcluster-base');
-var debug = require('debug')('queue:data');
+var base    = require('taskcluster-base');
+var debug   = require('debug')('queue:data');
+var assert  = require('assert');
 
-/** Azure table storage item for tracking a resource */
-var Resource = base.Entity.configure({
+/** Azure table storage item for tracking an artifact */
+var Artifact = base.Entity.configure({
   mapping: [
     {
       key:      'PartitionKey',
       property: 'taskIdSlashRunId',
-      type:     'string'
+      type:     'encodedstring'
     }, {
       key:      'RowKey',
       property: 'name',
-      type:     'string'
+      type:     'encodedstring'
     }, {
       key:      'version',
-      property: 'version',
       type:     'number'
     }, {
       key:      'kind',
-      property: 'kind',
       type:     'string'
     }, {
-      key:      'info',
-      property: 'info',
+      key:      'contentType',
+      type:     'string'
+    }, {
+      key:      'details',
       type:     'json'
     }, {
       key:      'expires',
-      property: 'expires',
       type:     'date'
     }
   ]
 });
 
 /** Define auxiliary property to read `taskId` from `taskIdSlashRunId` */
-Object.defineProperty(Resource.prototype, 'taskId', {
+Object.defineProperty(Artifact.prototype, 'taskId', {
   enumerable: true,
   get: function() { return this.taskIdSlashRunId.split('/')[0]; }
 });
 
 /** Define auxiliary property to read `runId` from `taskIdSlashRunId` */
-Object.defineProperty(Resource.prototype, 'runId', {
+Object.defineProperty(Artifact.prototype, 'runId', {
   enumerable: true,
   get: function() { return parseInt(this.taskIdSlashRunId.split('/')[1]); }
 });
 
 /** Overwrite create to construct taskIdSlashRunId */
-Resource.create = function(properties) {
+Artifact.create = function(properties) {
   assert(properties.taskId  !== undefined, "can't create without taskId");
   assert(properties.runId   !== undefined, "can't create without runId");
   properties.taskIdSlashRunId = properties.taskId + '/' + properties.runId;
@@ -54,8 +54,15 @@ Resource.create = function(properties) {
   return base.Entity.create.call(this, properties);
 };
 
-// Export Log
-exports.Log = Resource.configure({});
+/** Overwrite load to construct taskIdSlashRunId */
+Artifact.load = function(taskId, runId, name) {
+  return base.Entity.load.call(this, taskId + '/' + runId, name);
+};
+
+/** List all artifacts  for a given `taskId` and `runId` */
+Artifact.list = function(taskId, runId) {
+  return base.Entity.queryPartitionKey.call(this, taskId + '/' + runId);
+};
 
 // Export Artifact
-exports.Artifact = Artifact.configure({});
+exports.Artifact = Artifact;

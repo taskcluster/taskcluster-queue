@@ -18,12 +18,12 @@ var SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/queue/v1/';
  *                   // Stores:
  *                   //   - <taskId>/task.json
  *                   //   - <taskId>/status.json (serialized task status)
- *   logstore:       // Azure blob storage container used for logs
  *   artifactBucket: // S3 bucket used for artifacts
+ *   artifactStore:  // Azure blob storage container used for artifacts
  *   publisher:      // publisher from base.Exchanges
  *   validator:      // base.validator
  *   Artifacts:      // base.Entity subclass
- *   Logs:           // base.Entity subclass
+ *   claimTimeout:   // Number of seconds before a claim expires
  *   cfg:            // Configuration object
  * }
  */
@@ -299,7 +299,7 @@ api.declare({
   }).then(function(task) {;
     if (!task) {
       res.json(404, {
-        message: "Task not found or already resolved"
+        message: "Task not found"
       });
     }
     // Reply with task status
@@ -358,7 +358,7 @@ api.declare({
 
     // Set takenUntil to now + 20 min
     var takenUntil = new Date();
-    var claimTimeout = parseInt(ctx.cfg.get('queue:claimTimeout'));
+    var claimTimeout = parseInt(ctx.claimTimeout);
     takenUntil.setSeconds(takenUntil.getSeconds() + claimTimeout);
 
     // Claim run
@@ -433,7 +433,7 @@ api.declare({
 
     // Set takenUntil to now + claimTimeout
     var takenUntil = new Date();
-    var claimTimeout = parseInt(ctx.cfg.get('queue:claimTimeout'));
+    var claimTimeout = parseInt(ctx.claimTimeout);
     takenUntil.setSeconds(takenUntil.getSeconds() + claimTimeout);
 
     // Reclaim run
@@ -548,229 +548,6 @@ api.declare({
   });
 });
 
-
-/** Post log */
-api.declare({
-  method:     'post',
-  route:      '/task/:taskId/runs/:runId/logs/:name',
-  name:       'createLog',
-  scopes: [
-    [
-      'queue:put:log:<name>',
-      'queue:assume:worker-id:<workerGroup>/<workerId>'
-    ]
-  ],
-  deferAuth:  true,
-  input:      SCHEMA_PREFIX_CONST + '',
-  output:     SCHEMA_PREFIX_CONST + '',
-  title:      "Create Log",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Get log from run */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/runs/:runId/logs/:name',
-  name:       'getLogFromRun',
-  scopes: [
-    'queue:get:log:<name>'
-  ],
-  deferAuth:  true,
-  title:      "Get Log from Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Get latest log from task */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/logs/:name',
-  name:       'getLatestLog',
-  scopes: [
-    'queue:get:log:<name>'
-  ],
-  deferAuth:  true,
-  title:      "Get Log from Latest Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Get logs from run */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/runs/:runId/logs/',
-  name:       'getLogsFromRun',
-  title:      "Get Logs from Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Get latest logs from task */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/logs/',
-  name:       'getLatestLogs',
-  title:      "Get Logs from Latest Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Post artifact */
-api.declare({
-  method:     'post',
-  route:      '/task/:taskId/runs/:runId/artifacts/:name',
-  name:       'createArtifact',
-  scopes: [
-    [
-      'queue:put:artifact:<name>',
-      'queue:assume:worker-id:<workerGroup>/<workerId>'
-    ]
-  ],
-  deferAuth:  true,
-  input:      SCHEMA_PREFIX_CONST + 'post-artifact-request.json',
-  output:     SCHEMA_PREFIX_CONST + 'post-artifact-response.json',
-  title:      "Create Artifact",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-  var name   = req.params.name;
-
-  return ctx.Task.load(taskId).then(function(task) {
-    // if no task is found, we return 404
-    if (!task || !task.runs[runId]) {
-      return res.json(404, {
-        message:  "Task not found or already resolved"
-      });
-    }
-
-    var workerGroup = task.runs[runId].workerGroup;
-    var workerId    = task.runs[runId].workerId;
-
-    // Authenticate request by providing parameters
-    if(!req.satisfies({
-      workerGroup:  workerGroup,
-      workerId:     workerId,
-      name:         name
-    })) {
-      return;
-    }
-
-    // kinds supported:
-    //   azure  (explicitly deleted after expiration)
-    //   s3     (explicitly deleted after expiration)
-    //   url    (reference deleted after expiration, resource not touched)
-    // expires supported:
-    //   date object
-  });
-});
-
-/** Get artifact from run */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/runs/:runId/artifacts/:name',
-  name:       'getArtifactFromRun',
-  scopes: [
-    'queue:get:artifact:<name>'
-  ],
-  deferAuth:  true,
-  title:      "Get Artifact from Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Get latest artifact from task */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/artifacts/:name',
-  name:       'getLatestArtifact',
-  scopes: [
-    'queue:get:artifact:<name>'
-  ],
-  deferAuth:  true,
-  title:      "Get Artifact from Latest Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Get artifacts from run */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/runs/:runId/artifacts/',
-  name:       'getArtifactsFromRun',
-  title:      "Get Artifacts from Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
-
-/** Get latest artifacts from task */
-api.declare({
-  method:     'get',
-  route:      '/task/:taskId/artifacts/',
-  name:       'getLatestArtifacts',
-  title:      "Get Artifacts from Latest Run",
-  description: [
-    "TODO: document this method"
-  ].join('\n')
-}, function(req ,res) {
-  var ctx = this;
-
-  var taskId = req.params.taskId;
-  var runId  = parseInt(req.params.runId);
-});
 
 /** Report task completed */
 api.declare({
@@ -916,6 +693,9 @@ api.declare({
   });
 });
 
+
+// Load artifacts.js so API end-points declared in that file is loaded
+require('./artifacts');
 
 
 /** Fetch pending tasks */
