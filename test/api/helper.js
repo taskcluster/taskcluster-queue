@@ -78,6 +78,13 @@ exports.setup = function(options) {
     baseUrlPath:  '/v1'
   });
 
+  // Configure reaper
+  var reaper = new base.testing.LocalApp({
+    command:      path.join(__dirname, '..', '..', 'bin', 'reaper.js'),
+    args:         [options.profile],
+    name:         'reaper.js'
+  });
+
   // Hold reference to mockAuthServer
   var mockAuthServer = null;
 
@@ -116,8 +123,14 @@ exports.setup = function(options) {
         mockAuthServer = mockAuthServer_;
       });
     }).then(function() {
+      // Launch reaper
+      var reaperLaunched = Promise.resolve(null);
+      if (options.startReaper) {
+        reaperLaunched = reaper.launch();
+      }
+
       // Launch server
-      return server.launch().then(function(baseUrl) {
+      var serverLaunched = server.launch().then(function(baseUrl) {
         // Create client for working with API
         subject.baseUrl = baseUrl;
         var reference = v1.reference({baseUrl: baseUrl});
@@ -136,12 +149,21 @@ exports.setup = function(options) {
         subject.QueueEvents = taskcluster.createClient(exchangeReference);
         subject.queueEvents = new subject.QueueEvents();
       });
+
+      return Promise.all(serverLaunched, reaperLaunched);
     });
   });
 
   // Shutdown server
   teardown(function() {
-    return server.terminate().then(function() {
+    // Kill reaper if needed
+    var reaperDead = Promise.resolve(null);
+    if (options.startReaper) {
+      reaperDead = reaper.terminate();
+    }
+    // Kill server
+    var serverDead = server.terminate();
+    return Promise.all(reaperDead, serverDead).then(function() {
       return mockAuthServer.terminate();
     }).then(function() {
       return Promise.all(listeners.map(function(listener) {
