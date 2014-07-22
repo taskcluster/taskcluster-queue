@@ -771,17 +771,191 @@ Task.rerunTask = transacting(function(taskId, options, knex) {
   });
 });
 
-/**  */
-Task.expireClaims = transacting(function(knex) {
-  // find running runs with takenUntil < new Date() and retriesLeft > 0
-  // Update last run to 'failed' with reasonResolved: 'claim-expired'
-  // and add new pending run while decrementing retriesLeft
-  // Returns list of tasks now pending again
+/**
+ * Find `running` runs with `takenUntil` < now and `retriesLeft` > 0
+ * Update the runs to 'failed' with `reasonResolved` as 'claim-expired' and
+ * schedule a new pending run
+ *
+ * Return promise for the list of tasks which just had a run scheduled.
+ */
+Task.expireClaimsWithRetries = transacting(function(knex) {
+  var that = this;
+  var now = new Date();
+
+  // Find runs
+  var foundRuns = knex
+    .select('runs.taskId', 'runs.runId', 'tasks.retriesLeft')
+    .forUpdate()
+    .from('runs')
+    .join('tasks', 'runs.taskId', 'tasks.taskId')
+    .where({
+      'runs.state':     'running'
+    })
+    .andWhere('runs.takenUntil', '<', now)
+    .andWhere('tasks.retriesLeft', '>', 0);
+
+  // For each run we find
+  return foundRuns.then(function(runs) {
+    return Promise.all(runs.map(function(run) {
+      // Update run to failed
+      var updatedRun = knex
+        ('runs')
+        .update({
+          state:            'failed',
+          reasonResolved:   'claim-expired',
+          success:          false,
+          resolved:         now
+        })
+        .where({
+          taskId:           run.taskId,
+          runId:            run.runId,
+          state:            'running'
+        })
+        .andWhere('runs.takenUntil', '<', now)
+        .then(function(count) {
+          // As we selected forUpdate we should always be able to update the
+          // run, even with the `where` clause (which why we have it)
+          assert(count == 1, "Abort expireClaimsWithRetries run not updated");
+        });
+
+      // Update task to have retriesLeft - 1
+      var updateTask = knex
+        ('tasks')
+        .update({
+          retriesLeft:    run.retriesLeft - 1,
+        })
+        .where({
+          taskId:         run.taskId,
+          retriesLeft:    run.retriesLeft
+        })
+        .then(function(count) {
+          // As we selected forUpdate we should always be able to update the
+          // task, even with the `where` clause (which why we have it)
+          assert(count == 1, "Abort expireClaimsWithRetries task not updated");
+        });
+
+      // Insert new pending run
+      var insertRun = knex
+        .insert({
+          taskId:         run.taskId,
+          runId:          run.runId + 1,
+          state:          'pending',
+          reasonCreated:  'scheduled',
+          scheduled:      new Date()
+        })
+        .into('runs');
+
+      // Wait for operations to finish and load task
+      return Promise.all(
+        updatedRun,
+        updateTask,
+        insertRun
+      ).then(function() {
+        return that.load(slugid.encode(run.taskId), knex);
+      }).then(function(task) {
+        assert(task instanceof that, "Task must exist!");
+        return task;
+      });
+    }));
+  });
 });
 
-/**  */
-Task.expireDeadlineAndRetries = transacting(function(knex) {
-  // find tasks with deadline exceeded or retries zero and takenUntil < new Date()
+/**
+ * Find runs where the deadline is exceeded and then declare the runs failed.
+ *
+ * Return a promise for a list of tasks
+ */
+Task.expireByDeadline = transacting(function(knex) {
+  var that = this;
+  var now = new Date();
+
+  // Find runs where deadline is exceeded
+  var foundRuns = knex
+    .select('runs.taskId', 'runs.runId')
+    .forUpdate()
+    .from('runs')
+    .join('tasks', 'runs.taskId', 'tasks.taskId')
+    .where({
+      'runs.state':     'running'
+    })
+    .andWhere('tasks.deadline', '<', now);
+
+  // Update runs
+  return foundRuns.then(function(runs) {
+    return Promise.all(runs.map(function(run) {
+      return knex
+        ('runs')
+        .update({
+          state:            'failed',
+          reasonResolved:   'deadline-exceeded',
+          success:          false,
+          resolved:         now
+        })
+        .where({
+          taskId:           run.taskId,
+          runId:            run.runId,
+          state:            'running'
+        })
+        .then(function(count) {
+          // This shouldn't happen was we select for update
+          assert(count == 1, "Abort expireByDeadline, run not updated");
+          return that.load(slugid.encode(run.taskId), knex);
+        }).then(function(task) {
+          assert(task instanceof that, "Task must exist!");
+          return task;
+        });
+    }));
+  });
+});
+
+/**
+ * Find runs where takenUntil < now and retriesLeft is 0 and declare the
+ * runs failed.
+ *
+ * Return a promise for a list of tasks
+ */
+Task.expireClaimsWithoutRetries = transacting(function(knex) {
+  var that = this;
+  var now = new Date();
+
+  // Find runs
+  var foundRuns = knex
+    .select('runs.taskId', 'runs.runId')
+    .forUpdate()
+    .from('runs')
+    .join('tasks', 'runs.taskId', 'tasks.taskId')
+    .where({
+      'runs.state':         'running',
+      'tasks.retriesLeft':  0
+    })
+    .andWhere('runs.takenUntil', '<', now);
+
+  // Update runs
+  return foundRuns.then(function(runs) {
+    return Promise.all(runs.map(function(run) {
+      return knex
+        ('runs')
+        .update({
+          state:            'failed',
+          reasonResolved:   'claim-expired',
+          success:          false,
+          resolved:         now
+        })
+        .where({
+          taskId:           run.taskId,
+          runId:            run.runId,
+          state:            'running'
+        })
+        .then(function(count) {
+          // This shouldn't happen was we select for update
+          assert(count == 1, "Abort expireByDeadline, run not updated");
+          return that.load(slugid.encode(run.taskId), knex);
+        }).then(function(task) {
+          assert(task instanceof that, "Task must exist!");
+          return task;
+        });
+    }));
+  });
 });
 
 
@@ -806,25 +980,25 @@ Task.prototype.status = function() {
         scheduled:      run.scheduled.toJSON(),
       };
       // Add optional properties
-      if (run.reasonResolved !== null) {
+      if (run.reasonResolved != null) {
         r.reasonResolved = run.reasonResolved;
       }
-      if (run.success !== null) {
+      if (run.success != null) {
         r.success = run.success;
       }
-      if (run.workerGroup !== null) {
+      if (run.workerGroup != null) {
         r.workerGroup = run.workerGroup;
       }
-      if (run.workerId !== null) {
+      if (run.workerId != null) {
         r.workerId = run.workerId;
       }
-      if (run.takenUntil !== null) {
+      if (run.takenUntil != null) {
         r.takenUntil = run.takenUntil.toJSON();
       }
-      if (run.started !== null) {
+      if (run.started != null) {
         r.started = run.started.toJSON();
       }
-      if (run.resolved !== null) {
+      if (run.resolved != null) {
         r.resolved = run.resolved.toJSON();
       }
       return r;
