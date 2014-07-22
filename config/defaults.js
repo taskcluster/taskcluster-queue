@@ -24,11 +24,14 @@ module.exports = {
     // S3 bucket where artifacts are stored
     artifactBucket:               'taskcluster-artifacts',
 
-    // Azure blob container for logs
-    logContainer:                 'logs',
+    // Azure blob container for artifacts
+    artifactContainer:            'artifacts',
 
     // Azure task storage container (for task information and archived status)
     taskContainer:                'tasks',
+
+    // Azure table name for artifacts meta-data
+    artifactTableName:            'Artifacts'
   },
 
   // TaskCluster configuration
@@ -60,16 +63,8 @@ module.exports = {
     connectionString:               undefined
   },
 
-  // Azure table configuration
-  azureTable: {
-    accountUrl:                     undefined,
-    accountName:                    undefined,
-    accountKey:                     undefined
-  },
-
-  // Azure blob store configuration
-  azureBlob: {
-    accountUrl:                     undefined,
+  // Azure credentials configuration
+  azure: {
     accountName:                    undefined,
     accountKey:                     undefined
   },

@@ -1,10 +1,15 @@
 suite('queue/tasks_store', function() {
-  var Promise   = require('promise');
-  var slugid    = require('slugid');
-  var assert    = require('assert');
-  var BlobStore = require('../../queue/blobstore');
-  var base      = require('taskcluster-base');
-  var _         = require('lodash');
+  var Promise       = require('promise');
+  var slugid        = require('slugid');
+  var assert        = require('assert');
+  var BlobStore     = require('../../queue/blobstore');
+  var base          = require('taskcluster-base');
+  var _             = require('lodash');
+  var urljoin       = require('url-join');
+  var querystring   = require('querystring');
+  var request       = require('superagent-promise');
+  var BlobUploader  = require('./azure-blob-uploader-sas');
+  var debug         = require('debug')('queue:test:queue:blobstore_test');
 
   // Load configuration
   var cfg = base.config({
@@ -107,6 +112,75 @@ suite('queue/tasks_store', function() {
       assert(false, "Expected Error");
     }).catch(function(err) {
       assert(err.code === 'BlobNotFound', "Expected not found error");
+    });
+  });
+
+  // Test that we can generate SAS with write access
+  test("upload w. generateWriteSAS", function() {
+    var key = slugid.v4();
+    var expiry = new Date();
+    expiry.setMinutes(expiry.getMinutes() + 20);
+    var sas = blobstore.generateWriteSAS(key, {expiry: expiry});
+    assert(sas, "Failed to generate a signature");
+
+    // Create BlobUploader
+    var uploader = new BlobUploader(sas);
+    var block1 = slugid.v4();
+    var block2 = slugid.v4();
+
+    return Promise.all(
+      uploader.putBlock(block1, '{"block1_says": "Hello world",\n'),
+      uploader.putBlock(block2, '"block2_says": "Hello Again"}\n')
+    ).then(function() {
+      return uploader.putBlockList([block1, block2], 'application/json');
+    }).then(function() {
+      return blobstore.get(key);
+    }).then(function(result) {
+      assert(result.block1_says === 'Hello world', "block 1 incorrect");
+      assert(result.block2_says === 'Hello Again', "block 2 incorrect");
+    });
+  });
+
+  // Test that we can't abuse SAS with write access
+  test("no unauthorized upload w. generateWriteSAS", function() {
+    var key = slugid.v4();
+    var expiry = new Date();
+    expiry.setMinutes(expiry.getMinutes() + 20);
+    var sas = blobstore.generateWriteSAS(key, {expiry: expiry});
+    assert(sas, "Failed to generate a signature");
+
+    // Make a new key and try it
+    key = slugid.v4();
+    var sas2 = blobstore.generateWriteSAS(key, {expiry: expiry});
+    sas.path = sas2.path;
+
+    // Create BlobUploader
+    var uploader = new BlobUploader(sas);
+    var block1 = slugid.v4();
+    var block2 = slugid.v4();
+
+    return uploader.putBlock(block1, '{"').then(function() {
+      assert(false, "This should have failed");
+    }, function(err) {
+      debug("Got expected error: %s", err);
+    });
+  });
+
+  // Test that signed get URLs work
+  test("createSignedGetUrl", function() {
+    var key = slugid.v4();
+    return blobstore.put(key, {message: "Hello"}).then(function() {
+      var expiry = new Date();
+      expiry.setMinutes(expiry.getMinutes() + 5);
+      var url = blobstore.createSignedGetUrl(key, {expiry: expiry});
+      return request
+                .get(url)
+                .end()
+                .then(function(res) {
+                  assert(res.ok, "Request failed");
+                  assert(res.body.message === 'Hello',
+                         "message didn't message");
+                });
     });
   });
 });

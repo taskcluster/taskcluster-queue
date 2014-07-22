@@ -1,8 +1,10 @@
-var azure   = require('azure');
-var _       = require('lodash');
-var Promise = require('promise');
-var debug   = require('debug')('queue:blobstore');
-
+var azure       = require('azure');
+var _           = require('lodash');
+var Promise     = require('promise');
+var debug       = require('debug')('queue:blobstore');
+var assert      = require('assert');
+var urljoin     = require('url-join');
+var querystring = require('querystring');
 
 /**
  * Create convenient azure blob storage wrapper.
@@ -16,8 +18,11 @@ var debug   = require('debug')('queue:blobstore');
  * }
  */
 var BlobStore = function(options) {
+  assert(options.container, "Container name must be given");
   this.container = options.container;
-  this.service = new azure.BlobService(
+  // Documentation for the BlobService object can be found here:
+  // http://dl.windowsazure.com/nodestoragedocs/index.html
+  this.service = azure.createBlobService(
     options.credentials.accountName,
     options.credentials.accountKey
   );
@@ -123,5 +128,46 @@ BlobStore.prototype.get = function(key, nullIfNotFound) {
       return accept(JSON.parse(result));
     });
   });
+};
+
+/** Generated Shared-Access-Signature for writing to a blob */
+BlobStore.prototype.generateWriteSAS = function(key, options) {
+  assert(options,                         "Options are required");
+  assert(options.expiry instanceof Date,  "options.expiry must be given");
+  // Set start of the signature to 15 min in the past
+  var start   = new Date();
+  start.setMinutes(start.getMinutes() - 15);
+  // Generate SAS
+  var sas = this.service.generateSharedAccessSignature(this.container, key, {
+    AccessPolicy: {
+      Start:        start,
+      Expiry:       options.expiry,
+      Permissions:  azure.Constants.BlobConstants.SharedAccessPermissions.WRITE
+    }
+  });
+  return _.pick(sas, 'baseUrl', 'path', 'queryString');
+};
+
+/** Create signed GET url */
+BlobStore.prototype.createSignedGetUrl = function(key, options) {
+  assert(options,                         "Options are required");
+  assert(options.expiry instanceof Date,  "options.expiry must be given");
+  // Set start of the signature to 15 min in the past
+  var start   = new Date();
+  start.setMinutes(start.getMinutes() - 15);
+  // Generate SAS
+  var sas = this.service.generateSharedAccessSignature(this.container, key, {
+    AccessPolicy: {
+      Start:        start,
+      Expiry:       options.expiry,
+      Permissions:  azure.Constants.BlobConstants.SharedAccessPermissions.READ
+    }
+  });
+  // Generate URL
+  return urljoin(
+    sas.baseUrl,
+    sas.path,
+    '?' + querystring.stringify(sas.queryString)
+  );
 };
 

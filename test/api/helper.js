@@ -54,12 +54,8 @@ exports.setup = function(options) {
     envs: [
       'aws_accessKeyId',
       'aws_secretAccessKey',
-      'azureBlob_accountUrl',
-      'azureBlob_accountName',
-      'azureBlob_accountKey',
-      'azureTable_accountUrl',
-      'azureTable_accountName',
-      'azureTable_accountKey',
+      'azure_accountName',
+      'azure_accountKey',
       'amqp_url'
     ],
     filename:     'taskcluster-queue'
@@ -67,8 +63,7 @@ exports.setup = function(options) {
 
   // Skip tests if no AWS credentials is configured
   if (!cfg.get('aws:secretAccessKey') ||
-      !cfg.get('azureBlob:accountKey') ||
-      !cfg.get('azureTable:accountKey') ||
+      !cfg.get('azure:accountKey') ||
       !cfg.get('amqp:url')) {
     console.log("Skip tests for " + options.title +
                 " due to missing credentials!");
