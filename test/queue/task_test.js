@@ -289,6 +289,51 @@ suite('queue/task', function() {
   });
 
 
-
-
+  // test that we can move files
+  test("moveTaskFromDatabase", function() {
+    var taskId = slugid.v4();
+    var storedTask = false;
+    return Task.dropTables().then(function() {
+      return Task.ensureTables();
+    }).then(function() {
+      var deadline = new Date();
+      deadline.setDate(deadline.getDate() - 2);
+      return Task.create({
+        version:        1,
+        taskId:         taskId,
+        provisionerId:  'provisioner-id',
+        workerType:     'worker-type',
+        priority:       5.4,
+        created:        new Date().toJSON(),
+        deadline:       deadline.toJSON(),
+        retriesLeft:    5,
+        routing:        "my.routing.key",
+        owner:          "jonasfj@mozilla.com",
+        runs:           [{
+          runId:          0,
+          state:          'completed',
+          reasonCreated:  'new-task',
+          reaonReasolve:  'completed',
+          success:        true,
+          workerGroup:    'mygroup',
+          workerId:       'myid',
+          scheduled:      new Date(),
+          started:        new Date(),
+          takenUntil:     new Date().toJSON()
+        }]
+      });
+    }).then(function() {
+      return Task.moveTaskFromDatabase({
+        store: function(task) {
+          storedTask = true;
+          assert(task.taskId == taskId, "Got right taskId");
+        }
+      }).then(function() {
+        assert(storedTask, "Should have stored the task");
+        return Task.load(taskId);
+      }).then(function(task) {
+        assert(task === null, "Task should not be in database anymore");
+      });
+    });
+  });
 });

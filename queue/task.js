@@ -970,7 +970,47 @@ Task.expireClaimsWithoutRetries = transacting(function(knex) {
  * status structure for storage.
  */
 Task.moveTaskFromDatabase = transacting(function(options, knex) {
+  var that = this;
 
+  // Find yesterday
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Find tasks to move (and select them for update)
+  return knex
+    .select('taskId')
+    .forUpdate()
+    .from('tasks')
+    .where('deadline', '<', yesterday)
+    .then(function(tasks) {
+      return Promise.all(tasks.map(function(task) {
+        // Load each task
+        return that.load(slugid.encode(task.taskId), knex).then(function(task) {
+          assert(task instanceof that, "Task must exist");
+          task.runs.forEach(function(run) {
+            assert(run.state == 'failed' || run.state == 'completed',
+                   "Expected task to be resolved past its deadline");
+          });
+          // Store the task in permanent storage
+          return options.store(task);
+        }).then(function() {
+          // Delete from database
+          return knex
+            .del()
+            .from('tasks')
+            .where({
+              taskId:       task.taskId
+            })
+            .andWhere('deadline', '<', yesterday)
+            .then(function(count) {
+              if (count === 0) {
+                debug("Failed to delete task %s in moveTaskFromDatabase",
+                      slugid.encode(task.taskId));
+              }
+            });
+        });
+      }));
+    });
 });
 
 /** Return task status structure */
