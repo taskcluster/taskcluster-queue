@@ -57,7 +57,8 @@ api.declare({
   title:      "Create new task",
   description: [
     "Create a new task, this is an **idempotent** operation, so repeat it if",
-    "you get an internal server error."
+    "you get an internal server error.",
+    "Deadline is at most 7 days into the future"
   ].join('\n')
 }, function(req, res) {
   var ctx = this;
@@ -70,6 +71,18 @@ api.declare({
     workerType:     taskDef.workerId
   })) {
     return;
+  }
+
+  // Validate that deadline is less than a week from now
+  var aWeekFromNow = new Date();
+  aWeekFromNow.setDate(aWeekFromNow.getDate() + 8);
+  if (new Date(taskDef.deadline) > aWeekFromNow) {
+    return res.json(400, {
+      message:    "Deadline cannot be more than 1 week into the future",
+      error: {
+        deadline: taskDef.deadline
+      }
+    });
   }
 
   // Conditional put to azure blob storage
@@ -163,6 +176,18 @@ api.declare({
     workerType:     taskDef.workerId
   })) {
     return;
+  }
+
+  // Validate that deadline is less than a week from now
+  var aWeekFromNow = new Date();
+  aWeekFromNow.setDate(aWeekFromNow.getDate() + 8);
+  if (new Date(taskDef.deadline) > aWeekFromNow) {
+    return res.json(400, {
+      message:    "Deadline cannot be more than 1 week into the future",
+      error: {
+        deadline: taskDef.deadline
+      }
+    });
   }
 
   // Conditional put to azure blob storage

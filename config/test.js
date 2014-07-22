@@ -3,10 +3,12 @@ module.exports = {
     publishMetaData:              'false',
     reaper: {
       // Let's not wait too long for reaping during tests
-      interval:                   10,
+      interval:                   5,
       // Don't want to see error
       errorLimit:                 0
     },
+    // For testing purposes we let claims expire very fast
+    claimTimeout:                 30,
     artifactBucket:               'test-bucket-for-any-garbage',
     artifactContainer:            'artifacts',
     taskContainer:                'tasks'

@@ -561,7 +561,7 @@ Task.reclaimTaskRun = transacting(function(taskId, runId, options, knex) {
           }
           return {
             code:     409,
-            message:  "Run not claimed, or claimed by another worker"
+            message:  "Run not running, or claimed by another worker"
           };
         });
     }
@@ -958,6 +958,20 @@ Task.expireClaimsWithoutRetries = transacting(function(knex) {
   });
 });
 
+/**
+ * Move tasks 24 hours past their deadline to permanent storage.
+ *
+ * options:
+ * {
+ *   store: function(task) { // store task where it can be fetched later
+ * }
+ *
+ * Note, it's strongly recommended to use `Task.serialize` for serializing task
+ * status structure for storage.
+ */
+Task.moveTaskFromDatabase = transacting(function(options, knex) {
+
+});
 
 /** Return task status structure */
 Task.prototype.status = function() {
