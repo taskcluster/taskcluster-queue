@@ -171,11 +171,12 @@ api.declare({
   var taskId  = req.params.taskId;
   var taskDef = req.body;
 
-  // Authenticate request by providing parameters
+  // Authenticate request by providing parameters, and then validate that the
+  // requester satisfies all the scopes assigned to the task
   if(!req.satisfies({
     provisionerId:  taskDef.provisionerId,
     workerType:     taskDef.workerId
-  })) {
+  }) || ! req.satisfies([taskDef.scopes])) {
     return;
   }
 
@@ -654,7 +655,7 @@ api.declare({
   scopes:     ['queue:post:rerun:<provisionerId>/<workerType>'],
   deferAuth:  true,
   input:      undefined, // No input accepted
-  output:     SCHEMA_PREFIX_CONST + 'task-rerun-response.json#',
+  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
   title:      "Rerun a Resolved Task",
   description: [
     "This method _reruns_ a previously resolved task, even if it was",
