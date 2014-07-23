@@ -24,7 +24,7 @@
     "superagent-promise":               "0.1.2",
     "slugid":                           "1.0.1",
     "superagent-hawk":                  "0.0.3",
-    "taskcluster-base":                 "0.2.5",
+    "taskcluster-base":                 "0.2.6",
     "azure":                            "0.9.12",
     "taskcluster-client":               "0.7.3",
     "xmlbuilder":                       "2.3.0"

@@ -976,6 +976,7 @@ Task.moveTaskFromDatabase = transacting(function(options, knex) {
   var yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
+  var count = 0;
   // Find tasks to move (and select them for update)
   return knex
     .select('taskId')
@@ -992,6 +993,7 @@ Task.moveTaskFromDatabase = transacting(function(options, knex) {
                    "Expected task to be resolved past its deadline");
           });
           // Store the task in permanent storage
+          count += 1;
           return options.store(task);
         }).then(function() {
           // Delete from database
@@ -1009,7 +1011,9 @@ Task.moveTaskFromDatabase = transacting(function(options, knex) {
               }
             });
         });
-      }));
+      })).then(function() {
+        return count;
+      });
     });
 });
 

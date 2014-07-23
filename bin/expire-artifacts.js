@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-var debug       = require('debug')('queue:bin:retire-tasks');
+var debug       = require('debug')('queue:bin:expire-artifacts');
 var base        = require('taskcluster-base');
 var path        = require('path');
 var Promise     = require('promise');
-var TaskModule  = require('../queue/task.js')
 var _           = require('lodash');
 var BlobStore   = require('../queue/blobstore');
+var Bucket      = require('../queue/bucket');
+var data        = require('../queue/data');
 
-/** Launch retire-tasks */
+/** Launch expire-artifacts */
 var launch = function(profile) {
   debug("Launching with profile: %s", profile);
 
@@ -16,62 +17,64 @@ var launch = function(profile) {
     defaults:     require('../config/defaults'),
     profile:      require('../config/' + profile),
     envs: [
-      'database_connectionString',
+      'aws_accessKeyId',
+      'aws_secretAccessKey',
       'azure_accountName',
       'azure_accountKey'
     ],
     filename:     'taskcluster-queue'
   });
 
-  // Create taskstore
-  var taskstore     = new BlobStore({
-    container:          cfg.get('queue:taskContainer'),
+  // Create artifactStore
+  var artifactStore = new BlobStore({
+    container:          cfg.get('queue:artifactContainer'),
     credentials:        cfg.get('azure')
   });
 
-  // Create Task subclass wrapping database access
-  var Task = TaskModule.configure({
-    connectionString:   cfg.get('database:connectionString')
+  // Create artifact bucket
+  var artifactBucket = new Bucket({
+    bucket:             cfg.get('queue:artifactBucket'),
+    credentials:        cfg.get('aws')
+  });
+
+  // Create artifacts table
+  var Artifact = data.Artifact.configure({
+    tableName:          cfg.get('queue:artifactTableName'),
+    credentials:        cfg.get('azure')
   });
 
   debug("Waiting for resources to be created");
   return Promise.all(
-    taskstore.createContainer(),
-    Task.ensureTables()
+    artifactStore.createContainer(),
+    Artifact.createTable()
   ).then(function() {
-    // Move old tasks from database
-    return Task.moveTaskFromDatabase({
-      store: function(task) {
-        debug("Move %s to blob storage", task.taskId);
-        return taskstore.put(task.taskId + '/status.json', task.serialize());
-      }
+    Artifact.expireEntities({
+      artifactBucket:   artifactBucket,
+      artifactStore:    artifactStore
     });
   }).then(function(count) {
-    debug("Retired %s old tasks to blob storage", count);
+    debug("Expired %s artifacts", count);
 
     // Notify parent process, so that this worker can run using LocalApp
     base.app.notifyLocalAppInParentProcess();
-
-    // Shutdown
-    return Task.close();
   });
 };
 
-// If retire-tasks.js is executed run launch
+// If expire-artifacts.js is executed run launch
 if (!module.parent) {
   // Find configuration profile
   var profile = process.argv[2];
   if (!profile) {
-    console.log("Usage: retire-tasks.js [profile]")
+    console.log("Usage: expire-artifacts.js [profile]")
     console.error("ERROR: No configuration profile is provided");
   }
   // Launch with given profile
   launch(profile).then(function() {
-    debug("Launched retire-tasks successfully");
+    debug("Launched expire-artifacts successfully");
   }).catch(function(err) {
-    debug("Failed to start retire-tasks, err: %s, as JSON: %j",
-           err, err, err.stack);
-    // If we didn't launch the retire-artifacts we should crash
+    debug("Failed to start expire-artifacts, err: %s, as JSON: %j",
+          err, err, err.stack);
+    // If we didn't launch the expire-artifacts we should crash
     process.exit(1);
   });
 }
