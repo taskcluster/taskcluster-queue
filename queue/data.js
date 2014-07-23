@@ -76,7 +76,8 @@ Artifact.list = function(taskId, runId) {
  * Returns a promise that all expired artifacts have been deleted
  */
 Artifact.expireEntities = function(options) {
-  return base.Entity.QueryProperty(
+  var count = 0;
+  return base.Entity.queryProperty.call(this,
     'expires', '<=', new Date(),
     function(artifact) {
       // Promise that we're ready to delete the artifact
@@ -89,12 +90,17 @@ Artifact.expireEntities = function(options) {
 
       // Handle azure artifacts
       if (artifact.kind === 'azure') {
-
+        ready = options.artifactStore.deleteBlob(artifact.path, true);
       }
 
+      // When resources are deleted, we delete the reference from table storage
       return ready.then(function() {
-        return artifact.remove();
+        return artifact.remove().then(function() {
+          count += 1;
+        });
       });
+  }).then(function() {
+    return count;
   });
 };
 
