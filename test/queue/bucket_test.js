@@ -12,6 +12,10 @@ suite('queue/bucket_test', function() {
   var cfg = base.config({
     defaults:     require('../../config/defaults'),
     profile:      require('../../config/' + 'test'),
+    envs: [
+      'aws_accessKeyId',
+      'aws_secretAccessKey',
+    ],
     filename:     'taskcluster-queue'
   });
 
