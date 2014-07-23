@@ -15,6 +15,10 @@ suite('queue/tasks_store', function() {
   var cfg = base.config({
     defaults:     require('../../config/defaults'),
     profile:      require('../../config/' + 'test'),
+    envs: [
+      'azure_accountName',
+      'azure_accountKey',
+    ],
     filename:     'taskcluster-queue'
   });
 
