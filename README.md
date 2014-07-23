@@ -2,8 +2,6 @@
 
 This the central queue coordinating execution of tasks in the TaskCluster setup.
 
-**Warning:** This is still very much a prototype.
-
 Project Structure
 -----------------
 _The following itemization of folders outlines how this project is structured._
@@ -23,7 +21,8 @@ _The following itemization of folders outlines how this project is structured._
 
 Deployment
 ----------
-Code is deployed from master to heroku whenever code hits master (and it passes travis ci)
+Code is deployed from master to heroku whenever code hits master
+(and it passes travis ci)
 
 
 AWS Access Policies Required
