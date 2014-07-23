@@ -88,6 +88,13 @@ Bucket.prototype.createGetUrl = function(prefix, options) {
   });
 };
 
+/** Delete a object */
+Bucket.prototype.deleteObject = function(prefix) {
+  assert(prefix, "prefix must be provided");
+  return this.s3.deleteObject({
+    Key:  prefix
+  }).promise();
+};
 
 /** Delete a list of objects */
 Bucket.prototype.deleteObjects = function(prefixes) {

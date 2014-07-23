@@ -64,5 +64,39 @@ Artifact.list = function(taskId, runId) {
   return base.Entity.queryPartitionKey.call(this, taskId + '/' + runId);
 };
 
+/**
+ * Expire artifacts that are past their expiration.
+ *
+ * options:
+ * {
+ *   artifactBucket:     // Bucket for S3 artifact storage
+ *   artifactStore:      // BlobStore for Azure blob artifact storage
+ * }
+ *
+ * Returns a promise that all expired artifacts have been deleted
+ */
+Artifact.expireEntities = function(options) {
+  return base.Entity.QueryProperty(
+    'expires', '<=', new Date(),
+    function(artifact) {
+      // Promise that we're ready to delete the artifact
+      var ready = Promise.resolve(null);
+
+      // Handle S3 artifacts
+      if (artifact.kind === 's3') {
+        ready = options.artifactBucket.deleteObject(artifact.prefix);
+      }
+
+      // Handle azure artifacts
+      if (artifact.kind === 'azure') {
+
+      }
+
+      return ready.then(function() {
+        return artifact.remove();
+      });
+  });
+};
+
 // Export Artifact
 exports.Artifact = Artifact;

@@ -171,3 +171,17 @@ BlobStore.prototype.createSignedGetUrl = function(key, options) {
   );
 };
 
+/** Delete a blob on azure blob storage */
+BlobStore.prototype.deleteBlob = function(key, ignoreIfNotExists) {
+  var that = this;
+  return new Promise(function(accept, reject) {
+    that.service.deleteBlob(that.container, key, function(err, result) {
+      if (err) {
+        if (!ignoreIfNotExists || err.code !== 'BlobNotFound') {
+          return reject(err);
+        }
+      }
+      return accept();
+    });
+  });
+};

@@ -19,7 +19,7 @@ suite('queue/tasks_store', function() {
   });
 
   // Check that we have an account
-  if (!cfg.get('azureBlob:accountKey')) {
+  if (!cfg.get('azure:accountKey')) {
     console.log("\nWARNING:");
     console.log("Skipping 'blobstore' tests, missing config file: " +
                 "taskcluster-queue.conf.json");
@@ -27,8 +27,8 @@ suite('queue/tasks_store', function() {
   }
 
   var blobstore = new BlobStore({
-    container:    'test-container',
-    credentials:  cfg.get('azureBlob')
+    container:    cfg.get('queue:artifactContainer'),
+    credentials:  cfg.get('azure')
   });
 
   // Create container
@@ -182,5 +182,20 @@ suite('queue/tasks_store', function() {
                          "message didn't message");
                 });
     });
+  });
+
+  // Test that we can delete a blob
+  test('deleteBlob (blob exists)', function() {
+    var key  = slugid.v4();
+    var data = {message: "Hello World", list: [1, 2, 3]};
+    return blobstore.put(key, data).then(function() {
+      return blobstore.deleteBlob(key);
+    });
+  });
+
+  // Test that we can delete a blob that doesn't exist
+  test('deleteBlob (blob does not exists)', function() {
+    var key  = slugid.v4();
+    return blobstore.deleteBlob(key, true);
   });
 });
