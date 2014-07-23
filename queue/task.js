@@ -608,7 +608,6 @@ Task.claimWork = transacting(function(options, knex) {
         };
       }
       var row = rows[0];
-      console.log(row);
       // Claim the run and be done with it
       return that.claimTaskRun(
         slugid.encode(row.taskId),

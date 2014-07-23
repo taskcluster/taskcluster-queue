@@ -14,18 +14,18 @@ suite('Query tasks', function() {
 
   // Use the same task definition for everything
   var taskDef = {
-    version:          '0.2.0',
+    version:          1,
     provisionerId:    'my-provisioner',
     workerType:       'my-worker',
     // let's just test a large routing key too, 128 chars please :)
     routing:          "jonasfj-test.what-a-hack.I suppose we might " +
                       "actually need it when we add taskgraph scheduler id, " +
                       "taskgraphId, task graph routing",
-    timeout:          30,
     retries:          5,
     priority:         1,
     created:          created.toJSON(),
     deadline:         deadline.toJSON(),
+    scopes:           [],
     payload:          {},
     metadata: {
       name:           "Unit testing task",

@@ -1,15 +1,16 @@
 #!/bin/bash -ve
 # USAGE: Run this file using `npm test` (must run from repository root)
 
-mocha                               \
-  test/validate_test.js             \
-  test/queue/tasks_test.js          \
-  test/queue/taskstore_test.js      \
-  test/api/artifact_urls.js         \
-  test/api/claim_timeout.js         \
-  test/api/claim.js                 \
-  test/api/define_schedule_task.js  \
-  test/api/pending_tasks.js         \
-  test/api/post_task.js             \
-  test/api/rerun_test.js            \
+mocha                                 \
+  test/validate_test.js               \
+  test/queue/task_test.js             \
+  test/queue/bucket_test.js           \
+  test/queue/blobstore_test.js        \
+  test/api/artifact_test.js           \
+  test/api/claimtask_test.js          \
+  test/api/createtask_test.js         \
+  test/api/helper.js                  \
+  test/api/querytasks_test.js         \
+  test/api/reaper_test.js             \
+  test/api/reruntask_test.js          \
   ;

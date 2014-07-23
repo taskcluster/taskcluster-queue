@@ -23,15 +23,15 @@ suite('Post artifacts', function() {
 
   // Use the same task definition for everything
   var taskDef = {
-    version:          '0.2.0',
+    version:          1,
     provisionerId:    'my-provisioner',
     workerType:       'my-worker',
     routing:          "jonasfj-test.what-a-hack",
-    timeout:          30,
     retries:          5,
     priority:         1,
     created:          created.toJSON(),
     deadline:         deadline.toJSON(),
+    scopes:           [],
     payload:          {},
     metadata: {
       name:           "Unit testing task",
@@ -45,7 +45,7 @@ suite('Post artifacts', function() {
   };
 
   test("Post S3 artifact", function() {
-    this.timeout(5 * 120000);
+    this.timeout(45000);
 
     var taskId = slugid.v4();
     debug("### Creating task");

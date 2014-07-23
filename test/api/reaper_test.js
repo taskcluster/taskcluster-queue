@@ -16,16 +16,16 @@ suite('Reaper tests', function() {
     deadline.setSeconds(deadline.getSeconds() + timeToDeadline);
     // Use the same task definition for everything
     return {
-      version:          '0.2.0',
+      version:          1,
       provisionerId:    'my-provisioner',
       workerType:       'my-worker',
       // let's just test a large routing key too, 128 chars please :)
       routing:          "jonasfj-test.what-a-hack",
-      timeout:          20,
       retries:          retries,
       priority:         1,
       created:          created.toJSON(),
       deadline:         deadline.toJSON(),
+      scopes:           [],
       payload:          {},
       metadata: {
         name:           "Unit testing task",

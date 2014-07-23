@@ -65,11 +65,12 @@ api.declare({
   var taskId  = req.params.taskId;
   var taskDef = req.body;
 
-  // Authenticate request by providing parameters
+  // Authenticate request by providing parameters, and then validate that the
+  // requester satisfies all the scopes assigned to the task
   if(!req.satisfies({
     provisionerId:  taskDef.provisionerId,
     workerType:     taskDef.workerId
-  })) {
+  }) || ! req.satisfies([taskDef.scopes])) {
     return;
   }
 

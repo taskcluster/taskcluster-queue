@@ -91,7 +91,7 @@ var commonRoutingKey = [
 
 /** Build an AMQP compatible message from a message */
 var commonMessageBuilder = function(message) {
-  message.version = '0.2.0';
+  message.version = 1;
   return message;
 };
 
