@@ -48,9 +48,11 @@ var launch = function(profile) {
     artifactStore.createContainer(),
     Artifact.createTable()
   ).then(function() {
-    Artifact.expireEntities({
+    debug("Expiring artifacts at: %s", new Date());
+    return Artifact.expireEntities({
       artifactBucket:   artifactBucket,
-      artifactStore:    artifactStore
+      artifactStore:    artifactStore,
+      now:              new Date()
     });
   }).then(function(count) {
     debug("Expired %s artifacts", count);

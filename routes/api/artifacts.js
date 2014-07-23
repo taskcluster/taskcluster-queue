@@ -38,7 +38,7 @@ api.declare({
   // Find expiration date
   var expires = new Date(input.expires);
 
-  // Validate expires it isn't in the future
+  // Validate expires it is in the future
   var past = new Date();
   past.setMinutes(past.getMinutes() - 15);
   if (expires < past) {

@@ -1,6 +1,7 @@
 var base    = require('taskcluster-base');
 var debug   = require('debug')('queue:data');
 var assert  = require('assert');
+var Promise = require('promise');
 
 /** Azure table storage item for tracking an artifact */
 var Artifact = base.Entity.configure({
@@ -71,30 +72,34 @@ Artifact.list = function(taskId, runId) {
  * {
  *   artifactBucket:     // Bucket for S3 artifact storage
  *   artifactStore:      // BlobStore for Azure blob artifact storage
+ *   now:                // Date object to expire from
  * }
  *
  * Returns a promise that all expired artifacts have been deleted
  */
 Artifact.expireEntities = function(options) {
+  assert(options.now instanceof Date, "now must be given as option");
   var count = 0;
   return base.Entity.queryProperty.call(this,
-    'expires', '<=', new Date(),
+    'expires', '<=', options.now,
     function(artifact) {
       // Promise that we're ready to delete the artifact
       var ready = Promise.resolve(null);
 
       // Handle S3 artifacts
       if (artifact.kind === 's3') {
-        ready = options.artifactBucket.deleteObject(artifact.prefix);
+        debug("Deleting artifact from S3 at: %s", artifact.details.prefix);
+        ready = options.artifactBucket.deleteObject(artifact.details.prefix);
       }
 
       // Handle azure artifacts
       if (artifact.kind === 'azure') {
-        ready = options.artifactStore.deleteBlob(artifact.path, true);
+        ready = options.artifactStore.deleteBlob(artifact.details.path, true);
       }
 
       // When resources are deleted, we delete the reference from table storage
       return ready.then(function() {
+        debug("Removing artifact: %s for %s", artifact.name, artifact.taskId);
         return artifact.remove().then(function() {
           count += 1;
         });
