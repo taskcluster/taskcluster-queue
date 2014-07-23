@@ -45,7 +45,7 @@ suite('Post artifacts', function() {
   };
 
   test("Post S3 artifact", function() {
-    this.timeout(45000);
+    this.timeout(120 * 1000);
 
     var taskId = slugid.v4();
     debug("### Creating task");
@@ -150,7 +150,7 @@ suite('Post artifacts', function() {
   });
 
   test("Post Azure artifact", function() {
-    this.timeout(45000);
+    this.timeout(120 * 1000);
     var taskId = slugid.v4();
     debug("### Creating task");
     return subject.queue.createTask(taskId, taskDef).then(function() {
@@ -228,7 +228,7 @@ suite('Post artifacts', function() {
   });
 
   test("Post error artifact", function() {
-    this.timeout(45000);
+    this.timeout(120 * 1000);
     var taskId = slugid.v4();
     debug("### Creating task");
     return subject.queue.createTask(taskId, taskDef).then(function() {
@@ -298,7 +298,7 @@ suite('Post artifacts', function() {
   });
 
   test("Post redirect artifact", function() {
-    this.timeout(45000);
+    this.timeout(120 * 1000);
     var taskId = slugid.v4();
     debug("### Creating task");
     return subject.queue.createTask(taskId, taskDef).then(function() {
