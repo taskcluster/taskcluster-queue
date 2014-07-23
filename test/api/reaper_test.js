@@ -40,7 +40,7 @@ suite('Reaper tests', function() {
   };
 
   test("Expire claim with retry", function() {
-    this.timeout(60 * 1000);
+    this.timeout(120 * 1000);
     var taskId = slugid.v4();
     var task = makeTask(120, 5);
     return subject.queue.createTask(taskId, task).then(function() {
@@ -67,7 +67,7 @@ suite('Reaper tests', function() {
   });
 
   test("Expire claim without retry", function() {
-    this.timeout(60 * 1000);
+    this.timeout(120 * 1000);
     var taskId = slugid.v4();
     var task = makeTask(120, 0);
     return subject.queue.createTask(taskId, task).then(function() {
@@ -90,7 +90,7 @@ suite('Reaper tests', function() {
   });
 
   test("Expire deadline", function() {
-    this.timeout(60 * 1000);
+    this.timeout(120 * 1000);
     var taskId = slugid.v4();
 
     var task = makeTask(10, 5);

@@ -1,6 +1,6 @@
 env:
   global:
-  - DEBUG=*
+  - DEBUG='* -superagent -express:* -base:validator -mocha:*'
   - secure: C9e1VB9QCwT6hKk/r5l5/vg301IzmvlOZgVsJA+qUH92IOc+FNeN9wZ0pCo9I06cFmHzwaTzyGM49n3iTihiOjrFykCTrxdXd5p24le9JxSv0DS4w7K1HEPVdN3QNoy6n+08vU7H3esMhcOYX9s3sBh3QYEgPuS05iPu0Qq4WFY=
   - secure: eDLMXb+zhTGXbD8CNtlJ4qPQ1RQqysa/2xLKx3PShELLan0sUOUF9c+bRXdHCfuKZeLSgFxMczYT0sU6ELaWks685vzWeKuDoPZAJu/k+hFH/hI7HJnrKsLh2LbSnvaNkjwurliIAVqimFtmwF+HefNy15KNpIvtWBTMOgGUgnU=
   - secure: tA9x85PZyAQNV0dOb+AArkzpBYIguwNs0F/Sv8/UNSq6ZHgyenOuSG9OFYDZtax4ewgQNrqPTKtaPC+UY/ABC0XhjcG9/8HU8aA+BdUsko26hL92Pn2wU92aio9KdSGck2ivff7VMxzkgqDDfKWSm7Y4zdPbXMgHIkCNUo6vgKI=
