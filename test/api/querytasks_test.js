@@ -5,7 +5,7 @@ suite('Query tasks', function() {
   var _           = require('lodash');
   var Promise     = require('promise');
   var helper      = require('./helper');
-  var subject     = helper.setup({title: "create task"});
+  var subject     = helper.setup({title: "Query task"});
 
   // Create datetime for created and deadline as 3 days later
   var created = new Date();

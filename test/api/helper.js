@@ -48,7 +48,7 @@ exports.setup = function(options) {
   var subject = {};
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = subject.cfg = base.config({
     defaults:     require('../../config/defaults'),
     profile:      require('../../config/' + options.profile),
     envs: [

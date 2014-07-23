@@ -9,7 +9,12 @@ suite('Post artifacts', function() {
   var urljoin       = require('url-join');
   var BlobUploader  = require('../queue/azure-blob-uploader-sas');
   var helper        = require('./helper');
-  var subject       = helper.setup({title: "create task"});
+  var Bucket        = require('../../queue/bucket');
+  var BlobStore     = require('../../queue/blobstore');
+  var data          = require('../../queue/data');
+  var subject       = helper.setup({
+    title:    "Post artifacts",
+  });
 
   // Create datetime for created and deadline as 3 days later
   var created = new Date();
@@ -40,7 +45,7 @@ suite('Post artifacts', function() {
   };
 
   test("Post S3 artifact", function() {
-    this.timeout(45000);
+    this.timeout(5 * 120000);
 
     var taskId = slugid.v4();
     debug("### Creating task");
@@ -110,6 +115,37 @@ suite('Post artifacts', function() {
       return subject.queue.getLatestArtifacts(taskId);
     }).then(function(result) {
       assert(result.artifacts.length == 1, "Wrong length");
+    }).then(function() {
+      debug("### Expire artifacts (using future date)");
+      var future = new Date();
+      future.setDate(future.getDate() + 5);
+
+      // Create artifactStore
+      var artifactStore = new BlobStore({
+        container:          subject.cfg.get('queue:artifactContainer'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Create artifact bucket
+      var artifactBucket = new Bucket({
+        bucket:             subject.cfg.get('queue:artifactBucket'),
+        credentials:        subject.cfg.get('aws')
+      });
+
+      // Create artifacts table
+      var Artifact = data.Artifact.configure({
+        tableName:          subject.cfg.get('queue:artifactTableName'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Expire artifacts
+      return Artifact.expireEntities({
+        artifactBucket:   artifactBucket,
+        artifactStore:    artifactStore,
+        now:              future
+      }).then(function(count) {
+        assert(count > 0, "Something should have been expired");
+      });
     });
   });
 
@@ -157,6 +193,37 @@ suite('Post artifacts', function() {
         assert(res.ok, "Request failed");
         assert(res.body.block1_says === 'Hello world', "Got wrong message");
       });
+    }).then(function() {
+      debug("### Expire artifacts (using future date)");
+      var future = new Date();
+      future.setDate(future.getDate() + 5);
+
+      // Create artifactStore
+      var artifactStore = new BlobStore({
+        container:          subject.cfg.get('queue:artifactContainer'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Create artifact bucket
+      var artifactBucket = new Bucket({
+        bucket:             subject.cfg.get('queue:artifactBucket'),
+        credentials:        subject.cfg.get('aws')
+      });
+
+      // Create artifacts table
+      var Artifact = data.Artifact.configure({
+        tableName:          subject.cfg.get('queue:artifactTableName'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Expire artifacts
+      return Artifact.expireEntities({
+        artifactBucket:   artifactBucket,
+        artifactStore:    artifactStore,
+        now:              future
+      }).then(function(count) {
+        assert(count > 0, "Something should have been expired");
+      });
     });
   });
 
@@ -196,6 +263,37 @@ suite('Post artifacts', function() {
         assert(res.body.message === 'Some user-defined message',
                "Got wrong message");
       });
+    }).then(function() {
+      debug("### Expire artifacts (using future date)");
+      var future = new Date();
+      future.setDate(future.getDate() + 5);
+
+      // Create artifactStore
+      var artifactStore = new BlobStore({
+        container:          subject.cfg.get('queue:artifactContainer'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Create artifact bucket
+      var artifactBucket = new Bucket({
+        bucket:             subject.cfg.get('queue:artifactBucket'),
+        credentials:        subject.cfg.get('aws')
+      });
+
+      // Create artifacts table
+      var Artifact = data.Artifact.configure({
+        tableName:          subject.cfg.get('queue:artifactTableName'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Expire artifacts
+      return Artifact.expireEntities({
+        artifactBucket:   artifactBucket,
+        artifactStore:    artifactStore,
+        now:              future
+      }).then(function(count) {
+        assert(count > 0, "Something should have been expired");
+      });
     });
   });
 
@@ -232,6 +330,38 @@ suite('Post artifacts', function() {
                 .end().then(function(res) {
         assert(res.text, "Didn't get a text from google.com?");
       });
+    }).then(function() {
+      debug("### Expire artifacts (using future date)");
+      var future = new Date();
+      future.setDate(future.getDate() + 5);
+
+      // Create artifactStore
+      var artifactStore = new BlobStore({
+        container:          subject.cfg.get('queue:artifactContainer'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Create artifact bucket
+      var artifactBucket = new Bucket({
+        bucket:             subject.cfg.get('queue:artifactBucket'),
+        credentials:        subject.cfg.get('aws')
+      });
+
+      // Create artifacts table
+      var Artifact = data.Artifact.configure({
+        tableName:          subject.cfg.get('queue:artifactTableName'),
+        credentials:        subject.cfg.get('azure')
+      });
+
+      // Expire artifacts
+      return Artifact.expireEntities({
+        artifactBucket:   artifactBucket,
+        artifactStore:    artifactStore,
+        now:              future
+      }).then(function(count) {
+        assert(count > 0, "Something should have been expired");
+      });
     });
   });
+
 });
