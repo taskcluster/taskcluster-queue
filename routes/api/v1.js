@@ -3,7 +3,6 @@ var debug     = require('debug')('routes:api:v1');
 var slugid    = require('slugid');
 var assert    = require('assert');
 var _         = require('lodash');
-
 var base      = require('taskcluster-base');
 
 // Common schema prefix
