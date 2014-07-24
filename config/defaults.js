@@ -10,7 +10,7 @@ module.exports = {
     // Settings for task reaper, note that this must be started as a separate
     // process bin/reaper.js run the reaper
     reaper: {
-      // Timeóut between dealing with timed tasks
+      // Timeout between dealing with timed tasks
       interval:                   180,
 
       // Number of times reaping is allowed to fail in a row, before the process
