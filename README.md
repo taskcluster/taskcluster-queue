@@ -15,8 +15,6 @@ _The following itemization of folders outlines how this project is structured._
     S3 files, requests and responses should be validated against.
  * `tests/`, automated tests using `nodeunit`, launched with `node tests` so
    that we can stick in other test frameworks should we ever need it.
- * `utils/`, various helpful utilities, monkey-patches, etc. that are useful,
-   but not exactly query specific.
 
 
 Deployment
@@ -24,7 +22,17 @@ Deployment
 Code is deployed from master to heroku whenever code hits master
 (and it passes travis ci)
 
+The following processes are designed to run constantly:
 
+ * `./bin/server.js production`
+ * `./bin/reaper.js production`
+
+With the following processes running as cron jobs on daily basis:
+
+ * `./bin/expire-artifacts.js production`
+ * `./bin/retire-tasks.js production`
+
+On heroku these are configured using the scheduler.
 
 
 AWS Access Policies Required
