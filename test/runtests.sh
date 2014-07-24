@@ -13,4 +13,5 @@ mocha                                 \
   test/api/querytasks_test.js         \
   test/api/reaper_test.js             \
   test/api/reruntask_test.js          \
+  test/api/gettask_test.js            \
   ;
