@@ -1,10 +1,10 @@
 env:
   global:
   - DEBUG='* -superagent -express:* -base:validator -mocha:*'
-  - secure: C9e1VB9QCwT6hKk/r5l5/vg301IzmvlOZgVsJA+qUH92IOc+FNeN9wZ0pCo9I06cFmHzwaTzyGM49n3iTihiOjrFykCTrxdXd5p24le9JxSv0DS4w7K1HEPVdN3QNoy6n+08vU7H3esMhcOYX9s3sBh3QYEgPuS05iPu0Qq4WFY=
-  - secure: eDLMXb+zhTGXbD8CNtlJ4qPQ1RQqysa/2xLKx3PShELLan0sUOUF9c+bRXdHCfuKZeLSgFxMczYT0sU6ELaWks685vzWeKuDoPZAJu/k+hFH/hI7HJnrKsLh2LbSnvaNkjwurliIAVqimFtmwF+HefNy15KNpIvtWBTMOgGUgnU=
-  - secure: tA9x85PZyAQNV0dOb+AArkzpBYIguwNs0F/Sv8/UNSq6ZHgyenOuSG9OFYDZtax4ewgQNrqPTKtaPC+UY/ABC0XhjcG9/8HU8aA+BdUsko26hL92Pn2wU92aio9KdSGck2ivff7VMxzkgqDDfKWSm7Y4zdPbXMgHIkCNUo6vgKI=
-  - secure: RXIYqfcomDy9gcLOvcI8k3HlTSd8RLGZaPX40TFG4Sz1PXP4xo0pcu2rzqN/rOKUdkOUStc9o8AczwYCxr9EJ/2ALJex151OHiqENxiaEw5ZQl50NcxVF7q/EUsVqL4lvG/KD+PXoruGN2wwfGYH7/4v0iaZ0um7xP19gNzljCw=
+  - secure: e7gsPPC4fJJSrLn2nZ0v2/uMbP4q2Xukw1zVvPsS3JbVG1qRmTr7BeTA/v5ANbUf3InYfv5PzVZmltlbQeM8FSLaSeiH1fhdtHHUbWM8pC31RshcKJa5VHOSRI3CyO5+vcysEuM2ula76gPXTi2wNdfNz0oKIqDwZ4ijzfZYe+g=
+  - secure: KmPgLHNCupDQ2SL1ISDgVxxzBO2Ij494+C8ctscZMutI1e55qhqYwbEkukmmHcuNja8uQ6bcAhHMGWsY4hh3rO9uQ7GDpGDy/MrnB6kO55Uy7F5sXu3bXrGQ4wLDb/d+RZ+3SZ5vznCPH6LlBAIXaLz/KHyYGCvrr+PQTt221r8=
+  - secure: gFphaqSHLvyjjz6ZWh0a6LCshNX6MTXkLmPTCCvvjK+6gl+xxv+8PKcqy+NvaRvqZAeiUWYptWaCVHHkPV55N+FCWvNZEsMdu40jzJ2Zq+ldr5mUQoC7mGSoCBp+RYfQsqueBavMAQxGHT7un5/BmyaQKoUEbm2NH16KkIUR52U=
+  - secure: fYM8sOkYDjxx3UsS4k0aop7wyaNf0PsBYhVfO78CSZODGnhmw+27gBGhOjnqVohYCEaE1Es/cLUQZfbn/JaKlymzRXjv5dP6dIr1qSU35AElxdwt9DL1/J96DNo6KEXJV2tvFRx6CKH4xD+56f3IlTyhFiVugaNTPoHp81QX5CQ=
 language: node_js
 node_js:
 - '0.10'
