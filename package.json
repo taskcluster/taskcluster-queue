@@ -1,6 +1,6 @@
 {
   "name":     "taskcluster-queue",
-  "version":  "0.1.0",
+  "version":  "1.0.0",
   "private":  true,
   "main":     "node bin/server.js production",
   "scripts": {
@@ -25,12 +25,11 @@
     "slugid":                           "1.0.1",
     "taskcluster-base":                 "0.2.6",
     "azure":                            "0.9.12",
-    "taskcluster-client":               "0.7.4",
-    "xmlbuilder":                       "2.3.0"
+    "taskcluster-client":               "0.7.4"
   },
   "devDependencies": {
     "mocha":                            "1.18.2",
-    "sinon":                            "1.10.3"
+    "xmlbuilder":                       "2.3.0"
   },
   "engines": {
     "node":                             "0.10.x"
