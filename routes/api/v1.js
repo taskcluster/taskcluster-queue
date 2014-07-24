@@ -50,6 +50,7 @@ api.declare({
   method:     'put',
   route:      '/task/:taskId',
   name:       'createTask',
+  idempotent: true,
   scopes:     ['queue:put:task:<provisionerId>/<workerType>'],
   deferAuth:  true,
   input:      SCHEMA_PREFIX_CONST + 'task.json#',
@@ -134,6 +135,36 @@ api.declare({
       });
     }
     throw err;
+  });
+});
+
+/** Get task */
+api.declare({
+  method:     'get',
+  route:      '/task/:taskId',
+  name:       'getTask',
+  idempotent: true,
+  scopes:     undefined,
+  output:     SCHEMA_PREFIX_CONST + 'task.json#',
+  title:      "Fetch Task",
+  description: [
+    "Get task definition from queue."
+  ].join('\n')
+}, function(req, res) {
+  var ctx = this;
+  var taskId  = req.params.taskId;
+
+  // Fetch task from azure blob storage
+  return ctx.taskstore.get(taskId + '/task.json', true).then(function(taskDef) {
+    // Handle case where task doesn't exist
+    if (!taskDef) {
+      return res.json(404, {
+        message:  "task not found"
+      });
+    }
+
+    // Return task definition
+    return res.reply(taskDef);
   });
 });
 
