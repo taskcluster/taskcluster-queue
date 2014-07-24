@@ -23,6 +23,8 @@ var launch = function(profile) {
       'amqp_url',
       'database_connectionString',
       'queue_publishMetaData',
+      'taskcluster_credentials_clientId',
+      'taskcluster_credentials_accessToken',
       'aws_accessKeyId',
       'aws_secretAccessKey',
       'queue_credentials_clientId',
