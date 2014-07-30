@@ -41,6 +41,105 @@ var api = new base.API({
   ].join('\n')
 });
 
+// List of slugid parameters
+var SLUGID_PARAMS = [
+  'taskId'
+];
+
+// List of identifier parameters
+var IDENTIFIER_PARAMS = [
+  'provisionerId',
+  'workerType',
+  'workerGroup',
+  'workerId'
+];
+
+// List of integer parameters
+var INT_PARAMS = [
+  'runId'
+];
+
+/**
+ * Check parameters against regular expressions for identifiers
+ * and send a 401 response with an error in case of malformed URL parameters
+ *
+ * returns true if there was no errors.
+ */
+var checkParams = function(req, res) {
+  var errors = [];
+  _.forIn(req.params, function(value, key) {
+    // Validate slugid parameters
+    if (SLUGID_PARAMS.indexOf(key) !== -1) {
+      if (!/^[a-zA-Z0-9-_]{22}$/.test(value)) {
+        errors.push({
+          message:  "Parameter '" + key + "' is not a slugid",
+          error:    value
+        });
+      }
+    }
+
+    // Validate identifier parameters
+    if (IDENTIFIER_PARAMS.indexOf(key) !== -1) {
+      // Validate format
+      if (!/^[a-zA-Z0-9-_]*$/.test(value)) {
+        errors.push({
+          message:  "Parameter '" + key + "' does not match [a-zA-Z0-9-_]* " +
+                    "as required for identifiers",
+          error:    value
+        });
+      }
+
+      // Validate minimum length
+      if (value.length == 0) {
+        errors.push({
+          message:  "Parameter '" + key + "' must be longer than 0 characters",
+          error:    value
+        });
+      }
+
+      // Validate maximum length
+      if (value.length > 22) {
+        errors.push({
+          message:  "Parameter '" + key + "' cannot be more than 22 characters",
+          error:    value
+        });
+      }
+    }
+
+    // Validate and parse integer parameters
+    if (INT_PARAMS.indexOf(key) !== -1) {
+      if (!/^[0-9]+$/.test(value)) {
+        errors.push({
+          message:  "Parameter '" + key + "' does not match [0-9]+",
+          error:    value
+        });
+      } else {
+        var number = parseInt(value);
+        if (_.isNaN(number)) {
+          errors.push({
+            message:  "Parameter '" + key + "' parses to NaN",
+            error:    value
+          });
+        }
+      }
+    }
+  });
+
+  // Check for errors and reply if necessary
+  if (errors.length != 0) {
+    res.json(401, {
+      message:  "Malformed URL parameters",
+      error:    errors
+    });
+    return false;
+  }
+  // No errors
+  return true;
+};
+
+// Export checkParams for use in artifacts.js
+api.checkParams = checkParams;
+
 // Export api
 module.exports = api;
 
@@ -61,6 +160,11 @@ api.declare({
     "Deadline is at most 7 days into the future"
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
   var taskId  = req.params.taskId;
   var taskDef = req.body;
@@ -150,6 +254,11 @@ api.declare({
     "Get task definition from queue."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
   var taskId  = req.params.taskId;
 
@@ -200,6 +309,11 @@ api.declare({
     "task definition as previously defined this operation is safe to retry."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
   var taskId  = req.params.taskId;
   var taskDef = req.body;
@@ -289,6 +403,11 @@ api.declare({
     "To reschedule a task previously resolved, use `rerunTask`."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
   var taskId = req.params.taskId;
 
@@ -325,24 +444,6 @@ api.declare({
   });
 });
 
-/** Get task */
-api.declare({
-  method:   'get',
-  route:    '/task/:taskId',
-  name:     'getTask',
-  scopes:   undefined,  // Still no auth required
-  input:    undefined,  // No input is accepted
-  output:   'http://schemas.taskcluster.net/queue/v1/task.json#',
-  title:    "Get task",
-  description: [
-    "Get task structure from `taskId`"
-  ].join('\n')
-}, function(req, res) {
-  // TODO: Once we move tasks to azure use information stored in the status
-  // table instead of this hardcoded value.
-  res.redirect(this.bucket.publicUrl(req.params.taskId + '/task.json'));
-});
-
 
 /** Get task status */
 api.declare({
@@ -357,6 +458,11 @@ api.declare({
     "Get task status structure from `taskId`"
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx     = this;
   var taskId  = req.params.taskId;
 
@@ -407,6 +513,11 @@ api.declare({
     "claim a task, more to be added later..."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var taskId = req.params.taskId;
@@ -492,6 +603,11 @@ api.declare({
     "reclaim a task more to be added later..."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var taskId = req.params.taskId;
@@ -567,6 +683,11 @@ api.declare({
     "for your `workerType` claim work using `claimTaskRun`."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var provisionerId   = req.params.provisionerId;
@@ -646,6 +767,11 @@ api.declare({
     "Report a run completed, resolving the run as `completed`."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var taskId        = req.params.taskId;
@@ -724,6 +850,11 @@ api.declare({
     "current task status."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx     = this;
   var taskId  = req.params.taskId;
 
@@ -796,6 +927,11 @@ api.declare({
     "**Warning** this api end-point is **not stable**."
   ].join('\n')
 }, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
   var ctx           = this;
   var provisionerId = req.params.provisionerId;
 
