@@ -27,6 +27,11 @@ api.declare({
     "TODO: document this method"
   ].join('\n')
 }, function(req ,res) {
+  // Validate parameters
+  if (!api.checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var taskId = req.params.taskId;
@@ -247,6 +252,11 @@ api.declare({
     "TODO: document this method"
   ].join('\n')
 }, function(req ,res) {
+  // Validate parameters
+  if (!api.checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var taskId = req.params.taskId;
@@ -278,6 +288,11 @@ api.declare({
     "TODO: document this method"
   ].join('\n')
 }, function(req ,res) {
+  // Validate parameters
+  if (!api.checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var taskId = req.params.taskId;
@@ -400,6 +415,11 @@ api.declare({
     "TODO: document this method"
   ].join('\n')
 }, function(req ,res) {
+  // Validate parameters
+  if (!api.checkParams(req, res)) {
+    return;
+  }
+
   var ctx = this;
 
   var taskId = req.params.taskId;
