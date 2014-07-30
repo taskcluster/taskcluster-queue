@@ -99,11 +99,18 @@ suite('Create task', function() {
 
   test("defineTask and scheduleTask", function() {
     var taskId = slugid.v4();
+    var taskIsScheduled = false;
     var gotMessage = subject.listenFor(subject.queueEvents.taskPending({
       taskId:   taskId
-    }));
+    })).then(function(message) {
+      assert(taskIsScheduled, "Got pending message before scheduleTask");
+      return message;
+    });
 
     return subject.queue.defineTask(taskId, taskDef).then(function() {
+      return helper.sleep(1000);
+    }).then(function() {
+      taskIsScheduled = true;
       return subject.queue.scheduleTask(taskId);
     }).then(function(result) {
       return gotMessage.then(function(message) {
