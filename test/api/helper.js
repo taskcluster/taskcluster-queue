@@ -144,10 +144,7 @@ exports.setup = function(options) {
               clientId:       'test-client',
               accessToken:    'none'
             },
-            authorization: {
-              delegating:     (scopes.length > 0),
-              scopes:         scopes
-            }
+            authorizedScopes: (scopes.length > 0 ? scopes : undefined)
           });
         };
         subject.scopes();
