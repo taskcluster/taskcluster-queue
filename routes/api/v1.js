@@ -219,14 +219,19 @@ api.declare({
         }
       ]
     }, true).then(function(task) {
-      // Publish notification on AMQP
-      return ctx.publisher.taskPending({
-        status:         task.status(),
-        runId:          _.last(task.runs).runId
+      // Publish message about a defined task
+      return ctx.publisher.taskDefined({
+        status:         task.status()
       }, task.routing).then(function() {
+        // Publish message about a pending task
+        return ctx.publisher.taskPending({
+          status:         task.status(),
+          runId:          _.last(task.runs).runId
+        }, task.routing);
+      }).then(function() {
         // Reply to caller
         debug("New task created: %s", taskId);
-        res.reply({
+        return res.reply({
           status:       task.status()
         });
       });
@@ -364,10 +369,15 @@ api.declare({
       runs:           []
     }, true);
   }).then(function(task) {
-    // Reply to caller
-    debug("New task defined: %s", taskId);
-    res.reply({
-      status:       task.status()
+    // Publish message about a defined task
+    return ctx.publisher.taskDefined({
+      status:         task.status()
+    }, task.routing).then(function() {
+      // Reply to caller
+      debug("New task defined: %s", taskId);
+      return res.reply({
+        status:       task.status()
+      });
     });
   }).catch(function(err) {
     // Handle error in case the taskId is already in use, with another task
