@@ -40,19 +40,27 @@ suite('Create task', function() {
 
   test("createTask", function() {
     var taskId = slugid.v4();
-    var gotMessage = subject.listenFor(subject.queueEvents.taskPending({
+    var isDefined = subject.listenFor(subject.queueEvents.taskDefined({
+      taskId:   taskId
+    }));
+    var isPending = subject.listenFor(subject.queueEvents.taskPending({
       taskId:   taskId
     }));
 
     subject.scopes('queue:create-task:my-provisioner/my-worker');
     return subject.queue.createTask(taskId, taskDef).then(function(result) {
-      return gotMessage.then(function(message) {
+      return isDefined.then(function(message) {
         assert(_.isEqual(result.status, message.payload.status),
                "Message and result should have the same status");
-        return subject.queue.status(taskId);
-      }).then(function(result2) {
-        assert(_.isEqual(result.status, result2.status),
-               "Task status shouldn't have changed");
+      }).then(function() {
+        return isPending.then(function(message) {
+          assert(_.isEqual(result.status, message.payload.status),
+                 "Message and result should have the same status");
+          return subject.queue.status(taskId);
+        }).then(function(result2) {
+          assert(_.isEqual(result.status, result2.status),
+                 "Task status shouldn't have changed");
+        });
       });
     });
   });
@@ -85,12 +93,17 @@ suite('Create task', function() {
 
   test("defineTask", function() {
     var taskId = slugid.v4();
+    var isDefined = subject.listenFor(subject.queueEvents.taskDefined({
+      taskId:   taskId
+    }));
     var gotMessage = subject.listenFor(subject.queueEvents.taskPending({
       taskId:   taskId
     }));
 
     subject.scopes('queue:define-task:my-provisioner/my-worker');
     return subject.queue.defineTask(taskId, taskDef).then(function() {
+      return isDefined;
+    }).then(function() {
       return new Promise(function(accept, reject) {
         gotMessage.then(reject, reject);
         setTimeout(accept, 1000);

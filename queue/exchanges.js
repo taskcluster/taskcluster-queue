@@ -63,7 +63,7 @@ var commonRoutingKey = [
     summary:          "`runId` of latest run for the task, " +
                       "`_` if no run is exists for the task.",
     multipleWords:    false,
-    required:         true,
+    required:         false,
     maxSize:          3
   }, {
     name:             'workerGroup',
@@ -132,6 +132,27 @@ var commonRoutingKeyBuilder = function(message, routing) {
     routing:          routing
   };
 };
+
+/** Task defined exchange */
+exchanges.declare({
+  exchange:           'task-defined',
+  name:               'taskDefined',
+  title:              "Task Defined Messages",
+  description: [
+    "When a task is created or just defined a message is posted to this",
+    "exchange.",
+    "",
+    "This message exchange is mainly useful when tasks are scheduled by a",
+    "scheduler that uses `defineTask` as this does not make the task",
+    "`pending`. Thus, no `taskPending` message is published.",
+    "Please, note that messages are also published on this exchange if defined",
+    "using `createTask`."
+  ].join('\n'),
+  routingKey:         commonRoutingKey,
+  schema:             SCHEMA_PREFIX_CONST + 'task-defined-message.json#',
+  messageBuilder:     commonMessageBuilder,
+  routingKeyBuilder:  commonRoutingKeyBuilder
+});
 
 /** Task pending exchange */
 exchanges.declare({
