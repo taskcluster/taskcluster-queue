@@ -149,7 +149,7 @@ api.declare({
   route:      '/task/:taskId',
   name:       'createTask',
   idempotent: true,
-  scopes:     ['queue:put:task:<provisionerId>/<workerType>'],
+  scopes:     ['queue:create-task:<provisionerId>/<workerType>'],
   deferAuth:  true,
   input:      SCHEMA_PREFIX_CONST + 'task.json#',
   output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
@@ -202,6 +202,8 @@ api.declare({
       taskId:         taskId,
       provisionerId:  taskDef.provisionerId,
       workerType:     taskDef.workerType,
+      schedulerId:    taskDef.schedulerId,
+      taskGroupId:    taskDef.taskGroupId,
       priority:       taskDef.priority,
       created:        taskDef.created,
       deadline:       taskDef.deadline,
@@ -285,8 +287,8 @@ api.declare({
   route:      '/task/:taskId/define',
   name:       'defineTask',
   scopes:     [
-    'queue:post:define-task:<provisionerId>/<workerType>',
-    'queue:put:task:<provisionerId>/<workerType>'
+    'queue:define-task:<provisionerId>/<workerType>',
+    'queue:create-task:<provisionerId>/<workerType>'
   ],
   deferAuth:  true,
   input:      SCHEMA_PREFIX_CONST + 'task.json#',
@@ -351,6 +353,8 @@ api.declare({
       taskId:         taskId,
       provisionerId:  taskDef.provisionerId,
       workerType:     taskDef.workerType,
+      schedulerId:    taskDef.schedulerId,
+      taskGroupId:    taskDef.taskGroupId,
       priority:       taskDef.priority,
       created:        taskDef.created,
       deadline:       taskDef.deadline,
@@ -385,8 +389,10 @@ api.declare({
   route:      '/task/:taskId/schedule',
   name:       'scheduleTask',
   scopes:     [
-    'queue:post:schedule-task:<provisionerId>/<workerType>',
-    'queue:put:task:<provisionerId>/<workerType>'
+    [
+      'queue:schedule-task',
+      'assume:scheduler-id:<schedulerId>/<taskGroupId>'
+    ]
   ],
   deferAuth:  true,
   input:      undefined, // No input accepted
@@ -411,7 +417,7 @@ api.declare({
   var ctx = this;
   var taskId = req.params.taskId;
 
-  // Load task status structure to find provisionerId and workerType
+  // Load task status structure to find schedulerId and taskGroupId
   return ctx.Task.load(taskId).then(function(task) {
     // if no task is found, we return 404
     if (!task) {
@@ -422,8 +428,8 @@ api.declare({
 
     // Authenticate request by providing parameters
     if(!req.satisfies({
-      provisionerId:  task.provisionerId,
-      workerType:     task.workerType
+      schedulerId:    task.schedulerId,
+      taskGroupId:    task.taskGroupId
     })) {
       return;
     }
@@ -500,9 +506,9 @@ api.declare({
   name:       'claimTask',
   scopes: [
     [
-      'queue:post:claim-task',
-      'queue:assume:worker-type:<provisionerId>/<workerType>',
-      'queue:assume:worker-id:<workerGroup>/<workerId>'
+      'queue:claim-task',
+      'assume:worker-type:<provisionerId>/<workerType>',
+      'assume:worker-id:<workerGroup>/<workerId>'
     ]
   ],
   deferAuth:  true,
@@ -592,8 +598,8 @@ api.declare({
   name:       'reclaimTask',
   scopes: [
     [
-      'queue:post:claim-task',
-      'queue:assume:worker-id:<workerGroup>/<workerId>'
+      'queue:claim-task',
+      'assume:worker-id:<workerGroup>/<workerId>'
     ]
   ],
   deferAuth:  true,
@@ -662,9 +668,9 @@ api.declare({
   name:       'claimWork',
   scopes: [
     [
-      'queue:post:claim-task',
-      'queue:assume:worker-type:<provisionerId>/<workerType>',
-      'queue:assume:worker-id:<workerGroup>/<workerId>'
+      'queue:claim-task',
+      'assume:worker-type:<provisionerId>/<workerType>',
+      'assume:worker-id:<workerGroup>/<workerId>'
     ]
   ],
   deferAuth:  true,
@@ -755,8 +761,8 @@ api.declare({
   name:       'reportCompleted',
   scopes: [
     [
-      'queue:post:task-completed',
-      'queue:assume:worker-id:<workerGroup>/<workerId>'
+      'queue:report-task-completed',
+      'assume:worker-id:<workerGroup>/<workerId>'
     ]
   ],
   deferAuth:  true,
@@ -830,7 +836,12 @@ api.declare({
   method:     'post',
   route:      '/task/:taskId/rerun',
   name:       'rerunTask',
-  scopes:     ['queue:post:rerun:<provisionerId>/<workerType>'],
+  scopes:     [
+    [
+      'queue:rerun-task',
+      'assume:scheduler-id:<schedulerId>/<taskGroupId>'
+    ]
+  ],
   deferAuth:  true,
   input:      undefined, // No input accepted
   output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
@@ -873,8 +884,8 @@ api.declare({
 
     // Authenticate request by providing parameters
     if(!req.satisfies({
-      provisionerId:  data.definition.provisionerId,
-      workerType:     data.definition.workerType
+      schedulerId:    data.definition.schedulerId,
+      taskGroupId:    data.definition.taskGroupId
     })) {
       return;
     }

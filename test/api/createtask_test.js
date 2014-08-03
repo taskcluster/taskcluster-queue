@@ -16,10 +16,11 @@ suite('Create task', function() {
   var taskDef = {
     provisionerId:    'my-provisioner',
     workerType:       'my-worker',
-    // let's just test a large routing key too, 128 chars please :)
-    routing:          "jonasfj-test.what-a-hack.I suppose we might " +
-                      "actually need it when we add taskgraph scheduler id, " +
-                      "taskgraphId, task graph routing",
+    schedulerId:      'my-scheduler',
+    taskGroupId:      'dSlITZ4yQgmvxxAi4A8fHQ',
+    // let's just test a large routing key too, 90 chars please :)
+    routing:          "jonasfj.what-a-hack.I suppose we might actually need " +
+                      "it when we add taskgraph scheduler...",
     retries:          5,
     priority:         1,
     created:          created.toJSON(),
@@ -43,7 +44,7 @@ suite('Create task', function() {
       taskId:   taskId
     }));
 
-    subject.scopes('queue:put:task:my-provisioner/my-worker');
+    subject.scopes('queue:create-task:my-provisioner/my-worker');
     return subject.queue.createTask(taskId, taskDef).then(function(result) {
       return gotMessage.then(function(message) {
         assert(_.isEqual(result.status, message.payload.status),
@@ -58,7 +59,7 @@ suite('Create task', function() {
 
   test("createTask (without required scopes)", function() {
     var taskId = slugid.v4();
-    subject.scopes('queue:put:task:my-provisioner/another-worker');
+    subject.scopes('queue:create-task:my-provisioner/another-worker');
     return subject.queue.createTask(taskId, taskDef).then(function() {
       assert(false, "Expected an authentication error");
     }, function(err) {
@@ -88,7 +89,7 @@ suite('Create task', function() {
       taskId:   taskId
     }));
 
-    subject.scopes('queue:post:define-task:my-provisioner/my-worker');
+    subject.scopes('queue:define-task:my-provisioner/my-worker');
     return subject.queue.defineTask(taskId, taskDef).then(function() {
       return new Promise(function(accept, reject) {
         gotMessage.then(reject, reject);
@@ -111,6 +112,10 @@ suite('Create task', function() {
       return helper.sleep(1000);
     }).then(function() {
       taskIsScheduled = true;
+      subject.scopes(
+        'queue:schedule-task',
+        'assume:scheduler-id:my-scheduler/dSlITZ4yQgmvxxAi4A8fHQ'
+      );
       return subject.queue.scheduleTask(taskId);
     }).then(function(result) {
       return gotMessage.then(function(message) {
