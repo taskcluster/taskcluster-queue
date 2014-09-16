@@ -30,15 +30,15 @@ var Publisher = function(conn, channel, entries, options) {
   events.EventEmitter.call(this);
   assert(options.validator instanceof Validator,
          "options.validator must be an instance of Validator");
-  if (options.drain) {
-    assert(options.component, "component name for statistics is required");
-    assert(options.process,   "process name for statistics is required");
-  }
   this._conn = conn;
   this._channel = channel;
   this._entries = entries;
   this._options = options;
-  this._reporter = ExchangeReports.reporter(options.drain);
+  if (options.drain) {
+    assert(options.component, "component name for statistics is required");
+    assert(options.process,   "process name for statistics is required");
+    this._reporter = ExchangeReports.reporter(options.drain);
+  }
 
   var that = this;
   this._channel.on('error', function(err) {
@@ -113,7 +113,10 @@ var Publisher = function(conn, channel, entries, options) {
       // Return promise
       return new Promise(function(accept, reject) {
         // Start timer
-        var start = process.hrtime();
+        var start = null;
+        if (that._reporter) {
+          start = process.hrtime();
+        }
 
         // Publish message
         that._channel.publish(exchange, routingKey, payload, {
@@ -122,19 +125,21 @@ var Publisher = function(conn, channel, entries, options) {
           contentEncoding:    'utf-8',
           CC:                 CCs
         }, function(err, val) {
-          // Get duration
-          var d = process.hrtime(start);
+          if (that._reporter) {
+            // Get duration
+            var d = process.hrtime(start);
 
-          // Report statistics
-          that._reporter({
-            component:      options.component,
-            process:        options.process,
-            duration:       d[0] * 1000 + (d[1] / 1000000),
-            routingKeys:    1 + CCs.length,
-            payloadSize:    payload.length,
-            exchange:       exchange,
-            error:          (err ? 'true' : 'false'),
-          });
+            // Report statistics
+            that._reporter({
+              component:      options.component,
+              process:        options.process,
+              duration:       d[0] * 1000 + (d[1] / 1000000),
+              routingKeys:    1 + CCs.length,
+              payloadSize:    payload.length,
+              exchange:       exchange,
+              error:          (err ? 'true' : 'false'),
+            });
+          }
 
           // Handle errors
           if (err) {
