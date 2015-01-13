@@ -443,7 +443,10 @@ Task.queryPending = transacting(function(provisionerId, knex) {
       'runs.state':           'pending'
     }).then(function(tasks) {
       return tasks.map(function(task) {
-        return slugid.encode(task.taskId);
+        return {
+          taskId: slugid.encode(task.taskId),
+          workerType: task.workerType
+        }
       });
     });
 });
