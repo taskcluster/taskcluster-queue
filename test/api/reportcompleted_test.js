@@ -122,6 +122,48 @@ suite('Report task completed', function() {
     });
   });
 
+  test("create, claim and cancel task (is idempotent)", function() {
+    var taskId = slugid.v4();
+    var allowedToFailNow = false;
+    var gotMessage = null;
+
+    return helper.events.listenFor('exception', helper.queueEvents.taskException({
+      taskId:   taskId
+    })).then(function() {
+      gotMessage = helper.events.waitFor('exception').then(function(message) {
+        assert(allowedToFailNow, "Failed at wrong time");
+        return message;
+      });
+      debug("### Creating task");
+      return helper.queue.createTask(taskId, taskDef);
+    }).then(function() {
+      debug("### Claiming task");
+      // First runId is always 0, so we should be able to claim it here
+      return helper.queue.claimTask(taskId, 0, {
+        workerGroup:    'my-worker-group',
+        workerId:       'my-worker'
+      });
+    }).then(function() {
+      allowedToFailNow = true;
+      debug("### Reporting task canceled");
+      helper.scopes(
+        'queue:resolve-task',
+        'assume:worker-id:my-worker-group/my-worker'
+      );
+      return helper.queue.reportCanceled(taskId, 0);
+    }).then(function() {
+      return gotMessage.then(function(message) {
+        assert(message.payload.status.runs[0].state === 'exception',
+               "Expected message to say it was exception");
+        assert(message.payload.status.runs[0].reasonResolved === 'canceled',
+               "Expected reason resolved to be 'canceled'");
+      });
+    }).then(function() {
+      debug("### Reporting task canceled (again)");
+      return helper.queue.reportCanceled(taskId, 0);
+    });
+  });
+
   test("create, claim and complete (with bad scopes)", function() {
     var taskId = slugid.v4();
     debug("### Creating task");
