@@ -100,7 +100,7 @@ suite('Poll tasks', function() {
             workerId:         'test-worker',
             messageId:        msg.MessageId[0],
             receipt:          msg.PopReceipt[0],
-            signature:        payload.signature
+            token:            payload.token
           });
         });
       });

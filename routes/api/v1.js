@@ -650,7 +650,7 @@ api.declare({
     "claim a task, more to be added later...",
     "",
     "**Warning,** in the future this API end-point will require the presents",
-    "of `receipt`, `messageId` and `signature` in the body."
+    "of `receipt`, `messageId` and `token` in the body."
   ].join('\n')
 }, function(req, res) {
   // Validate parameters
@@ -668,7 +668,7 @@ api.declare({
 
   var messageId   = req.body.messageId;
   var receipt     = req.body.receipt;
-  var signature   = req.body.signature;
+  var signature   = req.body.token;
 
   // Load task status structure to validate that we're allowed to claim it
   return ctx.Task.load(taskId).then(function(task) {

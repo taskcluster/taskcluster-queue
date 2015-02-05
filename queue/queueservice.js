@@ -143,7 +143,7 @@ QueueService.prototype.putTask = function(provisionerId, workerType,
   return this.putMessage(provisionerId, workerType, {
     taskId:     taskId,
     runId:      runId,
-    signature:  sig
+    token:      sig
   }, deadline);
 };
 

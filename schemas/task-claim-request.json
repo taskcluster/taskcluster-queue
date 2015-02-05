@@ -27,9 +27,9 @@
       "type":           "string",
       "description":    "PopReceipt from Azure Queue message"
     },
-    "signature": {
+    "token": {
       "type":           "string",
-      "description":    "Signature from the MessageText in Azure Queue message"
+      "description":    "Opaque token from the JSON parsed and base64 decoded MessageText in the Azure Queue message"
     }
   },
   "additionalProperties":   false,
