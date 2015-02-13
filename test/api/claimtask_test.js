@@ -130,6 +130,30 @@ suite('Claim task', function() {
     });
   });
 
+
+  test("can claimWork (empty queue)", function() {
+    var taskId = slugid.v4();
+    // Create datetime for created and deadline as 3 days later
+    var created = new Date();
+    var deadline = new Date();
+    deadline.setDate(created.getDate() + 3);
+    return helper.queue.createTask(taskId, taskDef).then(function() {
+      // Reduce scopes available to test minimum set of scopes required
+      helper.scopes(
+        'queue:claim-task',
+        'assume:worker-type:my-provisioner/my-other-worker',
+        'assume:worker-id:my-worker-group/my-other-worker'
+      );
+      // First runId is always 0, so we should be able to claim it here
+      return helper.queue.claimWork('my-provisioner', 'my-other-worker', {
+        workerGroup:    'my-worker-group',
+        workerId:       'my-other-worker'
+      });
+    }).then(function(result) {
+      assert(!result.status, "Expected not to get a status");
+    });
+  });
+
   test("claimTask requires scopes", function() {
     var taskId = slugid.v4();
     return helper.queue.createTask(taskId, taskDef).then(function() {

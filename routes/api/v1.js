@@ -902,8 +902,8 @@ api.declare({
   }).then(function(result) {
     // Return the "error" message if we have one
     if(!(result instanceof ctx.Task)) {
-      return res.status(409).json(result.code, {
-        message:      result.message
+      return res.status(result.code).json({
+        message:      result.message,
       });
     }
 
