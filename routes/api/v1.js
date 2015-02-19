@@ -1407,7 +1407,11 @@ api.declare({
   // This implementation is stupid... but it works, just disregard
   // implementation details...
   return ctx.Task.pendingTasks(provisionerId).then(function(result) {
-    return res.reply(result[workerType] || 0);
+    var r = result[workerType];
+    if (typeof r !== 'number') {
+      r = 0;
+    }
+    return res.reply(r);
   });
 });
 
