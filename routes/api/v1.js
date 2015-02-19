@@ -594,7 +594,8 @@ api.declare({
   description: [
     "Get a signed url to get a message from azure queue.",
     "Once messages are polled from here, you can claim the referenced task",
-    "with `claimTask`."
+    "with `claimTask`, after wards which you **must** delete the message from",
+    "the azure queue."
   ].join('\n')
 }, function(req, res) {
     // Validate parameters
@@ -622,9 +623,10 @@ api.declare({
     workerType
   ).then(function(result) {
     res.reply({
-      signedPollTaskUrls: [
-        result.getMessage
-      ],
+      queues: [{
+        signedPollUrl:    result.getMessage,
+        signedDeleteUrl:  result.delMessage
+      }],
       expires:                  result.expiry.toJSON()
     });
   });
@@ -649,8 +651,6 @@ api.declare({
   description: [
     "claim a task, more to be added later...",
     "",
-    "**Warning,** in the future this API end-point will require the presents",
-    "of `receipt`, `messageId` and `token` in the body."
   ].join('\n')
 }, function(req, res) {
   // Validate parameters
@@ -665,10 +665,6 @@ api.declare({
 
   var workerGroup = req.body.workerGroup;
   var workerId    = req.body.workerId;
-
-  var messageId   = req.body.messageId;
-  var receipt     = req.body.receipt;
-  var signature   = req.body.token;
 
   // Load task status structure to validate that we're allowed to claim it
   return ctx.Task.load(taskId).then(function(task) {
@@ -689,21 +685,6 @@ api.declare({
       return;
     }
 
-    // Validate signature, if present
-    if (signature) {
-      var valid = ctx.queueService.validateSignature(
-        task.provisionerId, task.workerType,
-        taskId, runId,
-        task.deadline,
-        signature
-      );
-      if (!valid) {
-        return res.status(401).json({
-          messsage: "Message was faked!"
-        });
-      }
-    }
-
     // Set takenUntil to now + 20 min
     var takenUntil = new Date();
     var claimTimeout = parseInt(ctx.claimTimeout);
@@ -717,42 +698,19 @@ api.declare({
     }).then(function(result) {
       // Return the "error" message if we have one
       if(!(result instanceof ctx.Task)) {
-        res.status(result.code).json({
+        return res.status(result.code).json({
           message:      result.message
         });
-        if (messageId && receipt && signature) {
-          // Delete message from azure queue
-          return ctx.queueService.deleteMessage(
-            task.provisionerId,
-            task.workerType,
-            messageId,
-            receipt
-          );
-        }
-        return;
       }
 
-      // Delete message from azure queue
-      var messageDeleted = Promise.resolve();
-      if (messageId && receipt && signature) {
-        messageDeleted = ctx.queueService.deleteMessage(
-          task.provisionerId,
-          task.workerType,
-          messageId,
-          receipt
-        );
-      }
-
-      return messageDeleted.then(function() {
-        // Announce that the run is running
-        return ctx.publisher.taskRunning({
-          workerGroup:  workerGroup,
-          workerId:     workerId,
-          runId:        runId,
-          takenUntil:   takenUntil.toJSON(),
-          status:       result.status()
-        }, result.routes);
-      }).then(function() {
+      // Announce that the run is running
+      return ctx.publisher.taskRunning({
+        workerGroup:  workerGroup,
+        workerId:     workerId,
+        runId:        runId,
+        takenUntil:   takenUntil.toJSON(),
+        status:       result.status()
+      }, result.routes).then(function() {
         // Reply to caller
         return res.reply({
           workerGroup:  workerGroup,
@@ -951,8 +909,8 @@ api.declare({
   description: [
     "Report a task completed, resolving the run as `completed`.",
     "",
-    "For legacy, reasons the `success` parameter is accepted. This will be",
-    "removed in the future."
+    "For legacy, reasons the `success` parameter is accepted. **This will be",
+    "removed in the future.**"
   ].join('\n')
 }, function(req, res) {
   // Validate parameters
@@ -1347,7 +1305,7 @@ api.declare({
   description: [
     "Documented later...",
     "",
-    "**Warning: This is an experimental end-point!**"
+    "**This end-point is deprecated!**"
   ].join('\n')
 }, function(req, res) {
   // Validate parameters
@@ -1377,14 +1335,13 @@ api.declare({
   name:       'pendingTasks',
   scopes:     ['queue:pending-tasks:<provisionerId>/<workerType>'],
   deferAuth:  true,
-  output:     undefined,  // TODO: define schema later
+  output:     SCHEMA_PREFIX_CONST + 'pending-tasks-response.json',
   title:      "Get Number of Pending Tasks",
   description: [
     "Documented later...",
-    "This probably the end-point that will remain after rewriting to azure",
+    "This end-point will remain after rewriting to azure",
     "queue storage...",
-    "",
-    "**Warning: This is an experimental end-point!**"
+    ""
   ].join('\n')
 }, function(req, res) {
   // Validate parameters
@@ -1405,9 +1362,13 @@ api.declare({
   }
 
   // This implementation is stupid... but it works, just disregard
-  // implementation details...
+  // implementation details... (after all the implementation is temporary)
   return ctx.Task.pendingTasks(provisionerId).then(function(result) {
-    return res.reply(result[workerType] || 0);
+    return res.reply({
+      provisionerId:    provisionerId,
+      workerType:       workerType,
+      pendingTasks:     result[workerType] || 0
+    });
   });
 });
 

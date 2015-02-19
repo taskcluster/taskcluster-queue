@@ -8,7 +8,7 @@ suite('Poll tasks', function() {
   var request     = require('superagent-promise');
   var xml2js      = require('xml2js');
 
-  test("createTask, pollTaskUrl, getMessage, claimWork", function() {
+  test("pollTaskUrl, getMessage, claimWork, deleteMessage", function() {
     // Create datetime for created and deadline as 3 days later
     var created = new Date();
     var deadline = new Date();
@@ -61,7 +61,7 @@ suite('Poll tasks', function() {
       debug("### Access Tasks from azure queue");
       return helper.queue.pollTaskUrls('my-provisioner', 'az-queue-test');
     }).then(function(result) {
-      assert(result.signedPollTaskUrls.length > 0, "Missing signedPollTaskUrl");
+      assert(result.queues.length > 0, "Missing queues");
       helper.scopes(
         'queue:claim-task',
         'assume:worker-type:my-provisioner/az-queue-test',
@@ -70,8 +70,9 @@ suite('Poll tasks', function() {
       var i = 0;
       return helper.poll(function() {
         debug("### Polling azure queue: %s", i);
+        var queue = result.queues[i++ % result.queues.length];
         return request
-        .get(result.signedPollTaskUrls[i++ % result.signedPollTaskUrls.length])
+        .get(queue.signedPollUrl)
         .buffer()
         .end()
         .then(function(res) {
@@ -98,9 +99,16 @@ suite('Poll tasks', function() {
           return helper.queue.claimTask(payload.taskId, payload.runId,{
             workerGroup:      'dummy-workers',
             workerId:         'test-worker',
-            messageId:        msg.MessageId[0],
-            receipt:          msg.PopReceipt[0],
-            token:            payload.token
+          }).then(function() {
+            var delUrl = queue.delMessage
+              .replace('{{messageId}}', encodeURIComponent(msg.MessageId[0]))
+              .replace('{{popReceipt}}', encodeURIComponent(msg.PopReceipt[0]));
+            return request.del(delUrl).buffer().end().then(function(res) {
+              if (!res.ok) {
+                debug("Failed to delete message: %s", res.text);
+                assert(false, "Failed to delete message");
+              }
+            });
           });
         });
       });

@@ -21,17 +21,14 @@ var decodeUrlSafeBase64 = function(data) {
  *   credentials: {
  *     accountName:        // Azure storage account name
  *     accountKey:         // Azure storage account key
- *   },
- *   signatureSecret:      // Secret for generating signatures
+ *   }
  * }
  */
 var QueueService = function(options) {
   assert(options, "options is required");
   assert(/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(options.prefix), "Invalid prefix");
   assert(options.prefix.length <= 6, "Prefix is too long");
-  assert(options.signatureSecret, "a signatureSecret must be given");
   this.prefix = options.prefix;
-  this.signatureSecret = options.signatureSecret;
 
   // Documentation for the QueueService object can be found here:
   // http://dl.windowsazure.com/nodestoragedocs/index.html
@@ -115,52 +112,13 @@ QueueService.prototype.putMessage = function(provisionerId, workerType,
   });
 };
 
-QueueService.prototype.validateSignature = function(provisionerId, workerType,
-                                                    taskId, runId, deadline,
-                                                    signature) {
-  assert(deadline instanceof Date, "deadline must be a date");
-  assert(typeof(signature) === 'string', "signature must be a string");
-  var sigB = crypto.createHmac('sha256', this.signatureSecret).update([
-    deadline.getTime(),
-    provisionerId,
-    workerType,
-    taskId,
-    runId
-  ].join('\n')).digest('base64');
-  return cryptiles.fixedTimeComparison(signature, sigB);
-};
-
 QueueService.prototype.putTask = function(provisionerId, workerType,
                                           taskId, runId, deadline) {
   assert(deadline instanceof Date, "deadline must be a date");
-  var sig = crypto.createHmac('sha256', this.signatureSecret).update([
-    deadline.getTime(),
-    provisionerId,
-    workerType,
-    taskId,
-    runId
-  ].join('\n')).digest('base64');
   return this.putMessage(provisionerId, workerType, {
     taskId:     taskId,
-    runId:      runId,
-    token:      sig
+    runId:      runId
   }, deadline);
-};
-
-/** Delete message from azure queue */
-QueueService.prototype.deleteMessage = function(provisionerId, workerType,
-                                                msgId, receipt) {
-  var that = this;
-  return this.ensureQueue(provisionerId, workerType).then(function(name) {
-    return new Promise(function(accept, reject) {
-      that.service.deleteMessage(name, msgId, receipt, function(err) {
-        if (err) {
-          return reject(err);
-        }
-        accept();
-      });
-    });
-  });
 };
 
 
@@ -190,6 +148,15 @@ QueueService.prototype.signedUrl = function(provisionerId, workerType) {
         '.queue.core.windows.net/',
         name,
         '/messages?visibilitytimeout=300&',
+        sas
+      ].join(''),
+      delMessage: [
+        'https://',
+        that.accountName,
+        '.queue.core.windows.net/',
+        name,
+        '/messages/{{messageId}}',
+        '?popreceipt={{popReceipt}}&',
         sas
       ].join(''),
       expiry: expiry

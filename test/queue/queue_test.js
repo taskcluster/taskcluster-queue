@@ -31,8 +31,7 @@ suite('queue/QueueService', function() {
 
   var queueService = new QueueService({
     prefix:           cfg.get('queue:queuePrefix'),
-    credentials:      cfg.get('azure'),
-    signatureSecret:  "A very public secret"
+    credentials:      cfg.get('azure')
   });
 
   var workerType = 'no-worker';
@@ -65,7 +64,7 @@ suite('queue/QueueService', function() {
     );
   });
 
-  test("putTask, getMessage, validateSignature, deleteMessage", function() {
+  test("putTask, getMessage, deleteMessage", function() {
     var deadline = new Date();
     deadline.setMinutes(deadline.getMinutes() + 5);
     var taskId = slugid.v4();
@@ -98,19 +97,17 @@ suite('queue/QueueService', function() {
         var msg = json.QueueMessagesList.QueueMessage[0];
         var payload = new Buffer(msg.MessageText[0], 'base64').toString();
         payload = JSON.parse(payload);
-        assert(queueService.validateSignature(
-          'no-provisioner',
-          workerType + '1',
-          payload.taskId, payload.runId,
-          deadline,
-          payload.signature
-        ), "Failed to validate signature");
-        return queueService.deleteMessage(
-          'no-provisioner',
-          workerType + '1',
-          msg.MessageId,
-          msg.PopReceipt
-        );
+        assert(taskId === payload.taskId, "Got different taskId");
+
+        var delUrl = urls.delMessage
+             .replace('{{messageId}}', encodeURIComponent(msg.MessageId[0]))
+             .replace('{{popReceipt}}', encodeURIComponent(msg.PopReceipt[0]));
+        return request.del(delUrl).buffer().end().then(function(res) {
+          if (!res.ok) {
+            debug("Failed to delete message: %s", res.text);
+            assert(false, "Failed to delete message");
+          }
+        });
       });
     });
   });

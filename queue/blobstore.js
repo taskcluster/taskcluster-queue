@@ -25,6 +25,7 @@ var BlobStore = function(options) {
     options.credentials.accountName,
     options.credentials.accountKey
   ).withFilter(new azure.ExponentialRetryPolicyFilter());
+  debug("optoins: %j", options);
 };
 
 // Export BlobStore
@@ -33,9 +34,12 @@ module.exports = BlobStore;
 /** Create blob-store container */
 BlobStore.prototype.createContainer = function() {
   var that = this;
+  debug("Creating container: %s", that.container);
   return new Promise(function(accept, reject) {
+    debug("Got here");
     that.service.createContainerIfNotExists(that.container,
                                             function(err, created) {
+      debug("Got here2");
       if (err) {
         debug("Failed to create container '%s', err: %s, as JSON: %j",
               that.container, err, err);
@@ -48,6 +52,7 @@ BlobStore.prototype.createContainer = function() {
       }
       return accept(created);
     });
+    debug("Got here3");
   });
 };
 

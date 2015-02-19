@@ -66,7 +66,7 @@ suite('Query tasks', function() {
     }).then(function() {
       return helper.queue.pendingTasks('my-provisioner', 'my-worker');
     }).then(function(result) {
-      assert(result === 2, "Expected two tasks from my-worker");
+      assert(result.pendingTasks === 2, "Expected two tasks from my-worker");
     });
   });
 });

@@ -14,7 +14,7 @@ mv /tmp/pg_hba.conf /etc/postgresql/9.1/main/pg_hba.conf;
 sudo service postgresql restart;
 
 # Dependencies that we are likely to change over time
-sudo apt-get update;
-sudo apt-get -y install screen vim;
+#sudo apt-get update;
+#sudo apt-get -y install screen vim;
 SCRIPT
 end

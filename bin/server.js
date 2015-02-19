@@ -111,8 +111,7 @@ var launch = function(profile) {
   // Create QueueService to manage azure queues
   var queueService = new QueueService({
     prefix:           cfg.get('queue:queuePrefix'),
-    credentials:      cfg.get('azure'),
-    signatureSecret:  cfg.get('queue:signatureSecret')
+    credentials:      cfg.get('azure')
   });
 
   // When: publisher, validator and containers are created, proceed
