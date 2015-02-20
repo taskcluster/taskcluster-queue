@@ -69,4 +69,13 @@ suite('Query tasks', function() {
       assert(result.pendingTasks === 2, "Expected two tasks from my-worker");
     });
   });
+
+  test("pendingTasks (zero pending tasks)", function() {
+    return helper.queue.pendingTasks(
+      'my-provisioner',
+      'empty-worker'
+    ).then(function(result) {
+      assert(result.pendingTasks === 0, "Expected 0 tasks from empty-worker");
+    });
+  });
 });
