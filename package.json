@@ -13,7 +13,7 @@
   "dependencies": {
     "aws-sdk": "2.0.19",
     "aws-sdk-promise": "0.0.0",
-    "azure-storage": "0.4.2",
+    "azure-storage": "^0.4.2",
     "cryptiles": "2.0.4",
     "debug": "2.1.1",
     "knex": "0.7.3",

@@ -95,19 +95,29 @@ suite('Poll tasks', function() {
           var msg = data.QueueMessagesList.QueueMessage[0];
           var payload = new Buffer(msg.MessageText[0], 'base64').toString();
           payload = JSON.parse(payload);
+          debug("Received message with payload: %j", payload);
           assert(taskId === payload.taskId, "Got the wrong taskId");
+          debug("Claiming task");
           return helper.queue.claimTask(payload.taskId, payload.runId,{
             workerGroup:      'dummy-workers',
             workerId:         'test-worker',
           }).then(function() {
-            var delUrl = queue.delMessage
+            debug("Deleting message: %j", msg);
+            var delUrl = queue.signedDeleteUrl
               .replace('{{messageId}}', encodeURIComponent(msg.MessageId[0]))
               .replace('{{popReceipt}}', encodeURIComponent(msg.PopReceipt[0]));
+            debug("delete message url: %s", delUrl);
             return request.del(delUrl).buffer().end().then(function(res) {
+              debug("delete message status: %s", res.status);
               if (!res.ok) {
                 debug("Failed to delete message: %s", res.text);
                 assert(false, "Failed to delete message");
               }
+              debug("delete message successfully");
+            }, function(err) {
+              debug("Error, deleting message: %s, JSON: %j",
+                    err, err, err.stack);
+              throw err;
             });
           });
         });
