@@ -1197,6 +1197,88 @@ api.declare({
 });
 
 
+/** Report task canceled */
+api.declare({
+  method:     'post',
+  route:      '/task/:taskId/runs/:runId/canceled',
+  name:       'reportCanceled',
+  scopes: [
+    [
+      'queue:resolve-task',
+      'assume:worker-id:<workerGroup>/<workerId>'
+    ]
+  ],
+  deferAuth:  true,
+  input:      undefined,  // No input at this point
+  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  title:      "Report Task Canceled",
+  description: [
+    "Report a task as canceled, resolving the run as `exception`. Use this to cancel",
+    "a run that no longer needs to executed.  For example, if a commit no longer",
+    "exists after a rebase, the task should be canceled and reported as an exception",
+    "preventing any future reruns."
+  ].join('\n')
+}, function(req, res) {
+  // Validate parameters
+  if (!checkParams(req, res)) {
+    return;
+  }
+
+  var ctx = this;
+
+  var taskId        = req.params.taskId;
+  var runId         = parseInt(req.params.runId);
+  var reason        = req.body.reason;
+
+  return ctx.Task.load(taskId).then(function(task) {
+    // if no task is found, we return 404
+    if (!task || !task.runs[runId]) {
+      return res.status(404).json({
+        message:  "Task not found or already resolved"
+      });
+    }
+
+    var workerGroup = task.runs[runId].workerGroup;
+    var workerId    = task.runs[runId].workerId;
+
+    // Authenticate request by providing parameters
+    if(!req.satisfies({
+      workerGroup:  workerGroup,
+      workerId:     workerId
+    })) {
+      return;
+    }
+
+    // Resolve task run
+    return ctx.Task.resolveTask(
+      taskId,
+      runId,
+      'exception',
+      'canceled'
+    ).then(function(result) {
+      // Return the "error" message if we have one
+      if(!(result instanceof ctx.Task)) {
+        return res.status(result.code).json({
+          message:      result.message
+        });
+      }
+
+      // Publish message
+      return ctx.publisher.taskException({
+        status:       result.status(),
+        runId:        runId,
+        workerGroup:  workerGroup,
+        workerId:     workerId
+      }, task.routes).then(function() {
+        return res.reply({
+          status:   result.status()
+        });
+      });
+    });
+  });
+});
+
+
 /** Rerun a previously resolved task */
 api.declare({
   method:     'post',
