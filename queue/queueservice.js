@@ -206,7 +206,13 @@ class QueueService {
             this.service.deleteMessage(
               this.claimQueue,
               message.messageid, message.popreceipt,
-              (err) => { err ? reject(err) : accept() }
+              (err) => {
+                // Ignore message not found errors (who cares)
+                if (err && err.code !== 'MessageNotFound') {
+                  return reject(err);
+                }
+                return accept();
+              }
             );
           });
         }
@@ -255,7 +261,13 @@ class QueueService {
             this.service.deleteMessage(
               this.deadlineQueue,
               message.messageid, message.popreceipt,
-              (err) => { err ? reject(err) : accept() }
+              (err) => {
+                // Ignore message not found errors (who cares)
+                if (err && err.code !== 'MessageNotFound') {
+                  return reject(err);
+                }
+                return accept();
+              }
             );
           });
         }
