@@ -127,6 +127,7 @@ var launch = async function(profile) {
         schemaPrefix:     'queue/v1/',
         aws:              cfg.get('aws')
       });
+      //validator.check = function() { return null; };
 
       publisher = await exchanges.setup({
         credentials:        cfg.get('pulse'),
@@ -191,7 +192,10 @@ var launch = async function(profile) {
 
   // Create server
   debug("Launching server");
-  return app.createServer();
+  var server = await app.createServer();
+  //server.maxConnections = 100;
+
+  return server;
 };
 
 // If server.js is executed start the server
