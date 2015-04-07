@@ -20,7 +20,7 @@ var globalAzureQueueAgent = new https.Agent({
   // Avoid keep alive with azure as their load balancer hangs up on connections
   // after 60s, this causes uncaught ECONNRESET errors
   keepAlive:        false,
-  maxSockets:       50,
+  maxSockets:       5000,
   maxFreeSockets:   0
 });
 
