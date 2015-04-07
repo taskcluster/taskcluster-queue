@@ -102,7 +102,6 @@ var launch = async function(profile) {
   while(loops < 8) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
-  //*/
 
   // 16 req in parallel
   while(loops < 16) startLoop();
@@ -118,6 +117,7 @@ var launch = async function(profile) {
   while(loops < 48) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
+  //*/
 
   // 64 req in parallel
   while(loops < 64) startLoop();
