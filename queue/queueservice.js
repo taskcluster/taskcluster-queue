@@ -7,50 +7,17 @@ var assert      = require('assert');
 var base32      = require('thirty-two');
 var querystring = require('querystring');
 var url         = require('url');
-var https       = require('https');
+var base        = require('taskcluster-base');
 
 /** Timeout for azure queue requests */
 var AZURE_QUEUE_TIMEOUT     = 7 * 1000;
 
-/** Disable TCP Nagle (improves speed for small requests) */
-var DISABLE_NAGLE           = false;
-
 /** Azure queue agent used for all instances of the queue client */
-var globalAzureQueueAgent = new https.Agent({
-  // Avoid keep alive with azure as their load balancer hangs up on connections
-  // after 60s, this causes uncaught ECONNRESET errors
-  keepAlive:        false,
-  maxSockets:       5000,
-  maxFreeSockets:   0
+var globalAzureQueueAgent = new base.AzureAgent({
+  keepAlive:        true,
+  maxSockets:       100,
+  maxFreeSockets:   100
 });
-
-/** Monkey patch AzureClient to disable TCP Nagle */
-var patchAzureClient = function(client) {
-  // We're overwriting internal method, to do another hack on request
-  client._sendRequestWithRetry = function _sendRequestWithRetry(options, cb) {
-    if (this._retryLogic == null) {
-      this._request(
-        options,
-        this._normalizeCallback.bind(this, cb)
-      ).once('request', function(req) {
-        req.setNoDelay(DISABLE_NAGLE);
-      });
-    } else {
-      var self = this;
-      this._retryLogic(options, function(filterCb) {
-        self._request(
-          options,
-          self._normalizeCallback.bind(self, function(err, resp) {
-            filterCb(err, resp, function(err, resp) { cb(err, resp); });
-          })
-        ).once('request', function(req) {
-          req.setNoDelay(DISABLE_NAGLE);
-        });
-      });
-    }
-  };
-  return client;
-};
 
 
 /** Decode Url-safe base64, our identifiers satisfies these requirements */
@@ -119,7 +86,7 @@ class QueueService {
     ).withFilter(new azure.ExponentialRetryPolicyFilter());
 
     // Create azure-queue-node client (more reliable than azure-storage)
-    this.client = patchAzureClient(azureQueue.createClient({
+    this.client = azureQueue.createClient({
       accountUrl:   [
         'https://',
         options.credentials.accountName,
@@ -131,7 +98,7 @@ class QueueService {
       agent:        globalAzureQueueAgent,
       base64:       true,
       json:         false
-    }));
+    });
 
     // Store account name of use in SAS signed Urls
     this.accountName = options.credentials.accountName;

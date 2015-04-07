@@ -7,6 +7,7 @@ var _             = require('lodash');
 var taskcluster   = require('taskcluster-client');
 var slugid        = require('slugid');
 var https         = require('https');
+var http          = require('http');
 
 var makeTask = () => {
   return {
@@ -63,6 +64,7 @@ var launch = async function(profile) {
   };
 
   var loops = 0;
+  var exiting = false;
   var startLoop = () => {
     loops += 1;
     (async() => {
@@ -77,8 +79,13 @@ var launch = async function(profile) {
           success += 1;
         }, (err) => {
           failed += 1;
-          console.log("Error: %s: %s", err.statusCode, err.message);
+          if (exiting) {
+            console.log("Error: %s: %s", err.statusCode, err.message);
+          }
         });
+        if (exiting) {
+          break;
+        }
         await base.testing.sleep(10);
       }
     })().catch(function(err) {
@@ -87,7 +94,9 @@ var launch = async function(profile) {
     });
   };
 
+
 /*
+
   //  2 req in parallel
   while(loops < 2) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
@@ -97,12 +106,10 @@ var launch = async function(profile) {
   while(loops < 4) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
-
   //  8 req in parallel
   while(loops < 8) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
-
   // 16 req in parallel
   while(loops < 16) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
@@ -130,7 +137,7 @@ var launch = async function(profile) {
   summary();
 
   console.log("Exiting");
-  process.exit(0);
+  exiting = true;
 };
 
 // If load-test.js is executed start the load-test

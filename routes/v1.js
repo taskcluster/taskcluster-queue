@@ -366,6 +366,15 @@ api.declare({
 
   var taskId  = req.params.taskId;
   var taskDef = req.body;
+  //TODO: REMOVE THIS HACK!!!
+  taskDef.schedulerId = taskDef.schedulerId || '-';
+  taskDef.routes = taskDef.routes || [];
+  taskDef.scopes = taskDef.scopes || [];
+  taskDef.tags = taskDef.tags || {};
+  taskDef.extra = taskDef.extra || {};
+  if (taskDef.retries === undefined) {
+    taskDef.retries = 5;
+  }
 
   // Find scopes required for task specific routes
   var routeScopes = taskDef.routes.map(function(route) {
