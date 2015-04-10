@@ -41,31 +41,12 @@ var launch = async function(profile) {
     maxPendingPoints:   cfg.get('influx:maxPendingPoints')
   });
 
-  // TODO REMOVE THIS!!
-  var usage = require('taskcluster-base/node_modules/usage');
-  setInterval(() => {
-    // Lookup usage for the current process
-    usage.lookup(process.pid, {keepHistory: true}, function(err, result) {
-      // Check for error
-      if (err) {
-        debug("Failed to get usage statistics, err: %s, %j",
-              err, err, err.stack);
-        return;
-      }
-
-      // Report usage
-      console.log("USAGE: cpu: %s %  memory: %s MiB",
-                  Math.round(result.cpu * 100) / 100,
-                  Math.round(result.memory / (1024 * 1024)));
-    });
-  }, 10 * 1000);
-
   // Start monitoring the process
- /*base.stats.startProcessUsageReporting({
+  base.stats.startProcessUsageReporting({
     drain:      influx,
     component:  cfg.get('queue:statsComponent'),
     process:    'server'
-  });*/
+  });
 
   // Create artifact bucket instances
   var publicArtifactBucket = new Bucket({
@@ -127,7 +108,6 @@ var launch = async function(profile) {
         schemaPrefix:     'queue/v1/',
         aws:              cfg.get('aws')
       });
-      //validator.check = function() { return null; };
 
       publisher = await exchanges.setup({
         credentials:        cfg.get('pulse'),
@@ -192,10 +172,7 @@ var launch = async function(profile) {
 
   // Create server
   debug("Launching server");
-  var server = await app.createServer();
-  //server.maxConnections = 100;
-
-  return server;
+  return app.createServer();
 };
 
 // If server.js is executed start the server
