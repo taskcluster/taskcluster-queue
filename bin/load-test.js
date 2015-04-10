@@ -68,11 +68,15 @@ var launch = async function(profile) {
   var startLoop = () => {
     loops += 1;
     (async() => {
+      var agent = new https.Agent({keepAlive: true});
+      if (cfg.get('server:publicUrl').substr(0, 5) != 'https') {
+        agent = new http.Agent({keepAlive: true});
+      }
       var queue = new taskcluster.Queue({
         credentials:  cfg.get('taskcluster:credentials'),
         retries:      0,
         baseUrl:      cfg.get('server:publicUrl') + '/v1',
-        agent:        new https.Agent()
+        agent:        agent
       });
       while(true) {
         await queue.createTask(slugid.v4(), makeTask()).then(() => {
