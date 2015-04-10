@@ -171,6 +171,9 @@ class QueueService {
   }
 
   /////// START OF IMPLEMENTATION WITH AZURE STORAGE */
+  // We keep the old implementation using azure-storage around, so that it's
+  // easy to test the two against each other for performance, stability and
+  // correctness.
 /*
 
   // Create queue using azure-storage client
