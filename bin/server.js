@@ -30,7 +30,8 @@ var launch = async function(profile) {
       'aws_secretAccessKey',
       'azure_accountName',
       'azure_accountKey',
-      'influx_connectionString'
+      'influx_connectionString',
+      'queue_usePublicArtifactBucketProxy'
     ],
     filename:     'taskcluster-queue'
   });
@@ -99,7 +100,10 @@ var launch = async function(profile) {
 
   // Create EC2RegionResolver for regions we have artifact proxies in
   var regionResolver = new EC2RegionResolver(
-    _.keys(cfg.get('queue:publicArtifactBucketProxies'))
+    cfg.get('queue:usePublicArtifactBucketProxy') === 'true' ?
+      _.keys(cfg.get('queue:publicArtifactBucketProxies'))
+    :
+      []
   );
 
   // When: publisher, validator and containers are created, proceed

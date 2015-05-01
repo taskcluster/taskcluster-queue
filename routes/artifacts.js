@@ -340,7 +340,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
     if (artifact.details.bucket === this.publicBucket.bucket) {
       var region = this.regionResolver.getRegion(req);
       if (region) {
-        url = 'http://' + this.publicProxies(region) + '/' + prefix;
+        url = 'http://' + this.publicProxies[region] + '/' + prefix;
       } else {
         url = this.publicBucket.createGetUrl(prefix);
       }
