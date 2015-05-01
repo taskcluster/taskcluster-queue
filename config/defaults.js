@@ -66,7 +66,10 @@ module.exports = {
 
     // Mapping from EC2 region to public artifact bucket proxy
     // (Must not end with a slash!)
-    publicArtifactBucketProxies: {}
+    publicArtifactBucketProxies: {},
+
+    // Use publicArtifactBucketProxies
+    usePublicArtifactBucketProxy: 'true'
   },
 
   // TaskCluster configuration
