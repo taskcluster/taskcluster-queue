@@ -1,5 +1,3 @@
-var azure       = require('azure-storage');
-var azureQueue  = require('azure-queue-node');
 var _           = require('lodash');
 var Promise     = require('promise');
 var debug       = require('debug')('queue:queue');
@@ -8,17 +6,17 @@ var base32      = require('thirty-two');
 var querystring = require('querystring');
 var url         = require('url');
 var base        = require('taskcluster-base');
+var azure       = require('fast-azure-storage');
 
 /** Timeout for azure queue requests */
 var AZURE_QUEUE_TIMEOUT     = 7 * 1000;
 
 /** Azure queue agent used for all instances of the queue client */
-var globalAzureQueueAgent = new base.AzureAgent({
+var globalAzureQueueAgent = new azure.Agent({
   keepAlive:        true,
   maxSockets:       100,
   maxFreeSockets:   100
 });
-
 
 /** Decode Url-safe base64, our identifiers satisfies these requirements */
 var decodeUrlSafeBase64 = function(data) {
@@ -78,26 +76,10 @@ class QueueService {
     this.prefix             = options.prefix;
     this.pendingPollTimeout = options.pendingPollTimeout;
 
-    // Documentation for the QueueService object can be found here:
-    // http://dl.windowsazure.com/nodestoragedocs/index.html
-    this.service = azure.createQueueService(
-      options.credentials.accountName,
-      options.credentials.accountKey
-    ).withFilter(new azure.ExponentialRetryPolicyFilter());
-
-    // Create azure-queue-node client (more reliable than azure-storage)
-    this.client = azureQueue.createClient({
-      accountUrl:   [
-        'https://',
-        options.credentials.accountName,
-        '.queue.core.windows.net/'
-      ].join(''),
-      accountName:  options.credentials.accountName,
-      accountKey:   options.credentials.accountKey,
-      timeout:      AZURE_QUEUE_TIMEOUT,
-      agent:        globalAzureQueueAgent,
-      base64:       true,
-      json:         false
+    this.client = new azure.Queue({
+      accountId:    options.credentials.accountName,
+      accessKey:    options.credentials.accountKey,
+      timeout:      AZURE_QUEUE_TIMEOUT
     });
 
     // Store account name of use in SAS signed Urls
@@ -116,8 +98,42 @@ class QueueService {
     this.deadlineQueueReady = null;
   }
 
-  /////// START OF IMPLEMENTATION WITH AZURE QUEUE NODE
+  _createQueue(queue) {
+    return this.client.createQueue(queue);
+  }
 
+  _countMessages(queue) {
+    return this.client.getMetadata(queue).then(_.property('messageCount'));
+  }
+
+  _putMessage(queue, message, {visibility, ttl}) {
+    var text = new Buffer(JSON.stringify(message)).toString('base64');
+    return this.client.putMessage(queue, text, {
+      visibilityTimeout:    visibility,
+      messageTTL:           ttl
+    });
+  }
+
+  async _getMessages(queue, {visibility, count}) {
+    var messages = await this.client.getMessages(queue, {
+      visibilityTimeout:    visibility,
+      numberOfMessages:     count
+    });
+    return messages.map(msg => {
+      return {
+        payload:  JSON.parse(new Buffer(msg.messageText, 'base64')),
+        remove:   this.client.deleteMessage.bind(
+          this.client,
+          queue,
+          msg.messageId,
+          msg.popReceipt
+        )
+      };
+    });
+  }
+
+  /////// START OF IMPLEMENTATION WITH AZURE QUEUE NODE
+/*
   // Create queue using azure-queue-node client
   _createQueue(queue) {
     return new Promise((accept, reject) => {
@@ -481,11 +497,10 @@ class QueueService {
     expiry.setMinutes(expiry.getMinutes() + 30);
 
     // Create shared access signature
-    var sas = this.service.generateSharedAccessSignature(queueName, {
-      AccessPolicy: {
-        Permissions:  azure.QueueUtilities.SharedAccessPermissions.PROCESS,
-        Start:        start,
-        Expiry:       expiry
+    var sas = this.client.sas(queueName, {
+      start, expiry,
+      permissions: {
+        process:    true
       }
     });
 
