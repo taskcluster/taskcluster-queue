@@ -173,7 +173,12 @@ api.declare({
     }
     if (!allow) {
       return res.status(409).json({
-        message:    "The given run is not running",
+        message:    "Artifacts cannot be created for a task after it is " +
+                    "resolved, unless it is resolved 'exception', and even " +
+                    "in this case only up to 25 min past resolution." +
+                    "This to ensure that artifacts have been uploaded before " +
+                    "a task is 'completed' and output is consumed by a " +
+                    "dependent task",
         error: {
           status:   task.status(),
           runId:    runId
