@@ -42,10 +42,17 @@ var validateTask = function(task) {
 
 /** Priority to constant for use in queue name (should be a string) */
 const PRIORITY_TO_CONSTANT = {
-  normal: '1',
-  high:   '5'
+  high:   '5',
+  normal: '1'
 };
 _.forIn(PRIORITY_TO_CONSTANT, v => assert(typeof v === 'string'));
+
+/** Priority in order of priority from high to low */
+const PRIORITIES = [
+  'high',
+  'normal'
+];
+assert(_.xor(PRIORITIES, _.keys(PRIORITY_TO_CONSTANT)).length === 0);
 
 /**
  * Wrapper for azure queue storage, to ease our use cases.
@@ -505,7 +512,10 @@ class QueueService {
     var pendingPollTimeout = Math.floor(this.pendingPollTimeout / 1000);
 
     // For each queue name, return signed URLs for the queue
-    let queues = _.map(queueNames, queueName => {
+
+    let queues = PRIORITIES.map(priority => {
+      let queueName = queueNames[priority];
+
       // Create shared access signature
       var sas = this.client.sas(queueName, {
         start, expiry,
