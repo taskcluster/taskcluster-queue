@@ -5,9 +5,6 @@ var assert    = require('assert');
 var _         = require('lodash');
 var base      = require('taskcluster-base');
 
-// Common schema prefix
-var SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/queue/v1/';
-
 // Maximum number runs allowed
 var MAX_RUNS_ALLOWED    = 50;
 
@@ -87,6 +84,7 @@ var api = new base.API({
     " * Workers, who execute tasks, and",
     " * Tools, that wants to inspect the state of a task."
   ].join('\n'),
+  schemaPrefix:       'http://schemas.taskcluster.net/queue/v1/',
   params: {
     taskId:           SLUGID_PATTERN,
     provisionerId:    GENERIC_ID_PATTERN,
@@ -107,7 +105,7 @@ api.declare({
   name:       'task',
   idempotent: true,
   scopes:     [[]],
-  output:     SCHEMA_PREFIX_CONST + 'task.json#',
+  output:     'task.json#',
   title:      "Get Task Definition",
   description: [
     "This end-point will return the task-definition. Notice that the task",
@@ -141,7 +139,7 @@ api.declare({
   name:     'status',
   scopes:   [[]],
   input:    undefined,  // No input is accepted
-  output:   SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  output:   'task-status-response.json#',
   title:    "Get task status",
   description: [
     "Get task status structure from `taskId`"
@@ -241,8 +239,8 @@ api.declare({
   idempotent: true,
   scopes:     [['queue:create-task:<provisionerId>/<workerType>']],
   deferAuth:  true,
-  input:      SCHEMA_PREFIX_CONST + 'create-task-request.json#',
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  input:      'create-task-request.json#',
+  output:     'task-status-response.json#',
   title:      "Create New Task",
   description: [
     "Create a new task, this is an **idempotent** operation, so repeat it if",
@@ -394,8 +392,8 @@ api.declare({
     ['queue:create-task:<provisionerId>/<workerType>']
   ],
   deferAuth:  true,
-  input:      SCHEMA_PREFIX_CONST + 'create-task-request.json#',
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  input:      'create-task-request.json#',
+  output:     'task-status-response.json#',
   title:      "Define Task",
   description: [
     "Define a task without scheduling it. This API end-point allows you to",
@@ -529,7 +527,7 @@ api.declare({
   ],
   deferAuth:  true,
   input:      undefined, // No input accepted
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  output:     'task-status-response.json#',
   title:      "Schedule Defined Task",
   description: [
     "If you have define a task using `defineTask` API end-point, then you",
@@ -617,7 +615,7 @@ api.declare({
   ],
   deferAuth:  true,
   input:      undefined, // No input accepted
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  output:     'task-status-response.json#',
   title:      "Rerun a Resolved Task",
   description: [
     "This method _reruns_ a previously resolved task, even if it was",
@@ -734,7 +732,7 @@ api.declare({
   ],
   deferAuth:  true,
   input:      undefined, // No input accepted
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  output:     'task-status-response.json#',
   title:      "Cancel Task",
   description: [
     "This method will cancel a task that is either `unscheduled`, `pending` or",
@@ -845,7 +843,7 @@ api.declare({
     ]
   ],
   deferAuth:  true,
-  output:     SCHEMA_PREFIX_CONST + 'poll-task-urls-response.json#',
+  output:     'poll-task-urls-response.json#',
   title:      "Get Urls to Poll Pending Tasks",
   description: [
     "Get a signed URLs to get and delete messages from azure queue.",
@@ -891,8 +889,8 @@ api.declare({
     ]
   ],
   deferAuth:  true,
-  input:      SCHEMA_PREFIX_CONST + 'task-claim-request.json#',
-  output:     SCHEMA_PREFIX_CONST + 'task-claim-response.json#',
+  input:      'task-claim-request.json#',
+  output:     'task-claim-response.json#',
   title:      "Claim task",
   description: [
     "claim a task, more to be added later..."
@@ -1013,7 +1011,7 @@ api.declare({
     ]
   ],
   deferAuth:  true,
-  output:     SCHEMA_PREFIX_CONST + 'task-claim-response.json#',
+  output:     'task-claim-response.json#',
   title:      "Reclaim task",
   description: [
     "reclaim a task more to be added later..."
@@ -1212,7 +1210,7 @@ api.declare({
   ],
   deferAuth:  true,
   input:      undefined,  // No input at this point
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  output:     'task-status-response.json#',
   title:      "Report Run Completed",
   description: [
     "Report a task completed, resolving the run as `completed`."
@@ -1241,7 +1239,7 @@ api.declare({
   ],
   deferAuth:  true,
   input:      undefined,  // No input at this point
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  output:     'task-status-response.json#',
   title:      "Report Run Failed",
   description: [
     "Report a run failed, resolving the run as `failed`. Use this to resolve",
@@ -1271,8 +1269,8 @@ api.declare({
     ]
   ],
   deferAuth:  true,
-  input:      SCHEMA_PREFIX_CONST + 'task-exception-request.json#',
-  output:     SCHEMA_PREFIX_CONST + 'task-status-response.json#',
+  input:      'task-exception-request.json#',
+  output:     'task-status-response.json#',
   title:      "Report Task Exception",
   description: [
     "Resolve a run as _exception_. Generally, you will want to report tasks as",
@@ -1401,7 +1399,7 @@ api.declare({
   name:       'pendingTasks',
   scopes:     [['queue:pending-tasks:<provisionerId>/<workerType>']],
   deferAuth:  true,
-  output:     SCHEMA_PREFIX_CONST + 'pending-tasks-response.json#',
+  output:     'pending-tasks-response.json#',
   title:      "Get Number of Pending Tasks",
   description: [
     "Documented later...",

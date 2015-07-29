@@ -4,9 +4,6 @@ var _       = require('lodash');
 var assert  = require('assert');
 var Promise = require('promise');
 
-// Common schema prefix
-const SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/queue/v1/';
-
 // Maximum number of artifacts to list
 const MAX_ARTIFACTS_LISTING = 10 * 1000;
 
@@ -22,8 +19,8 @@ api.declare({
     ]
   ],
   deferAuth:  true,
-  input:      SCHEMA_PREFIX_CONST + 'post-artifact-request.json#',
-  output:     SCHEMA_PREFIX_CONST + 'post-artifact-response.json#',
+  input:      'post-artifact-request.json#',
+  output:     'post-artifact-response.json#',
   title:      "Create Artifact",
   description: [
     "This API end-point creates an artifact for a specific run of a task. This",
@@ -506,7 +503,7 @@ api.declare({
   method:     'get',
   route:      '/task/:taskId/runs/:runId/artifacts',
   name:       'listArtifacts',
-  output:     SCHEMA_PREFIX_CONST + 'list-artifacts-response.json#',
+  output:     'list-artifacts-response.json#',
   title:      "Get Artifacts from Run",
   description: [
     "Returns a list of artifacts and associated meta-data for a given run."
@@ -550,7 +547,7 @@ api.declare({
   method:     'get',
   route:      '/task/:taskId/artifacts',
   name:       'listLatestArtifacts',
-  output:     SCHEMA_PREFIX_CONST + 'list-artifacts-response.json#',
+  output:     'list-artifacts-response.json#',
   title:      "Get Artifacts from Latest Run",
   description: [
     "Returns a list of artifacts and associated meta-data for the latest run",
