@@ -87,11 +87,6 @@ api.declare({
     "reference artifacts your process has created."
   ].join('\n')
 }, async function(req ,res) {
-  // Validate parameters
-  if (!api.checkParams(req, res)) {
-    return;
-  }
-
   var taskId      = req.params.taskId;
   var runId       = parseInt(req.params.runId);
   var name        = req.params.name;
@@ -427,11 +422,6 @@ api.declare({
     "use that URL with a normal HTTP client."
   ].join('\n')
 }, async function(req ,res) {
-  // Validate parameters
-  if (!api.checkParams(req, res)) {
-    return;
-  }
-
   var taskId = req.params.taskId;
   var runId  = parseInt(req.params.runId);
   var name   = req.params.name;
@@ -475,11 +465,6 @@ api.declare({
     "the latest run. Otherwise, just us the most convenient API end-point."
   ].join('\n')
 }, async function(req ,res) {
-  // Validate parameters
-  if (!api.checkParams(req, res)) {
-    return;
-  }
-
   var taskId = req.params.taskId;
   var name   = req.params.name;
 
@@ -527,11 +512,6 @@ api.declare({
     "Returns a list of artifacts and associated meta-data for a given run."
   ].join('\n')
 }, async function(req ,res) {
-  // Validate parameters
-  if (!api.checkParams(req, res)) {
-    return;
-  }
-
   var taskId = req.params.taskId;
   var runId  = parseInt(req.params.runId);
   // TODO: Add support querying using prefix
@@ -577,11 +557,6 @@ api.declare({
     "from the given task."
   ].join('\n')
 }, async function(req ,res) {
-  // Validate parameters
-  if (!api.checkParams(req, res)) {
-    return;
-  }
-
   var taskId = req.params.taskId;
   // TODO: Add support querying using prefix
 

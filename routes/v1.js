@@ -52,6 +52,11 @@ var MAX_RUNS_ALLOWED    = 50;
  * can't cause the last deadline message to get ignored either.
  */
 
+// Common patterns URL parameters
+var SLUGID_PATTERN      = /^[a-zA-Z0-9-_]{22}$/;
+var GENERIC_ID_PATTERN  = /^[a-zA-Z0-9-_]{1,22}$/;
+var RUN_ID_PATTERN      = /^[1-9]*[0-9]+$/;
+
 /** API end-point for version v1/
  *
  * In this API implementation we shall assume the following context:
@@ -81,107 +86,16 @@ var api = new base.API({
     " * Schedulers, who create tasks to be executed,",
     " * Workers, who execute tasks, and",
     " * Tools, that wants to inspect the state of a task."
-  ].join('\n')
-});
-
-// List of slugid parameters
-var SLUGID_PARAMS = [
-  'taskId'
-];
-
-// List of identifier parameters
-var IDENTIFIER_PARAMS = [
-  'provisionerId',
-  'workerType',
-  'workerGroup',
-  'workerId'
-];
-
-// List of integer parameters
-var INT_PARAMS = [
-  'runId'
-];
-
-/**
- * Check parameters against regular expressions for identifiers
- * and send a 401 response with an error in case of malformed URL parameters
- *
- * returns true if there was no errors.
- */
-var checkParams = function(req, res) {
-  var errors = [];
-  _.forIn(req.params, function(value, key) {
-    // Validate slugid parameters
-    if (SLUGID_PARAMS.indexOf(key) !== -1) {
-      if (!/^[a-zA-Z0-9-_]{22}$/.test(value)) {
-        errors.push({
-          message:  "Parameter '" + key + "' is not a slugid",
-          error:    value
-        });
-      }
-    }
-
-    // Validate identifier parameters
-    if (IDENTIFIER_PARAMS.indexOf(key) !== -1) {
-      // Validate format
-      if (!/^[a-zA-Z0-9-_]*$/.test(value)) {
-        errors.push({
-          message:  "Parameter '" + key + "' does not match [a-zA-Z0-9-_]* " +
-                    "as required for identifiers",
-          error:    value
-        });
-      }
-
-      // Validate minimum length
-      if (value.length == 0) {
-        errors.push({
-          message:  "Parameter '" + key + "' must be longer than 0 characters",
-          error:    value
-        });
-      }
-
-      // Validate maximum length
-      if (value.length > 22) {
-        errors.push({
-          message:  "Parameter '" + key + "' cannot be more than 22 characters",
-          error:    value
-        });
-      }
-    }
-
-    // Validate and parse integer parameters
-    if (INT_PARAMS.indexOf(key) !== -1) {
-      if (!/^[0-9]+$/.test(value)) {
-        errors.push({
-          message:  "Parameter '" + key + "' does not match [0-9]+",
-          error:    value
-        });
-      } else {
-        var number = parseInt(value);
-        if (_.isNaN(number)) {
-          errors.push({
-            message:  "Parameter '" + key + "' parses to NaN",
-            error:    value
-          });
-        }
-      }
-    }
-  });
-
-  // Check for errors and reply if necessary
-  if (errors.length != 0) {
-    res.status(401).json({
-      message:  "Malformed URL parameters",
-      error:    errors
-    });
-    return false;
+  ].join('\n'),
+  params: {
+    taskId:           SLUGID_PATTERN,
+    provisionerId:    GENERIC_ID_PATTERN,
+    workerType:       GENERIC_ID_PATTERN,
+    workerGroup:      GENERIC_ID_PATTERN,
+    workerId:         GENERIC_ID_PATTERN,
+    runId:            RUN_ID_PATTERN
   }
-  // No errors
-  return true;
-};
-
-// Export checkParams for use in artifacts.js
-api.checkParams = checkParams;
+});
 
 // Export api
 module.exports = api;
@@ -201,11 +115,6 @@ api.declare({
     "specified the queue may provide a default value."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   // Load Task entity
   let task = await this.Task.load({
     taskId:     req.params.taskId
@@ -238,11 +147,6 @@ api.declare({
     "Get task status structure from `taskId`"
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   // Load Task entity
   let task = await this.Task.load({
     taskId:     req.params.taskId
@@ -361,11 +265,6 @@ api.declare({
     "for completed tasks you have posted."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var taskId  = req.params.taskId;
   var taskDef = req.body;
 
@@ -515,11 +414,6 @@ api.declare({
     "task definition as previously defined this operation is safe to retry."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var taskId  = req.params.taskId;
   var taskDef = req.body;
 
@@ -648,11 +542,6 @@ api.declare({
     "To reschedule a task previously resolved, use `rerunTask`."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   // Load Task entity
   var taskId = req.params.taskId;
   var task = await this.Task.load({taskId: taskId}, true);
@@ -745,11 +634,6 @@ api.declare({
     "current task status."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   // Load Task entity
   var taskId  = req.params.taskId;
   var task    = await this.Task.load({taskId: taskId}, true);
@@ -867,11 +751,6 @@ api.declare({
     "return the current task status."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   // Load Task entity
   var taskId  = req.params.taskId;
   var task    = await this.Task.load({taskId: taskId}, true);
@@ -974,11 +853,6 @@ api.declare({
     "with `claimTask`, and afterwards you should always delete the message."
   ].join('\n')
 }, async function(req, res) {
-    // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var provisionerId = req.params.provisionerId;
   var workerType    = req.params.workerType;
 
@@ -1024,11 +898,6 @@ api.declare({
     "claim a task, more to be added later..."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var taskId      = req.params.taskId;
   var runId       = parseInt(req.params.runId);
 
@@ -1150,11 +1019,6 @@ api.declare({
     "reclaim a task more to be added later..."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var taskId = req.params.taskId;
   var runId  = parseInt(req.params.runId);
 
@@ -1354,11 +1218,6 @@ api.declare({
     "Report a task completed, resolving the run as `completed`."
   ].join('\n')
 }, function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var taskId = req.params.taskId;
   var runId  = parseInt(req.params.runId);
   // Backwards compatibility with very old workers, should be dropped in the
@@ -1394,11 +1253,6 @@ api.declare({
     "which should be reported with `reportException`."
   ].join('\n')
 }, function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var taskId        = req.params.taskId;
   var runId         = parseInt(req.params.runId);
 
@@ -1429,11 +1283,6 @@ api.declare({
     "resource does not exist."
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var taskId        = req.params.taskId;
   var runId         = parseInt(req.params.runId);
   var reason        = req.body.reason;
@@ -1561,11 +1410,6 @@ api.declare({
     "",
   ].join('\n')
 }, async function(req, res) {
-  // Validate parameters
-  if (!checkParams(req, res)) {
-    return;
-  }
-
   var provisionerId = req.params.provisionerId;
   var workerType    = req.params.workerType;
 
