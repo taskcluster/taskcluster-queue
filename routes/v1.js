@@ -192,7 +192,7 @@ api.declare({
   route:      '/task/:taskId',
   name:       'task',
   idempotent: true,
-  scopes:     undefined,
+  scopes:     [[]],
   output:     SCHEMA_PREFIX_CONST + 'task.json#',
   title:      "Get Task Definition",
   description: [
@@ -230,7 +230,7 @@ api.declare({
   method:   'get',
   route:    '/task/:taskId/status',
   name:     'status',
-  scopes:   undefined,  // Still no auth required
+  scopes:   [[]],
   input:    undefined,  // No input is accepted
   output:   SCHEMA_PREFIX_CONST + 'task-status-response.json#',
   title:    "Get task status",
@@ -386,7 +386,7 @@ api.declare({
 
   // Check scopes for priority
   if (taskDef.priority !== 'normal' &&
-      !req.satisfies('queue:task-priority:' + taskDef.priority)) {
+      !req.satisfies([['queue:task-priority:' + taskDef.priority]])) {
     return;
   }
 
@@ -540,7 +540,7 @@ api.declare({
 
   // Check scopes for priority
   if (taskDef.priority !== 'normal' &&
-      !req.satisfies('queue:task-priority:' + taskDef.priority)) {
+      !req.satisfies([['queue:task-priority:' + taskDef.priority]])) {
     return;
   }
 
