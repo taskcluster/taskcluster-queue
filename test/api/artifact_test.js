@@ -476,7 +476,7 @@ suite('Post artifacts', function() {
     }).catch(async (err) => {
       await helper.queue.reportCompleted(taskId, 0);
       debug("Got error: %s, as JSON %j", err, err);
-      assume().fail("Expected artifact to be updated");
+      throw err;
     });
 
     var artifacts = await helper.queue.listArtifacts(taskId, 0);
