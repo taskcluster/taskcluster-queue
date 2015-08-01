@@ -21,6 +21,10 @@ oneOf:
           URL to which a `PUT` request can be made to upload the artifact
           requested. Note, the `Content-Length` must be specified correctly,
           and the `ContentType` header must be set the value specified below.
+          Addtionally, you may specify `Content-Encoding: gzip` if the
+          artifact is gzipped prior to uploading. In this case you shouldn't
+          append `.gz`, as the decompression is assumed to be handled by the
+          HTTP client downloading the artifact.
         type:       string
         format:     uri
       expires:
@@ -30,7 +34,21 @@ oneOf:
         format:     date-time
       contentType:
         description: |
-          Artifact mime-type, must be specified as header when uploading with
+          Artifact mime-type, must be specified as `Content-Type` header
+          when uploading with the signed `putUrl`.
+        type:       string
+        maxLength:  255
+      contentMD5:
+        description: |
+          Artifact MD5 sum (base64 encoded), must be specified as
+          `Content-MD5` header when uploading with the signed `putUrl`.
+        type:       string
+        pattern:    {$const: base64-pattern}
+        minLength:  24
+        maxLength:  24
+      cacheControl:
+        description: |
+          Value to be specified as `Cache-Control` header when uploading with
           the signed `putUrl`.
         type:       string
         maxLength:  255
@@ -40,6 +58,8 @@ oneOf:
       - putUrl
       - expires
       - contentType
+      - cacheControl
+      # - contentMD5, not required until it's also required when uploading...
   - title:          "Azure Artifact Response"
     description: |
       Response to a request for an Azure Shared Access Signature (SAS)

@@ -31,11 +31,35 @@ oneOf:
            always using `application/json` for JSON artifacts.
         type:       string
         maxLength:  255
+      contentMD5:
+        description: |
+          Base64 encoded MD5 sum of the artifact. If specified, it **must**
+          also be given as value to the `Content-MD5` header when uploading
+          to S3.
+          **Warning**, this will likely be required in the future, and **must**
+          be specified if `contentSHA256` is specified.
+        type:       string
+        pattern:    {$const: base64-pattern}
+        minLength:  24
+        maxLength:  24
+      contentSHA256:
+        description: |
+          Base64 encoded SHA-256 sum of the artifact. If specified, it will
+          be available as `x-amz-meta-content-sha256` header when people
+          download the artifact. This is useful for validating integrity.
+          **Warning**, this will likely be required in the future, and **must**
+          be specified if `contentMD5` is specified.
+        type:       string
+        pattern:    {$const: base64-pattern}
+        minLength:  44
+        maxLength:  44
     additionalProperties: false
     required:
       - storageType
       - expires
       - contentType
+      # contentMD5 and contentSHA256 aren't required YET
+      # We most port all workers to provide these before we make them required!
   - title:          "Azure Artifact Request"
     description: |
       Request for an Azure Shared Access Signature (SAS) that will allow
