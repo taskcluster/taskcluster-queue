@@ -33,7 +33,7 @@ suite('queue/QueueService', function() {
   var queueService = new QueueService({
     // Using a different prefix as we create/delete a lot of queues and we don't
     // want queues in state being-deleted when running the other tests
-    prefix:             slugid.v4(),
+    prefix:             slugid.v4().substring(0,6),
     credentials:        cfg.get('azure'),
     claimQueue:         cfg.get('queue:claimQueue'),
     deadlineQueue:      cfg.get('queue:deadlineQueue'),
