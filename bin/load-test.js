@@ -52,7 +52,7 @@ var launch = async function(profile) {
     return Math.round(n * 100) / 100;
   };
 
-  const CYCLE_SECONDS = 3 * 60;
+  const CYCLE_SECONDS = 10 * 60; // Normally 3
 
   var success = 0;
   var failed  = 0;
