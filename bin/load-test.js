@@ -98,9 +98,6 @@ var launch = async function(profile) {
     });
   };
 
-
-/*
-
   //  2 req in parallel
   while(loops < 2) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
@@ -129,7 +126,7 @@ var launch = async function(profile) {
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
   //*/
-
+/*
   // 64 req in parallel
   while(loops < 64) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
@@ -138,7 +135,7 @@ var launch = async function(profile) {
   // 128 req in parallel
   while(loops < 128) startLoop();
   await base.testing.sleep(CYCLE_SECONDS * 1000);
-  summary();
+  summary();//*/
 
   console.log("Exiting");
   exiting = true;
