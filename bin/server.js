@@ -162,7 +162,7 @@ var launch = async function(profile) {
     validator:        validator,
     authBaseUrl:      cfg.get('taskcluster:authBaseUrl'),
     // TODO Remove this
-    credentials:      cfg.get('taskcluster:credentials'),
+    //credentials:      cfg.get('taskcluster:credentials'),
     publish:          cfg.get('queue:publishMetaData') === 'true',
     baseUrl:          cfg.get('server:publicUrl') + '/v1',
     referencePrefix:  'queue/v1/api.json',
