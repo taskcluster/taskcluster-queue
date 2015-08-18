@@ -72,11 +72,38 @@ var launch = async function(profile) {
       if (cfg.get('server:publicUrl').substr(0, 5) != 'https') {
         agent = new http.Agent({keepAlive: true});
       }
+      var tempCreds = taskcluster.createTemporaryCredentials({
+        start:        taskcluster.fromNow('- 15 min'),
+        expiry:       taskcluster.fromNow('4 hours'),
+        scopes: [
+          'queue:*',
+          'index:*',
+          'assume:*',
+          'scheduler:*',
+          'auth:azure-table-access:taskclusterdev/*',
+          'docker-worker:cache:*',
+          'docker-worker:image:taskcluster/*',
+          'docker-worker:capability:device:loopbackVideo',
+          'docker-worker:capability:device:loopbackAudio'
+        ],
+        credentials:  cfg.get('taskcluster:credentials')
+      });
       var queue = new taskcluster.Queue({
-        credentials:  cfg.get('taskcluster:credentials'),
-        retries:      0,
-        baseUrl:      cfg.get('server:publicUrl') + '/v1',
-        agent:        agent
+        credentials:      tempCreds,
+        retries:          0,
+        baseUrl:          cfg.get('server:publicUrl') + '/v1',
+        agent:            agent,
+        authorizedScopes: [
+          'queue:create-task:no-provisioner/test-worker',
+          'index:-random-scope.that-is-a-non-trivial.string',
+          'assume:*',
+          'scheduler:-random-scope.that-is-a-non-trivial.string',
+          'auth:azure-table-access:taskclusterdev/*',
+          'docker-worker:cache:*',
+          'docker-worker:image:taskcluster/*',
+          'docker-worker:capability:device:loopbackVideo',
+          'docker-worker:capability:device:loopbackAudio'
+        ]
       });
       while(true) {
         await queue.createTask(slugid.v4(), makeTask()).then(() => {
