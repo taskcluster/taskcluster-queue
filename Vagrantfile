@@ -4,6 +4,11 @@ Vagrant.configure("2") do |config|
   config.vm.network :forwarded_port, host: 60001,   guest: 60001
   config.vm.network :forwarded_port, host: 5672,    guest: 5672
   config.vm.provision "shell", inline: <<-SCRIPT
+# Fix apt repository links
+sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com D8576A8BA88D21E9
+sudo sed -i 's/us\.archive\.ubuntu\.com/old-releases.ubuntu.com/g;s/security\.ubuntu\.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+sudo sed -i 's_http://get.docker.io_https://get.docker.com_' /etc/apt/sources.list.d/docker.list
+
 # Create postgres role for queue
 sudo -u postgres psql -c "CREATE ROLE queue LOGIN PASSWORD 'secret'";
 sudo -u postgres psql -c "CREATE DATABASE queue_v1 OWNER queue";
