@@ -293,7 +293,7 @@ suite('Resolve task', function() {
     assume(s2.runs[0].reasonResolved).equals('malformed-payload');
   });
 
-  test("reportEception (worker-shutdown) is idempotent", async () => {
+  test("reportException (worker-shutdown) is idempotent", async () => {
     var taskId = slugid.v4();
     var allowedToBeException = false;
     var gotMessage = null;
