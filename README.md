@@ -39,12 +39,13 @@ the configs given in `config/test.js` with a local configuration file
 }
 ```
 
-For S3 we have a dummy bucket called `test-bucket-for-any-garbage` which stores objects for 24 hours. Mozilla developers can get access from a taskcluster
-developer, or you can setup a custom a bucket and overwrite the bucket name
-as well as the credentials.
+For S3 we have a dummy bucket called `test-bucket-for-any-garbage` which stores
+objects for 24 hours. Mozilla developers can get access from a taskcluster
+developer, or you can setup a custom a bucket and overwrite the bucket name as
+well as the credentials.
 
-Same thing applies for azure, though it's as nicely scoped, and doesn't clean up
-on it's own.
+Same thing applies for azure, though it's as nicely scoped, and doesn't clean
+up on it's own.
 
 
 Deployment
