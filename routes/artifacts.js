@@ -190,6 +190,18 @@ api.declare({
         details.bucket  = this.privateBucket.bucket;
       }
       details.prefix    = [taskId, runId, name].join('/');
+      if (input.contentMD5 || input.contentSHA256) {
+        // Remove this check, when contentMD5 and contentSHA256 are required
+        if (!input.contentMD5 || !input.contentSHA256) {
+          return res.status(400).json({
+            message:  "Both contentMD5 and contentSHA256 must be given " +
+                      "if either is given"
+          });
+        }
+        // Add contentMD5 and contentSHA256 to details
+        details.contentMD5    = input.contentMD5;
+        details.contentSHA256 = input.contentSHA256;
+      }
       break;
 
     case 'azure':
@@ -296,17 +308,30 @@ api.declare({
         bucket = this.privateBucket;
       }
       // Create put URL
+      var metadata = {};
+      if (artifact.details.contentSHA256) {
+        metadata['content-sha256'] = artifact.details.contentSHA256;
+      }
       var putUrl = await bucket.createPutUrl(
         artifact.details.prefix, {
         contentType:      artifact.contentType,
-        expires:          30 * 60 + 10 // Add 10 sec for clock drift
+        expires:          30 * 60 + 10, // Add 10 sec for clock drift
+        contentMD5:       artifact.details.contentMD5 || undefined,
+        metadata:         metadata
       });
-      return res.reply({
+      // Construct reply
+      var reply = {
         storageType:  's3',
         contentType:  artifact.contentType,
         expires:      expiry.toJSON(),
-        putUrl:       putUrl
-      });
+        putUrl:       putUrl,
+        cacheControl: (isPublic ? 'public' : 'private') + ', no-transform'
+      };
+      // Provide contentMD5 if present
+      if (artifact.details.contentMD5) {
+        reply.contentMD5 = artifact.details.contentMD5;
+      }
+      return res.reply(reply);
 
     case 'azure':
       // Reply with SAS for azure

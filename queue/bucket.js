@@ -52,7 +52,9 @@ Bucket.prototype.createPutUrl = function(prefix, options) {
     that.s3.getSignedUrl('putObject', {
       Key:          prefix,
       ContentType:  options.contentType,
-      Expires:      options.expires
+      Expires:      options.expires,
+      ContentMD5:   options.contentMD5,
+      Metadata:     options.metadata
     }, function(err, url) {
       if (err) {
         return reject(err);

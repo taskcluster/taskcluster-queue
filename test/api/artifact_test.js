@@ -16,6 +16,7 @@ suite('Post artifacts', function() {
   var {Netmask}     = require('netmask');
   var assume        = require('assume');
   var helper        = require('./helper');
+  var crypto        = require('crypto');
 
   // Static URL from which ip-ranges from AWS services can be fetched
   const AWS_IP_RANGES_URL = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
@@ -32,7 +33,7 @@ suite('Post artifacts', function() {
       res = err.response;
     }
     assume(res.statusCode).equals(303);
-    return request.get(res.headers.location).end();
+    return request.get(res.headers.location).buffer().end();
   };
 
   // Get something we expect to return 404, this is just easier than having
@@ -166,6 +167,114 @@ suite('Post artifacts', function() {
     );
     debug("Fetching artifact from: %s", url);
     await get404(url);
+  });
+
+  test("Post S3 artifact with contentMD5", async () => {
+    debug("### Creating task");
+    var taskId = slugid.v4();
+    await helper.queue.createTask(taskId, taskDef);
+
+    debug("### Claiming task");
+    // First runId is always 0, so we should be able to claim it here
+    await helper.queue.claimTask(taskId, 0, {
+      workerGroup:    'my-worker-group',
+      workerId:       'my-worker'
+    });
+
+    debug("### Computing hashes");
+    var md5 = crypto.createHash('md5');
+    md5.update("Hello World", 'utf-8');
+    md5 = md5.digest('base64');
+    var sha = crypto.createHash('sha256');
+    sha.update("Hello World", 'utf-8');
+    sha = sha.digest('base64');
+
+    debug("### Send post artifact request");
+    var r1 = await helper.queue.createArtifact(taskId, 0, 'public/s3.txt', {
+      storageType:    's3',
+      expires:        taskcluster.fromNowJSON('1 day'),
+      contentType:    'plain/text',
+      contentMD5:     md5,
+      contentSHA256:  sha
+    });
+    assume(r1).contains('putUrl', 'contentMD5', 'cacheControl');
+
+    debug("### Uploading to putUrl");
+    var res = await request
+                      .put(r1.putUrl)
+                      .set('content-md5', md5)
+                      .set('cache-control', r1.cacheControl)
+                      .set('content-type', 'plain/text')
+                      .send("Hello World")
+                      .end();
+    assume(res.ok).is.ok();
+
+    debug("### Download Artifact (runId: 0)");
+    var url = helper.queue.buildUrl(
+      helper.queue.getArtifact,
+      taskId, 0, 'public/s3.txt'
+    );
+
+    debug("Fetching artifact from: %s", url);
+    res = await getWith303Redirect(url);
+    assume(res.ok).is.ok();
+    assume(res.text).to.be.eql("Hello World");
+    assume(res.headers).contains('x-amz-meta-content-sha256', 'cache-control');
+    assume(res.headers['cache-control']).is.eql('public, no-transform');
+    assume(res.headers['x-amz-meta-content-sha256']).is.eql(sha);
+
+    debug("### Expire artifacts");
+    // config/test.js hardcoded to expire artifact 4 days in the future
+    await helper.expireArtifacts();
+  });
+
+  test("Post S3 artifact with wrong contentMD5 fails", async () => {
+    debug("### Creating task");
+    var taskId = slugid.v4();
+    await helper.queue.createTask(taskId, taskDef);
+
+    debug("### Claiming task");
+    // First runId is always 0, so we should be able to claim it here
+    await helper.queue.claimTask(taskId, 0, {
+      workerGroup:    'my-worker-group',
+      workerId:       'my-worker'
+    });
+
+    debug("### Computing hashes");
+    var md5 = crypto.createHash('md5');
+    md5.update("Hello World", 'utf-8');
+    md5 = md5.digest('base64');
+    var sha = crypto.createHash('sha256');
+    sha.update("Hello World", 'utf-8');
+    sha = sha.digest('base64');
+
+    debug("### Send post artifact request");
+    var r1 = await helper.queue.createArtifact(taskId, 0, 'public/s3.txt', {
+      storageType:    's3',
+      expires:        taskcluster.fromNowJSON('1 day'),
+      contentType:    'plain/text',
+      contentMD5:     md5,
+      contentSHA256:  sha
+    });
+    assume(r1).contains('putUrl', 'contentMD5', 'cacheControl');
+
+    debug("### Uploading to putUrl");
+    try {
+      var res = await request
+                        .put(r1.putUrl)
+                        .set('content-md5', md5)
+                        .set('cache-control', r1.cacheControl)
+                        .set('content-type', 'plain/text')
+                        .send("Wrong Text!")
+                        .end();
+      assume().fail("Expected an error");
+    } catch (err) {
+      assume(err.response.statusCode).is.eql(400);
+    }
+
+    debug("### Expire artifacts");
+    // config/test.js hardcoded to expire artifact 4 days in the future
+    await helper.expireArtifacts();
   });
 
   test("Post S3 artifact (with bad scopes)", async () => {

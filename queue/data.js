@@ -203,6 +203,8 @@ var Artifact = base.Entity.configure({
      * storageType: s3
      *   bucket:        S3 bucket that contains the object
      *   prefix:        Prefix (path) for the object within the bucket
+     *   contentMD5:    (optional) base64 encoded MD5 of artifact
+     *   contentSHA256: (optional) base64 encoded SHA-256 of artifact
      *
      * storageType: azure
      *   container:     Azure container that holds the blob
