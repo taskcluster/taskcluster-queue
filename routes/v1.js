@@ -1,9 +1,10 @@
-var Promise   = require('promise');
-var debug     = require('debug')('routes:v1');
-var slugid    = require('slugid');
-var assert    = require('assert');
-var _         = require('lodash');
-var base      = require('taskcluster-base');
+var Promise     = require('promise');
+var debug       = require('debug')('routes:v1');
+var slugid      = require('slugid');
+var assert      = require('assert');
+var _           = require('lodash');
+var base        = require('taskcluster-base');
+var taskcluster = require('taskcluster-client');
 
 // Maximum number runs allowed
 var MAX_RUNS_ALLOWED    = 50;
@@ -69,6 +70,7 @@ var RUN_ID_PATTERN      = /^[1-9]*[0-9]+$/;
  *   queueService:   // Azure QueueService object from queueservice.js
  *   regionResolver: // Instance of EC2RegionResolver,
  *   publicProxies:  // Mapping from EC2 region to proxy host for publicBucket
+ *   credentials:    // TaskCluster credentials for issuing temp creds on claim
  * }
  */
 var api = new base.API({
@@ -986,13 +988,25 @@ api.declare({
     takenUntil:   run.takenUntil
   }, task.routes);
 
+  // Create temporary credentials for the task
+  let credentials = taskcluster.createTemporaryCredentials({
+    start:  new Date(Date.now() - 15 * 60 * 1000),
+    expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
+    scopes: [
+      'queue:task-claim:' + taskId + '/' + runId
+    ].concat(task.scopes),
+    credentials: this.credentials
+  });
+
   // Reply to caller
   return res.reply({
     status:       status,
     runId:        runId,
     workerGroup:  workerGroup,
     workerId:     workerId,
-    takenUntil:   run.takenUntil
+    takenUntil:   run.takenUntil,
+    task:         await task.definition(),
+    credentials:  credentials
   });
 });
 
@@ -1009,7 +1023,7 @@ api.declare({
     ]
   ],
   deferAuth:  true,
-  output:     'task-claim-response.json#',
+  output:     'task-reclaim-response.json#',
   title:      "Reclaim task",
   description: [
     "reclaim a task more to be added later..."
@@ -1094,13 +1108,24 @@ api.declare({
     });
   }
 
+  // Create temporary credentials for the task
+  let credentials = taskcluster.createTemporaryCredentials({
+    start:  new Date(Date.now() - 15 * 60 * 1000),
+    expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
+    scopes: [
+      'queue:task-claim:' + taskId + '/' + runId
+    ].concat(task.scopes),
+    credentials: this.credentials
+  });
+
   // Reply to caller
   return res.reply({
     status:       task.status(),
     runId:        runId,
     workerGroup:  run.workerGroup,
     workerId:     run.workerId,
-    takenUntil:   takenUntil.toJSON()
+    takenUntil:   takenUntil.toJSON(),
+    credentials:  credentials
   });
 });
 
