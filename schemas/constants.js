@@ -81,8 +81,8 @@ module.exports = {
     type: 'object',
     description: [
       "Temporary credentials granting `task.scopes` and the scope:",
-      "`queue:task-claim:<taskId>/<runId>` which allows the worker to reclaim",
-      "the task and upload artifacts.",
+      "`queue:claim-task:<taskId>/<runId>` which allows the worker to reclaim",
+      "the task, upload artifacts and report task resolution.",
       "",
       "The temporary credentials are set to expire after `takenUntil`. They",
       "won't expire exactly at `takenUntil` but shortly after, hence, requests",

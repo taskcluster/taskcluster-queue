@@ -993,7 +993,7 @@ api.declare({
     start:  new Date(Date.now() - 15 * 60 * 1000),
     expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
     scopes: [
-      'queue:task-claim:' + taskId + '/' + runId
+      'queue:claim-task:' + taskId + '/' + runId
     ].concat(task.scopes),
     credentials: this.credentials
   });
@@ -1020,6 +1020,8 @@ api.declare({
     [
       'queue:claim-task',
       'assume:worker-id:<workerGroup>/<workerId>'
+    ], [
+      'queue:claim-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
@@ -1054,8 +1056,10 @@ api.declare({
 
   // Authenticate request by providing parameters
   if (!req.satisfies({
+    taskId,
+    runId,
     workerGroup:    run.workerGroup,
-    workerId:       run.workerId
+    workerId:       run.workerId,
   })) {
     return;
   }
@@ -1113,7 +1117,7 @@ api.declare({
     start:  new Date(Date.now() - 15 * 60 * 1000),
     expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
     scopes: [
-      'queue:task-claim:' + taskId + '/' + runId
+      'queue:claim-task:' + taskId + '/' + runId
     ].concat(task.scopes),
     credentials: this.credentials
   });
@@ -1139,9 +1143,7 @@ var resolveTask = async function(req, res, taskId, runId, target) {
          target === 'failed', "Expected a valid target");
 
   // Load Task entity
-  let task = await this.Task.load({
-    taskId:     taskId
-  }, true);
+  let task = await this.Task.load({taskId}, true);
 
   // Handle cases where the task doesn't exist
   if (!task) {
@@ -1160,6 +1162,8 @@ var resolveTask = async function(req, res, taskId, runId, target) {
 
   // Authenticate request by providing parameters
   if(!req.satisfies({
+    taskId,
+    runId,
     workerGroup:    run.workerGroup,
     workerId:       run.workerId
   })) {
@@ -1229,6 +1233,8 @@ api.declare({
     [
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>'
+    ], [
+      'queue:claim-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
@@ -1258,6 +1264,8 @@ api.declare({
     [
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>'
+    ], [
+      'queue:claim-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
@@ -1289,6 +1297,8 @@ api.declare({
     [
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>'
+    ], [
+      'queue:claim-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
@@ -1315,9 +1325,7 @@ api.declare({
   var reason        = req.body.reason;
 
   // Load Task entity
-  let task = await this.Task.load({
-    taskId:     taskId
-  }, true);
+  let task = await this.Task.load({taskId}, true);
 
   // Handle cases where the task doesn't exist
   if (!task) {
@@ -1336,6 +1344,8 @@ api.declare({
 
   // Authenticate request by providing parameters
   if(!req.satisfies({
+    taskId,
+    runId,
     workerGroup:    run.workerGroup,
     workerId:       run.workerId
   })) {
