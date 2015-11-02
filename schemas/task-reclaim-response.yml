@@ -27,8 +27,8 @@ properties:
     pattern:      {$const: identifier-pattern}
   takenUntil:
     description: |
-      Time at which the run expires and is resolved as `failed`,
-      if the run isn't reclaimed.
+      Time at which the run expires and is resolved as `exception`,
+      with reason `claim-expired` if the run haven't been reclaimed.
     type:         string
     format:       date-time
   credentials:  {$const: task-credentials}
@@ -39,3 +39,4 @@ required:
   - workerGroup
   - workerId
   - takenUntil
+  - credentials
