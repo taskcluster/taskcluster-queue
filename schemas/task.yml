@@ -33,6 +33,7 @@ properties:
     minLength:      {$const: identifier-min-length}
     maxLength:      {$const: identifier-max-length}
     pattern:        {$const: identifier-pattern}
+    default:        '-'
   taskGroupId:
     title:          "Task-Group Identifier"
     description: |
@@ -47,6 +48,7 @@ properties:
     description: |
       List of task specific routes, AMQP messages will be CC'ed to these routes.
     type:           array
+    default:        []
     items:
       title:        "Task Specific Route"
       description: |
@@ -70,6 +72,7 @@ properties:
     enum:
       - high
       - normal
+    default:        normal
   retries:
     title:          "Retries"
     description: |
@@ -78,7 +81,8 @@ properties:
       these events are to be expected.
     type:           integer
     minimum:        0
-    maximum:        49
+    maximum:        50
+    default:        5
   created:          {$const: created}
   deadline:         {$const: deadline}
   expires:
@@ -96,6 +100,7 @@ properties:
       List of scopes (or scope-patterns) that the task is
       authorized to use.
     type:           array
+    default:        []
     items:
       title:        "Scope"
       description: |
@@ -168,6 +173,7 @@ properties:
     additionalProperties:
       type:           string
       maxLength:      4096
+    default:          {}
   extra:
     title:            "Extra Data"
     description: |
@@ -187,7 +193,6 @@ required:
   - provisionerId
   - workerType
   - schedulerId
-  - taskGroupId
   - routes
   - priority
   - retries
