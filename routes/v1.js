@@ -239,7 +239,7 @@ api.declare({
   idempotent: true,
   scopes:     [['queue:create-task:<provisionerId>/<workerType>']],
   deferAuth:  true,
-  input:      'task.json#',
+  input:      'create-task-request.json#',
   output:     'task-status-response.json#',
   title:      "Create New Task",
   description: [
@@ -392,7 +392,7 @@ api.declare({
     ['queue:create-task:<provisionerId>/<workerType>']
   ],
   deferAuth:  true,
-  input:      'task.json#',
+  input:      'create-task-request.json#',
   output:     'task-status-response.json#',
   title:      "Define Task",
   description: [
