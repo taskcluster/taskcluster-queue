@@ -1,5 +1,5 @@
 $schema:            http://json-schema.org/draft-04/schema#
-title:              "Task Definition"
+title:              "Task Definition Request"
 description: |
   Definition of a task that can be scheduled
 type:               object
@@ -72,6 +72,7 @@ properties:
       added later.
       **Task submitter required scopes** `queue:task-priority:high` for high
       priority tasks.
+    type:           string
     enum:
       - high
       - normal
@@ -84,7 +85,7 @@ properties:
       these events are to be expected.
     type:           integer
     minimum:        0
-    maximum:        50
+    maximum:        49
     default:        5
   created:          {$const: created}
   deadline:         {$const: deadline}
