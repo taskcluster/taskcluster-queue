@@ -386,7 +386,7 @@ api.declare({
 
 /** Define tasks */
 api.declare({
-  method:     'put',
+  method:     'post',
   route:      '/task/:taskId/define',
   name:       'defineTask',
   scopes:     [
