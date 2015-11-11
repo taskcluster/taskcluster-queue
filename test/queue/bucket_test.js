@@ -7,9 +7,10 @@ suite('queue/bucket_test', function() {
   var _             = require('lodash');
   var debug         = require('debug')('queue:test:queue:bucket_test');
   var request       = require('superagent-promise');
+  var legacyConfig  = require('taskcluster-lib-config');
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../../config/defaults'),
     profile:      require('../../config/' + 'test'),
     envs: [

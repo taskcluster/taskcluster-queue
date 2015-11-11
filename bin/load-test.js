@@ -8,6 +8,7 @@ var taskcluster   = require('taskcluster-client');
 var slugid        = require('slugid');
 var https         = require('https');
 var http          = require('http');
+var legacyConfig  = require('taskcluster-lib-config');
 
 var makeTask = () => {
   return {
@@ -30,7 +31,7 @@ var launch = async function(profile) {
   debug("Launching with profile: %s", profile);
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../config/defaults'),
     profile:      require('../config/' + profile),
     envs: [

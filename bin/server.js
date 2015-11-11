@@ -11,13 +11,14 @@ var data              = require('../queue/data');
 var Bucket            = require('../queue/bucket');
 var QueueService      = require('../queue/queueservice');
 var EC2RegionResolver = require('../queue/ec2regionresolver');
+var legacyConfig      = require('taskcluster-lib-config');
 
 /** Launch server */
 var launch = async function(profile) {
   debug("Launching with profile: %s", profile);
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../config/defaults'),
     profile:      require('../config/' + profile),
     envs: [

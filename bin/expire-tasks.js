@@ -9,13 +9,14 @@ var Bucket      = require('../queue/bucket');
 var data        = require('../queue/data');
 var taskcluster = require('taskcluster-client');
 var assert      = require('assert');
+var legacyConfig = require('taskcluster-lib-config');
 
 /** Launch expire-tasks */
 var launch = async function(profile) {
   debug("Launching with profile: %s", profile);
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../config/defaults'),
     profile:      require('../config/' + profile),
     envs: [

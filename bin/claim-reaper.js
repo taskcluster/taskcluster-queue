@@ -10,13 +10,14 @@ var assert              = require('assert');
 var ClaimResolver       = require('../queue/claimresolver');
 var QueueService        = require('../queue/queueservice');
 var exchanges           = require('../queue/exchanges');
+var legacyConfig      = require('taskcluster-lib-config');
 
 /** Launch claim-reaper */
 var launch = async function(profile) {
   debug("Launching with profile: %s", profile);
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../config/defaults'),
     profile:      require('../config/' + profile),
     envs: [
