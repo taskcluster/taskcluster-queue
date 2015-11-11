@@ -4,13 +4,14 @@ var base          = require('taskcluster-base');
 var path          = require('path');
 var assert        = require('assert');
 var QueueService  = require('../queue/queueservice');
+var legacyConfig  = require('taskcluster-lib-config');
 
 /** Launch expire-queues */
 var launch = async function(profile) {
   debug("Launching with profile: %s", profile);
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../config/defaults'),
     profile:      require('../config/' + profile),
     envs: [

@@ -10,9 +10,10 @@ suite('queue/QueueService', function() {
   var debug         = require('debug')('queue:test:queueservice');
   var xml2js        = require('xml2js');
   var assume        = require('assume');
+  var legacyConfig  = require('taskcluster-lib-config');
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../../config/defaults'),
     profile:      require('../../config/' + 'test'),
     envs: [

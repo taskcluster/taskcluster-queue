@@ -10,13 +10,14 @@ var assert              = require('assert');
 var DeadlineResolver    = require('../queue/deadlineresolver');
 var QueueService        = require('../queue/queueservice');
 var exchanges           = require('../queue/exchanges');
+var legacyConfig      = require('taskcluster-lib-config');
 
 /** Launch deadline-reaper */
 var launch = async function(profile) {
   debug("Launching with profile: %s", profile);
 
   // Load configuration
-  var cfg = base.config({
+  var cfg = legacyConfig({
     defaults:     require('../config/defaults'),
     profile:      require('../config/' + profile),
     envs: [

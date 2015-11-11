@@ -6,6 +6,7 @@ var base            = require('taskcluster-base');
 var v1              = require('../../routes/v1');
 var exchanges       = require('../../queue/exchanges');
 var taskcluster     = require('taskcluster-client');
+var legacyConfig    = require('taskcluster-lib-config');
 var mocha           = require('mocha');
 var bin = {
   server:             require('../../bin/server'),
@@ -40,7 +41,7 @@ var testProfile = 'test';
 var helper = module.exports = {};
 
 // Load configuration
-var cfg = helper.cfg = base.config({
+var cfg = helper.cfg = legacyConfig({
   defaults:     require('../../config/defaults'),
   profile:      require('../../config/' + testProfile),
   envs: [
