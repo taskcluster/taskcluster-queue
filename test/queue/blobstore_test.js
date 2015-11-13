@@ -9,31 +9,21 @@ suite('queue/tasks_store', function() {
   var request       = require('superagent-promise');
   var BlobUploader  = require('./azure-blob-uploader-sas');
   var debug         = require('debug')('queue:test:queue:blobstore_test');
-  var legacyConfig  = require('taskcluster-lib-config');
 
   // Load configuration
-  var cfg = legacyConfig({
-    defaults:     require('../../config/defaults'),
-    profile:      require('../../config/' + 'test'),
-    envs: [
-      'azure_accountName',
-      'azure_accountKey',
-    ],
-    filename:     'taskcluster-queue'
-  });
+  var cfg = base.config({profile: 'test'});
 
   // Check that we have an account
-  if (!cfg.get('azure:accountKey')) {
-    console.log("\nWARNING:");
-    console.log("Skipping 'blobstore' tests, missing config file: " +
-                "taskcluster-queue.conf.json");
-    return;
+  let blobstore = null;
+  if (cfg.azure && cfg.azure.accountKey) {
+    blobstore = new BlobStore({
+      container:    cfg.app.artifactContainer,
+      credentials:  cfg.azure
+    });
+  } else {
+    console.log("WARNING: Skipping 'blobstore' tests, missing user-config.yml");
+    this.pending = true;
   }
-
-  var blobstore = new BlobStore({
-    container:    cfg.get('queue:artifactContainer'),
-    credentials:  cfg.get('azure')
-  });
 
   // Create container
   test("createContainer", function() {

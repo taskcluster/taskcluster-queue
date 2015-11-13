@@ -16,10 +16,8 @@ let EC2RegionResolver = require('../queue/ec2regionresolver');
 let DeadlineResolver  = require('../queue/deadlineresolver');
 let ClaimResolver     = require('../queue/claimresolver');
 
-var loader           = require('taskcluster-lib-loader');
-
 // Create component loader
-let load = /*base.*/ loader({
+let load = base.loader({
   cfg: {
     requires: ['profile'],
     setup: ({profile}) => base.config({profile}),
@@ -292,7 +290,7 @@ let load = /*base.*/ loader({
   // Create the load-test process (run as one-off job)
   'load-test': {
     requires: ['cfg'],
-    setup: ({cfg}) => require('./load-test')(cfg);
+    setup: ({cfg}) => require('./load-test')(cfg)
   },
 
 }, ['profile', 'process']);
