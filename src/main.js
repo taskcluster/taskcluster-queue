@@ -25,7 +25,12 @@ let load = base.loader({
 
   influx: {
     requires: ['cfg'],
-    setup: ({cfg}) => new base.stats.Influx(cfg.influx),
+    setup: ({cfg}) => {
+      if (cfg.influx.connectionString) {
+        return new base.stats.Influx(cfg.influx);
+      }
+      return new base.stats.NullDrain();
+    }
   },
   monitor: {
     requires: ['cfg', 'influx', 'process'],
