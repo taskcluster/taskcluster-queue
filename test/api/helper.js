@@ -6,7 +6,6 @@ var base            = require('taskcluster-base');
 var v1              = require('../../routes/v1');
 var exchanges       = require('../../queue/exchanges');
 var taskcluster     = require('taskcluster-client');
-var legacyConfig    = require('taskcluster-lib-config');
 var mocha           = require('mocha');
 var load            = require('../../src/main');
 
