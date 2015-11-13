@@ -18,93 +18,71 @@ var launch = async function(profile) {
   debug("Launching with profile: %s", profile);
 
   // Load configuration
-  var cfg = legacyConfig({
-    defaults:     require('../config/defaults'),
-    profile:      require('../config/' + profile),
-    envs: [
-      'pulse_username',
-      'pulse_password',
-      'queue_publishMetaData',
-      'taskcluster_credentials_clientId',
-      'taskcluster_credentials_accessToken',
-      'aws_accessKeyId',
-      'aws_secretAccessKey',
-      'azure_accountName',
-      'azure_accountKey',
-      'influx_connectionString',
-      'queue_usePublicArtifactBucketProxy',
-      'queue_publicArtifactBucketCDN'
-    ],
-    filename:     'taskcluster-queue'
-  });
+  let cfg = base.config({profile});
 
   // Create InfluxDB connection for submitting statistics
-  var influx = new base.stats.Influx({
-    connectionString:   cfg.get('influx:connectionString'),
-    maxDelay:           cfg.get('influx:maxDelay'),
-    maxPendingPoints:   cfg.get('influx:maxPendingPoints')
-  });
+  var influx = new base.stats.Influx(cfg.influx);
 
   // Start monitoring the process
   base.stats.startProcessUsageReporting({
     drain:      influx,
-    component:  cfg.get('queue:statsComponent'),
+    component:  cfg.app.statsComponent,
     process:    'server'
   });
 
   // Create artifact bucket instances
   var publicArtifactBucket = new Bucket({
-    bucket:             cfg.get('queue:publicArtifactBucket'),
-    credentials:        cfg.get('aws'),
-    bucketCDN:          cfg.get('queue:publicArtifactBucketCDN')
+    bucket:             cfg.app.publicArtifactBucket,
+    credentials:        cfg.aws,
+    bucketCDN:          cfg.app.publicArtifactBucketCDN,
   });
   var privateArtifactBucket = new Bucket({
-    bucket:             cfg.get('queue:privateArtifactBucket'),
-    credentials:        cfg.get('aws')
+    bucket:             cfg.app.privateArtifactBucket,
+    credentials:        cfg.aws
   });
 
   // Create artifactStore
   var artifactStore = new BlobStore({
-    container:          cfg.get('queue:artifactContainer'),
-    credentials:        cfg.get('azure')
+    container:          cfg.app.artifactContainer,
+    credentials:        cfg.azure
   });
 
   // Create artifacts table
   var Artifact = data.Artifact.setup({
-    table:              cfg.get('queue:artifactTableName'),
-    credentials:        cfg.get('azure'),
+    table:              cfg.app.artifactTableName,
+    credentials:        cfg.azure,
     context: {
       blobStore:        artifactStore,
       publicBucket:     publicArtifactBucket,
       privateBucket:    privateArtifactBucket
     },
     drain:              influx,
-    component:          cfg.get('queue:statsComponent'),
+    component:          cfg.app.statsComponent,
     process:            'server'
   });
 
   // Create task table
   var Task = data.Task.setup({
-    table:              cfg.get('queue:taskTableName'),
-    credentials:        cfg.get('azure'),
+    table:              cfg.app.taskTableName,
+    credentials:        cfg.azure,
     drain:              influx,
-    component:          cfg.get('queue:statsComponent'),
+    component:          cfg.app.statsComponent,
     process:            'server'
   });
 
   // Create QueueService to manage azure queues
   var queueService = new QueueService({
-    prefix:           cfg.get('queue:queuePrefix'),
-    credentials:      cfg.get('azure'),
-    claimQueue:       cfg.get('queue:claimQueue'),
-    deadlineQueue:    cfg.get('queue:deadlineQueue'),
-    deadlineDelay:    cfg.get('queue:deadlineDelay')
+    prefix:           cfg.app.queuePrefix,
+    credentials:      cfg.azure,
+    claimQueue:       cfg.app.claimQueue,
+    deadlineQueue:    cfg.app.deadlineQueue,
+    deadlineDelay:    cfg.app.deadlineDelay
   });
 
   // Create EC2RegionResolver for regions we have artifact proxies in
   var regionResolver = new EC2RegionResolver(
-    cfg.get('queue:usePublicArtifactBucketProxy') === 'true' ?
-      _.keys(cfg.get('queue:publicArtifactBucketProxies'))
+    cfg.app.usePublicArtifactBucketProxy ?
+      _.keys(cfg.app.publicArtifactBucketProxies)
     :
       []
   );
@@ -117,20 +95,20 @@ var launch = async function(profile) {
       validator = await base.validator({
         folder:           path.join(__dirname, '..', 'schemas'),
         constants:        require('../schemas/constants'),
-        publish:          cfg.get('queue:publishMetaData') === 'true',
+        publish:          cfg.app.publishMetaData,
         schemaPrefix:     'queue/v1/',
-        aws:              cfg.get('aws')
+        aws:              cfg.aws
       });
 
       publisher = await exchanges.setup({
-        credentials:        cfg.get('pulse'),
-        exchangePrefix:     cfg.get('queue:exchangePrefix'),
+        credentials:        cfg.pulse,
+        exchangePrefix:     cfg.app.exchangePrefix,
         validator:          validator,
         referencePrefix:    'queue/v1/exchanges.json',
-        publish:            cfg.get('queue:publishMetaData') === 'true',
-        aws:                cfg.get('aws'),
+        publish:            cfg.app.publishMetaData,
+        aws:                cfg.aws,
         drain:              influx,
-        component:          cfg.get('queue:statsComponent'),
+        component:          cfg.app.statsComponent,
         process:            'server'
       });
     })(),
@@ -154,34 +132,29 @@ var launch = async function(profile) {
       Artifact:       Artifact,
       publisher:      publisher,
       validator:      validator,
-      claimTimeout:   cfg.get('queue:claimTimeout'),
+      claimTimeout:   cfg.app.claimTimeout,
       queueService:   queueService,
       blobStore:      artifactStore,
       publicBucket:   publicArtifactBucket,
       privateBucket:  privateArtifactBucket,
       regionResolver: regionResolver,
-      publicProxies:  cfg.get('queue:publicArtifactBucketProxies'),
-      credentials:    cfg.get('taskcluster:credentials'),
+      publicProxies:  cfg.app.publicArtifactBucketProxies,
+      credentials:    cfg.taskcluster.credentials,
     },
     validator:        validator,
-    authBaseUrl:      cfg.get('taskcluster:authBaseUrl'),
-    publish:          cfg.get('queue:publishMetaData') === 'true',
-    baseUrl:          cfg.get('server:publicUrl') + '/v1',
+    authBaseUrl:      cfg.taskcluster.authBaseUrl,
+    publish:          cfg.app.publishMetaData,
+    baseUrl:          cfg.server.publicUrl + '/v1',
     referencePrefix:  'queue/v1/api.json',
-    aws:              cfg.get('aws'),
-    component:        cfg.get('queue:statsComponent'),
+    aws:              cfg.aws,
+    component:        cfg.app.statsComponent,
     drain:            influx
   });
 
   debug("Configuring app");
 
   // Create app
-  var app = base.app({
-    port:           Number(process.env.PORT || cfg.get('server:port')),
-    env:            cfg.get('server:env'),
-    forceSSL:       cfg.get('server:forceSSL'),
-    trustProxy:     cfg.get('server:trustProxy')
-  });
+  var app = base.app(cfg.server);
 
   // Mount API router
   app.use('/v1', router);
