@@ -2,10 +2,17 @@ language: node_js
 sudo: false
 node_js:
 - '4'
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
 script: npm test
 env:
   global:
-  - DEBUG='* -superagent -express:* -mocha:* -babel'
+  - CXX=g++-4.8
+  - DEBUG='queue:*'
   - secure: NvXgVAqtwgbXntjGx9wj7mAzPrfhkoeNqA5xqS2+DFdMUfvPl7QXnLqxVxuD3u4mPESRBOOKuFasHcKvi6l0lp/0kXGLyriMusMnf1sx9DHAsCxrZUfbbGjWDH8nRKI2RbxnY0ps+EdapUyi3xF9xEu5m2oIcjuZxuM8KROt1d4=
   - secure: cPineCZbnw0/NBLPNC8NBq3/P8DN3kzqD1aG3bXUsNlD0XSHNlQLdJh87ueWNGyN4gjIY0PYBZo5JCIdZshzF3LO7Z3E0U7w4LObkr00BvJDPrfomnb87U27Gn8wVM9wjpBaR8ChzxiK0wjCt26Bb4tAm9kMm1jTUJIajosXG+o=
   - secure: mzWsVqCtoB4nYQ0D3RwEjACV4Ax/YcbHMp8faZH9dCyFammns6YLW/egZjtrVtJBMbC87+7tHP8ZC7DmssJG3q3gPw/0UT+mv97vsw3JiLjH74TGOEeYYZYbi8JsuxhlQJtPEhety7LufGIFlL1zPA9Jr8JZgD/RkHUa/ZCUN/0=
