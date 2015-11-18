@@ -48,7 +48,8 @@ suite('Create task', function() {
 
     helper.scopes(
       'queue:create-task:no-provisioner/test-worker',
-      'queue:route:*'
+      'queue:route:*',
+      'assume:scheduler-id:my-scheduler/dSlITZ4yQgmvxxAi4A8fHQ',
     );
     debug("### Start listening for messages");
     await helper.events.listenFor('is-defined', helper.queueEvents.taskDefined({
@@ -78,7 +79,8 @@ suite('Create task', function() {
     var taskId = slugid.v4();
     helper.scopes(
       'queue:create-task:my-provisioner/another-worker',
-      'queue:route:wrong-route'
+      'queue:route:wrong-route',
+      'assume:scheduler-id:my-scheduler/dSlITZ4yQgmvxxAi4A8fHQ',
     );
     await helper.queue.createTask(taskId, taskDef).then(() => {
       throw new Error("Expected an authentication error");
@@ -111,7 +113,8 @@ suite('Create task', function() {
 
     helper.scopes(
       'queue:define-task:no-provisioner/test-worker',
-      'queue:route:---*'
+      'queue:route:---*',
+      'assume:scheduler-id:my-scheduler/dSlITZ4yQgmvxxAi4A8fHQ',
     );
     await helper.events.listenFor('is-defined', helper.queueEvents.taskDefined({
       taskId:   taskId

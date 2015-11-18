@@ -237,7 +237,12 @@ api.declare({
   route:      '/task/:taskId',
   name:       'createTask',
   idempotent: true,
-  scopes:     [['queue:create-task:<provisionerId>/<workerType>']],
+  scopes:     [
+    [
+      'queue:create-task:<provisionerId>/<workerType>',
+      'assume:scheduler-id:<schedulerId>/<taskGroupId>'
+    ]
+  ],
   deferAuth:  true,
   input:      'create-task-request.json#',
   output:     'task-status-response.json#',
@@ -268,6 +273,12 @@ api.declare({
   var taskId  = req.params.taskId;
   var taskDef = req.body;
 
+  // Patch default values and validate timestamps
+  var detail = patchAndValidateTaskDef(taskId, taskDef);
+  if (detail) {
+    return res.status(detail.code).json(detail.json);
+  }
+
   // Find scopes required for task specific routes
   var routeScopes = taskDef.routes.map(function(route) {
     return 'queue:route:' + route;
@@ -277,7 +288,9 @@ api.declare({
   // requester satisfies all the scopes assigned to the task
   if (!req.satisfies({
     provisionerId:  taskDef.provisionerId,
-    workerType:     taskDef.workerType
+    workerType:     taskDef.workerType,
+    schedulerId:    taskDef.schedulerId,
+    taskGroupId:    taskDef.taskGroupId,
   }) || !req.satisfies([taskDef.scopes])
      || !req.satisfies([routeScopes])) {
     return;
@@ -287,12 +300,6 @@ api.declare({
   if (taskDef.priority !== 'normal' &&
       !req.satisfies([['queue:task-priority:' + taskDef.priority]])) {
     return;
-  }
-
-  // Patch default values and validate timestamps
-  var detail = patchAndValidateTaskDef(taskId, taskDef);
-  if (detail) {
-    return res.status(detail.code).json(detail.json);
   }
 
   // Insert entry in deadline queue
@@ -390,8 +397,14 @@ api.declare({
   route:      '/task/:taskId/define',
   name:       'defineTask',
   scopes:     [
-    ['queue:define-task:<provisionerId>/<workerType>'],
-    ['queue:create-task:<provisionerId>/<workerType>']
+    [
+      'queue:define-task:<provisionerId>/<workerType>',
+      'assume:scheduler-id:<schedulerId>/<taskGroupId>'
+    ],
+    [
+      'queue:create-task:<provisionerId>/<workerType>',
+      'assume:scheduler-id:<schedulerId>/<taskGroupId>'
+    ]
   ],
   deferAuth:  true,
   input:      'create-task-request.json#',
@@ -429,7 +442,9 @@ api.declare({
   // requester satisfies all the scopes assigned to the task
   if(!req.satisfies({
     provisionerId:  taskDef.provisionerId,
-    workerType:     taskDef.workerType
+    workerType:     taskDef.workerType,
+    schedulerId:    taskDef.schedulerId,
+    taskGroupId:    taskDef.taskGroupId,
   }) || !req.satisfies([taskDef.scopes])
      || !req.satisfies([routeScopes])) {
     return;

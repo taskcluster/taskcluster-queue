@@ -49,7 +49,8 @@ suite('Poll tasks', function() {
     debug("### Create task");
     helper.scopes(
       'queue:create-task:no-provisioner/poll-test-worker',
-      'queue:route:*'
+      'queue:route:*',
+      'assume:scheduler-id:my-scheduler/dSlITZ4yQgmvxxAi4A8fHQ',
     );
     await helper.queue.createTask(taskId, taskDef);
 
