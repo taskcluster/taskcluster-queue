@@ -280,9 +280,7 @@ api.declare({
   }
 
   // Find scopes required for task specific routes
-  var routeScopes = taskDef.routes.map(function(route) {
-    return 'queue:route:' + route;
-  });
+  var routeScopes = taskDef.routes.map(route => 'queue:route:' + route);
 
   // Authenticate request by providing parameters, and then validate that the
   // requester satisfies all the scopes assigned to the task
