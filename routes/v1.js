@@ -60,7 +60,7 @@ var RUN_ID_PATTERN      = /^[1-9]*[0-9]+$/;
  * In this API implementation we shall assume the following context:
  * {
  *   Task:           // data.Task instance
- *   Artifacts:      // data.Task instance
+ *   Artifact:       // data.Artifact instance
  *   publicBucket:   // bucket instance for public artifacts
  *   privateBucket:  // bucket instance for private artifacts
  *   blobStore:      // BlobStore for azure artifacts
@@ -93,8 +93,24 @@ var api = new base.API({
     workerType:       GENERIC_ID_PATTERN,
     workerGroup:      GENERIC_ID_PATTERN,
     workerId:         GENERIC_ID_PATTERN,
-    runId:            RUN_ID_PATTERN
-  }
+    runId:            RUN_ID_PATTERN,
+  },
+  context: [
+    'Task',
+    'Artifact',
+    'TaskGroup',
+    'TaskGroupMember',
+    'publicBucket',
+    'privateBucket',
+    'blobStore',
+    'publisher',
+    'validator',
+    'claimTimeout',
+    'queueService',
+    'regionResolver',
+    'publicProxies',
+    'credentials',
+  ],
 });
 
 // Export api
@@ -231,6 +247,60 @@ var patchAndValidateTaskDef = function(taskId, taskDef) {
   return null;
 };
 
+/** Ensure the taskGroup exists and that membership is declared */
+let ensureTaskGroup = async (ctx, taskId, taskDef, req) => {
+  let taskGroupId = taskDef.taskGroupId;
+  let taskGroup = await ctx.TaskGroup.load({taskGroupId}, true);
+  let taskGroupExpiration = new Date(
+    new Date(taskDef.expires).getTime() +
+    72 * 24 * 60 * 60 * 1000
+  );
+  if (!taskGroup) {
+    taskGroup = await ctx.TaskGroup.create({
+      taskGroupId,
+      schedulerId:  taskDef.schedulerId,
+      expires:      taskGroupExpiration,
+    }).catch(err => {
+      // We only handle cases where the entity already exists
+      if (!err || err.code !== 'EntityAlreadyExists') {
+        throw err;
+      }
+      return ctx.TaskGroup.load({taskGroupId});
+    });
+  }
+  if (taskGroup.schedulerId !== taskDef.schedulerId) {
+    req.status(409).json({
+      message: 'taskGroupId: ' + taskGroupId + ' contains tasks with ' +
+               'schedulerId: ' + taskGroup.schedulerId + ' you cannot ' +
+               'insert tasks into it with schedulerId: ' + taskDef.schedulerId,
+      taskGroupId,
+      existingSchedulerId: taskGroup.schedulerId,
+      givenSchedulerId: taskDef.schedulerId,
+    });
+    return false;
+  }
+  // Update taskGroup.expires if necessary
+  await taskGroup.modify(taskGroup => {
+    if (taskGroup.expires.getTime() < new Date(taskDef.expires).getTime()) {
+      taskGroup.expires = taskGroupExpiration;
+    }
+  });
+
+  // Ensure the group membership relation is constructed too
+  await ctx.TaskGroupMember.create({
+    taskGroupId,
+    taskId,
+    expires: new Date(taskDef.expires),
+  }).catch(err => {
+    // If the entity already exists, then we're happy no need to crash
+    if (!err || err.code !== 'EntityAlreadyExists') {
+      throw err;
+    }
+  });
+
+  return true;
+};
+
 /** Create tasks */
 api.declare({
   method:     'put',
@@ -303,6 +373,11 @@ api.declare({
   // Check scopes for priority
   if (taskDef.priority !== 'normal' &&
       !req.satisfies([['queue:task-priority:' + taskDef.priority]])) {
+    return;
+  }
+
+  // Ensure group membership is declared, and that schedulerId isn't conflicting
+  if (!await ensureTaskGroup(this, taskId, taskDef, req)) {
     return;
   }
 
@@ -463,6 +538,11 @@ api.declare({
   // Check scopes for priority
   if (taskDef.priority !== 'normal' &&
       !req.satisfies([['queue:task-priority:' + taskDef.priority]])) {
+    return;
+  }
+
+  // Ensure group membership is declared, and that schedulerId isn't conflicting
+  if (!await ensureTaskGroup(this, taskId, taskDef, req)) {
     return;
   }
 
