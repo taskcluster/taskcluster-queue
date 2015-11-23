@@ -732,7 +732,6 @@ api.declare({
   scopes:     [
     [
       'queue:cancel-task',
-      'assume:scheduler-id:<schedulerId>/<taskGroupId>'
     ]
   ],
   deferAuth:  true,
@@ -751,7 +750,10 @@ api.declare({
     "",
     "**Remark** this operation is idempotent, if you try to cancel a task that",
     "isn't `unscheduled`, `pending` or `running`, this operation will just",
-    "return the current task status."
+    "return the current task status.",
+    "",
+    "**Remark** note that this operation can apply to any task.  Future work will",
+    "provide a means to limit which sort of tasks can be cancelled.",
   ].join('\n')
 }, async function(req, res) {
   // Load Task entity
