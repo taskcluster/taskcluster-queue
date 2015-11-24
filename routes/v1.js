@@ -179,6 +179,7 @@ api.declare({
   });
 });
 
+
 /** Construct default values and validate dates */
 var patchAndValidateTaskDef = function(taskId, taskDef) {
   // Set taskGroupId to taskId if not provided
