@@ -244,7 +244,7 @@ api.declare({
     ], [
       'queue:define-task:<provisionerId>/<workerType>',
       'queue:task-group-id:<schedulerId>/<taskGroupId>',
-      'queue:schedule-task:<schedulerId>/<taskGroupId>',
+      'queue:schedule-task:<schedulerId>/<taskGroupId>/<taskId>',
     ],
   ],
   deferAuth:  true,
@@ -291,6 +291,7 @@ api.declare({
   // Authenticate request by providing parameters, and then validate that the
   // requester satisfies all the scopes assigned to the task
   if (!req.satisfies({
+    taskId,
     provisionerId:  taskDef.provisionerId,
     workerType:     taskDef.workerType,
     schedulerId:    taskDef.schedulerId,
@@ -549,7 +550,7 @@ api.declare({
       'queue:schedule-task',
       'assume:scheduler-id:<schedulerId>/<taskGroupId>'
     ], [
-      'queue:schedule-task:<schedulerId>/<taskGroupId>',
+      'queue:schedule-task:<schedulerId>/<taskGroupId>/<taskId>',
     ]
   ],
   deferAuth:  true,
@@ -580,8 +581,9 @@ api.declare({
 
   // Authenticate request by providing parameters
   if(!req.satisfies({
+    taskId,
     schedulerId:    task.schedulerId,
-    taskGroupId:    task.taskGroupId
+    taskGroupId:    task.taskGroupId,
   })) {
     return;
   }
@@ -640,7 +642,7 @@ api.declare({
       'queue:rerun-task',
       'assume:scheduler-id:<schedulerId>/<taskGroupId>'
     ], [
-      'queue:rerun-task:<schedulerId>/<taskGroupId>',
+      'queue:rerun-task:<schedulerId>/<taskGroupId>/<taskId>',
     ]
   ],
   deferAuth:  true,
@@ -675,6 +677,7 @@ api.declare({
 
   // Authenticate request by providing parameters
   if(!req.satisfies({
+    taskId,
     schedulerId:    task.schedulerId,
     taskGroupId:    task.taskGroupId
   })) {
@@ -760,7 +763,7 @@ api.declare({
       'queue:cancel-task',
       'assume:scheduler-id:<schedulerId>/<taskGroupId>'
     ], [
-      'queue:cancel-task:<schedulerId>/<taskGroupId>',
+      'queue:cancel-task:<schedulerId>/<taskGroupId>/<taskId>',
     ]
   ],
   deferAuth:  true,
@@ -795,6 +798,7 @@ api.declare({
 
   // Authenticate request by providing parameters
   if(!req.satisfies({
+    taskId,
     schedulerId:    task.schedulerId,
     taskGroupId:    task.taskGroupId
   })) {
@@ -1032,7 +1036,9 @@ api.declare({
     start:  new Date(Date.now() - 15 * 60 * 1000),
     expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
     scopes: [
-      'queue:claim-run-id:' + taskId + '/' + runId
+      'queue:reclaim-task:' + taskId + '/' + runId,
+      'queue:resolve-task:' + taskId + '/' + runId,
+      'queue:create-artifact:' + taskId + '/' + runId,
     ].concat(task.scopes),
     credentials: this.credentials
   });
@@ -1061,7 +1067,7 @@ api.declare({
       'queue:claim-task',
       'assume:worker-id:<workerGroup>/<workerId>'
     ], [
-      'queue:claim-run-id:<taskId>/<runId>'
+      'queue:reclaim-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
@@ -1157,7 +1163,9 @@ api.declare({
     start:  new Date(Date.now() - 15 * 60 * 1000),
     expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
     scopes: [
-      'queue:claim-run-id:' + taskId + '/' + runId
+      'queue:reclaim-task:' + taskId + '/' + runId,
+      'queue:resolve-task:' + taskId + '/' + runId,
+      'queue:create-artifact:' + taskId + '/' + runId,
     ].concat(task.scopes),
     credentials: this.credentials
   });
@@ -1275,7 +1283,7 @@ api.declare({
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>'
     ], [
-      'queue:claim-run-id:<taskId>/<runId>'
+      'queue:resolve-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
@@ -1307,7 +1315,7 @@ api.declare({
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>'
     ], [
-      'queue:claim-run-id:<taskId>/<runId>'
+      'queue:resolve-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
@@ -1341,7 +1349,7 @@ api.declare({
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>'
     ], [
-      'queue:claim-run-id:<taskId>/<runId>'
+      'queue:resolve-task:<taskId>/<runId>'
     ]
   ],
   deferAuth:  true,
