@@ -39,11 +39,23 @@ properties:
       error from which it couldn't recover. The queue will not retry runs
       resolved with this reason, but you are clearly signaling that this is a
       bug in the worker code.
-      **Report `superseded`** if the task was determined to have been
-      superseded by another task, and its results are no longer needed.  It is
-      convention in this case to create an artifact entitled
-      `public/superseded-by` containing the taskId of the task that superseded
-      this one.
+      **Report `superseded`** if a task can be determined to have been
+      superseded by another task, meaning its results aren't of interest, the
+      worker may report the task as _superseded_. The exact semantics of this
+      feature is worker-specific, upon encountering you should consult the
+      worker-specific documentation. Workers are free to use this exception as
+      they see fit, but they **must** document the behavior. It's strongly
+      recommended that the worker uploads a JSON artifact titled
+      `public/superseded-by.json` with details of why the task was superseded,
+      and a `taskId` property pointing to the task that superseded it.
+      Example use-case: Consider a worker that computes the next prime greater
+      than some number N given in `task.payload`, and then stores this prime in
+      a global database. If upon claiming a task the worker does a lookup in
+      the database and observes that the next time for N is already computed,
+      then it may be useful to just report the task as `superseded`.
+      In other cases a worker could also provide a facility by which
+      task-specific could report the task as `superseded`, for example using a
+      special exit code (not recommended, just illustrative).
 additionalProperties:   false
 required:
   - reason
