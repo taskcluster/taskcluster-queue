@@ -11,6 +11,7 @@ properties:
       - malformed-payload
       - resource-unavailable
       - internal-error
+      - superseded
     description: |
       Reason that the task is resolved with an exception. This is a subset
       of the values for `resolvedReason` given in the task status structure.
@@ -29,15 +30,20 @@ properties:
       unless you know the resource exists, if the resource doesn't exist you
       should report `malformed-payload`. Example use-case if you contact the
       index (a service) on behalf of the task, because of a declaration in
-      ´task.payload`, and the service (index) is temporarily down. Don't use
+      `task.payload`, and the service (index) is temporarily down. Don't use
       this if a URL returns 404, but if it returns 503 or hits a timeout when
       you retry the request, then this _may_ be a valid exception. The queue
       assumes that workers have applied retries as needed, and will not retry
        the task.
-      **Report `internal-error` if the worker experienced an unhandled internal
+      **Report `internal-error`** if the worker experienced an unhandled internal
       error from which it couldn't recover. The queue will not retry runs
       resolved with this reason, but you are clearly signaling that this is a
       bug in the worker code.
+      **Report `superseded`** if the task was determined to have been
+      superseded by another task, and its results are no longer needed.  It is
+      convention in this case to create an artifact entitled
+      `public/superseded-by` containing the taskId of the task that superseded
+      this one.
 additionalProperties:   false
 required:
   - reason
