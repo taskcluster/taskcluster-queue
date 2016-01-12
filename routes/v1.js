@@ -249,7 +249,7 @@ var patchAndValidateTaskDef = function(taskId, taskDef) {
 };
 
 /** Ensure the taskGroup exists and that membership is declared */
-let ensureTaskGroup = async (ctx, taskId, taskDef, req) => {
+let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
   let taskGroupId = taskDef.taskGroupId;
   let taskGroup = await ctx.TaskGroup.load({taskGroupId}, true);
   let taskGroupExpiration = new Date(
@@ -270,7 +270,7 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, req) => {
     });
   }
   if (taskGroup.schedulerId !== taskDef.schedulerId) {
-    req.status(409).json({
+    res.status(409).json({
       message: 'taskGroupId: ' + taskGroupId + ' contains tasks with ' +
                'schedulerId: ' + taskGroup.schedulerId + ' you cannot ' +
                'insert tasks into it with schedulerId: ' + taskDef.schedulerId,
@@ -377,7 +377,7 @@ api.declare({
   }
 
   // Ensure group membership is declared, and that schedulerId isn't conflicting
-  if (!await ensureTaskGroup(this, taskId, taskDef, req)) {
+  if (!await ensureTaskGroup(this, taskId, taskDef, res)) {
     return;
   }
 
@@ -540,7 +540,7 @@ api.declare({
   }
 
   // Ensure group membership is declared, and that schedulerId isn't conflicting
-  if (!await ensureTaskGroup(this, taskId, taskDef, req)) {
+  if (!await ensureTaskGroup(this, taskId, taskDef, res)) {
     return;
   }
 
