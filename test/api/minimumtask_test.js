@@ -28,7 +28,6 @@ suite('Create task (w. defaults)', () => {
 
     helper.scopes(
       'queue:create-task:no-provisioner/test-worker',
-      'assume:scheduler-id:-/' + taskId,
     );
     await helper.events.listenFor('is-defined', helper.queueEvents.taskDefined({
       taskId:   taskId

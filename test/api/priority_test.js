@@ -35,7 +35,6 @@ suite("task.priority", () => {
     helper.scopes(
       'queue:create-task:no-provisioner/' + workerType,
       'queue:task-priority:high',
-      'assume:scheduler-id:-/*',
     );
     await helper.queue.createTask(slugid.v4(), makeTask('high'));
   });
@@ -43,7 +42,6 @@ suite("task.priority", () => {
   test("Can't create 'high' without queue:task-priority:high", async () => {
     helper.scopes(
       'queue:create-task:no-provisioner/' + workerType,
-      'assume:scheduler-id:-/*',
     );
     await helper.queue.createTask(slugid.v4(), makeTask('high')).then(() => {
       assert(false, "Expected 400 error!");
@@ -55,7 +53,6 @@ suite("task.priority", () => {
   test("Can create 'normal' without queue:task-priority:high", async () => {
     helper.scopes(
       'queue:create-task:no-provisioner/' + workerType,
-      'assume:scheduler-id:-/*',
     );
     await helper.queue.createTask(slugid.v4(), makeTask('normal'));
   });
@@ -64,7 +61,6 @@ suite("task.priority", () => {
     helper.scopes(
       'queue:define-task:no-provisioner/' + workerType,
       'queue:task-priority:high',
-      'assume:scheduler-id:-/*',
     );
     await helper.queue.defineTask(slugid.v4(), makeTask('high'));
   });
@@ -72,7 +68,6 @@ suite("task.priority", () => {
   test("Can't define 'high' without queue:task-priority:high", async () => {
     helper.scopes(
       'queue:define-task:no-provisioner/' + workerType,
-      'assume:scheduler-id:-/*',
     );
     await helper.queue.defineTask(slugid.v4(), makeTask('high')).then(() => {
       assert(false, "Expected 400 error!");
@@ -84,7 +79,6 @@ suite("task.priority", () => {
   test("Can define 'normal' without queue:task-priority:high", async () => {
     helper.scopes(
       'queue:define-task:no-provisioner/' + workerType,
-      'assume:scheduler-id:-/*',
     );
     await helper.queue.defineTask(slugid.v4(), makeTask('normal'));
   });
