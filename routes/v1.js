@@ -348,16 +348,14 @@ api.declare({
   var taskId  = req.params.taskId;
   var taskDef = req.body;
 
-  // Find scopes required for task specific routes
-  var routeScopes = taskDef.routes.map(function(route) {
-    return 'queue:route:' + route;
-  });
-
   // Patch default values and validate timestamps
   var detail = patchAndValidateTaskDef(taskId, taskDef);
   if (detail) {
     return res.status(detail.code).json(detail.json);
   }
+
+  // Find scopes required for task specific routes
+  var routeScopes = taskDef.routes.map(route => 'queue:route:' + route);
 
   // Authenticate request by providing parameters, and then validate that the
   // requester satisfies all the scopes assigned to the task
@@ -514,16 +512,14 @@ api.declare({
   var taskId  = req.params.taskId;
   var taskDef = req.body;
 
-  // Find scopes required for task-specific routes
-  var routeScopes = taskDef.routes.map(function(route) {
-    return 'queue:route:' + route;
-  });
-
   // Patch default values and validate timestamps
   var detail = patchAndValidateTaskDef(taskId, taskDef);
   if (detail) {
     return res.status(detail.code).json(detail.json);
   }
+
+  // Find scopes required for task-specific routes
+  var routeScopes = taskDef.routes.map(route => 'queue:route:' + route);
 
   // Authenticate request by providing parameters, and then validate that the
   // requester satisfies all the scopes assigned to the task
