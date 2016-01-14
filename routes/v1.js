@@ -5,7 +5,6 @@ let assert      = require('assert');
 let _           = require('lodash');
 let base        = require('taskcluster-base');
 let taskcluster = require('taskcluster-client');
-let API         = require('taskcluster-lib-api');
 
 // Maximum number runs allowed
 const MAX_RUNS_ALLOWED = 50;
@@ -74,7 +73,7 @@ var RUN_ID_PATTERN      = /^[1-9]*[0-9]+$/;
  *   credentials:    // TaskCluster credentials for issuing temp creds on claim
  * }
  */
-var api = new API({
+var api = new base.API({
   title:        "Queue API Documentation",
   description: [
     "The queue, typically available at `queue.taskcluster.net`, is responsible",
