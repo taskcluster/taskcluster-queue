@@ -94,4 +94,65 @@ suite('TaskGroup features', () => {
       assert(err.statusCode === 409, 'Expected a 409 error');
     });
   });
+
+  test("list task-group", async () => {
+    let taskIdA = slugid.v4();
+    let taskGroupId = slugid.v4();
+
+    debug("### Creating taskA");
+    var r1 = await helper.queue.createTask(taskIdA, _.defaults({
+      taskGroupId,
+    }, taskDef));
+
+    debug("### Creating taskB");
+    let taskIdB = slugid.v4();
+    await helper.queue.createTask(taskIdB, _.defaults({
+      taskGroupId,
+    }, taskDef));
+
+    let result = await helper.queue.listTaskGroup(taskGroupId);
+    assert(!result.continuationToken);
+    assert(_.includes(result.members, taskIdA));
+    assert(_.includes(result.members, taskIdB));
+    assert(result.taskGroupId === taskGroupId);
+  });
+
+  test("list task-group (limit and continuationToken)", async () => {
+    let taskIdA = slugid.v4();
+    let taskGroupId = slugid.v4();
+
+    debug("### Creating taskA");
+    var r1 = await helper.queue.createTask(taskIdA, _.defaults({
+      taskGroupId,
+    }, taskDef));
+
+    debug("### Creating taskB");
+    let taskIdB = slugid.v4();
+    await helper.queue.createTask(taskIdB, _.defaults({
+      taskGroupId,
+    }, taskDef));
+
+    let result = await helper.queue.listTaskGroup(taskGroupId, {
+      limit: 1,
+    });
+    assert(result.continuationToken);
+    assert(_.includes(result.members, taskIdA) ||
+           _.includes(result.members, taskIdB));
+    assert(result.taskGroupId === taskGroupId);
+
+    result = await helper.queue.listTaskGroup(taskGroupId, {
+      limit: 1,
+      continuationToken: result.continuationToken,
+    });
+    assert(!result.continuationToken);
+    assert(_.includes(result.members, taskIdA) ||
+           _.includes(result.members, taskIdB));
+    assert(result.taskGroupId === taskGroupId);
+  });
+
+  test("list task-group -- that is empty / doesn't exist", async () => {
+    let result = await helper.queue.listTaskGroup(slugid.v4());
+    assert(!result.continuationToken);
+    assert(result.members.length === 0);
+  });
 });
