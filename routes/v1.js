@@ -1,13 +1,14 @@
-var Promise     = require('promise');
-var debug       = require('debug')('routes:v1');
-var slugid      = require('slugid');
-var assert      = require('assert');
-var _           = require('lodash');
-var base        = require('taskcluster-base');
-var taskcluster = require('taskcluster-client');
+let Promise     = require('promise');
+let debug       = require('debug')('routes:v1');
+let slugid      = require('slugid');
+let assert      = require('assert');
+let _           = require('lodash');
+let base        = require('taskcluster-base');
+let taskcluster = require('taskcluster-client');
+let API         = require('taskcluster-lib-api');
 
 // Maximum number runs allowed
-var MAX_RUNS_ALLOWED    = 50;
+const MAX_RUNS_ALLOWED = 50;
 
 /**
  * **Azure Queue Invariants**
@@ -73,7 +74,7 @@ var RUN_ID_PATTERN      = /^[1-9]*[0-9]+$/;
  *   credentials:    // TaskCluster credentials for issuing temp creds on claim
  * }
  */
-var api = new base.API({
+var api = new API({
   title:        "Queue API Documentation",
   description: [
     "The queue, typically available at `queue.taskcluster.net`, is responsible",
@@ -89,6 +90,7 @@ var api = new base.API({
   schemaPrefix:       'http://schemas.taskcluster.net/queue/v1/',
   params: {
     taskId:           SLUGID_PATTERN,
+    taskGroupId:      SLUGID_PATTERN,
     provisionerId:    GENERIC_ID_PATTERN,
     workerType:       GENERIC_ID_PATTERN,
     workerGroup:      GENERIC_ID_PATTERN,
@@ -177,6 +179,57 @@ api.declare({
   return res.reply({
     status:   task.status()
   });
+});
+
+
+/** List taskIds by taskGroupId */
+api.declare({
+  method: 'get',
+  route:  '/task-group/:taskGroupId/list',
+  query: {
+    continuationToken: /./,
+    limit: /^[0-9]+$/,
+  },
+  name:   'listTaskGroup',
+  output: 'list-task-group-response.json#',
+  title:  "List Task Group",
+  description: [
+    "List taskIds of all tasks sharing the same `taskGroupId`.",
+    "",
+    "As a task-group main contain an unbounded number of tasks, this end-point",
+    "may return a `continuationToken`. To continue listing tasks you must",
+    "`listTaskGroup` again with the `continuationToken` as the query-string",
+    "option `continuationToken`.",
+    "",
+    "By default this end-point will try to return up to 1000 members in one",
+    "request. But it **may return less**, even if more tasks are available.",
+    "It may also return a `continuationToken` even though there is no more",
+    "results. However, you can only be sure to have seen all results if you",
+    "keep calling `listTaskGroup` with a new `continationToken` until you",
+    "get a result without a `continuationToken`.",
+    "",
+    "If you're not interested in listing all the members at once, you may",
+    "use the query-string option `limit` to return fewer.",
+  ].join('\n')
+}, async function(req, res) {
+  let taskGroupId   = req.params.taskGroupId;
+  let continuation  = req.query.continuationToken || null;
+  let limit         = parseInt(req.query.limit || 1000);
+
+  let data = await this.TaskGroupMember.query({
+    taskGroupId,
+    expires: base.Entity.op.greaterThanOrEqual(new Date()),
+  }, {continuation, limit});
+
+  let members = data.entries.map(member => member.taskId);
+
+  // Build result
+  let result = {taskGroupId, members};
+  if (data.continuation) {
+    result.continuationToken = data.continuation;
+  }
+
+  return res.reply(result);
 });
 
 
