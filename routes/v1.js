@@ -100,6 +100,7 @@ var api = new base.API({
     'Task',
     'Artifact',
     'TaskGroup',
+    'taskGroupExpiresExtension',
     'TaskGroupMember',
     'publicBucket',
     'privateBucket',
@@ -306,7 +307,7 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
   let taskGroup = await ctx.TaskGroup.load({taskGroupId}, true);
   let taskGroupExpiration = new Date(
     new Date(taskDef.expires).getTime() +
-    72 * 24 * 60 * 60 * 1000
+    ctx.taskGroupExpiresExtension * 1000
   );
   if (!taskGroup) {
     taskGroup = await ctx.TaskGroup.create({

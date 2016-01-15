@@ -27,6 +27,11 @@ defaults:
     # taskcluster.fromNow, notice this should be negative!
     taskExpirationDelay:          '- 30 minutes'
 
+    # Time extension of the expires property for task-group definitions.
+    # This is properties holding the schedulerId for a task-group, hence, we
+    # expire them later to reduce risk of abuse
+    taskGroupExpiresExtension:     6220800 # 3 days as seconds
+
     # Component property in the responseTime and process statistics
     statsComponent:               queue
 
@@ -149,6 +154,7 @@ test:
     # Positive, means that expire tasks 4 days ahead of time, useful for
     # testing. In production this should be "- x hours" or so...
     taskExpirationDelay:          '4 days'
+    taskGroupExpiresExtension:    0 # should always be positive in production
     deadline:
       pollingDelay:               250
       parallelism:                1
