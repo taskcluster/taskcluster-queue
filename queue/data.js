@@ -171,7 +171,7 @@ Task.prototype.hasClaim = function() {
  *
  * Returns a promise that all expired tasks have been deleted
  */
-Task.expire = async function(now = new Date()) {
+Task.expire = async function(now) {
   assert(now instanceof Date, "now must be given as option");
   var count = 0;
   await base.Entity.scan.call(this, {
@@ -301,7 +301,7 @@ Artifact.prototype.remove = function(ignoreError) {
  *
  * Returns a promise that all expired artifacts have been deleted
  */
-Artifact.expire = async function(now = new Date()) {
+Artifact.expire = async function(now) {
   assert(now instanceof Date, "now must be given as option");
   var count = 0;
   await base.Entity.scan.call(this, {
@@ -342,7 +342,7 @@ var TaskGroup = base.Entity.configure({
  *
  * Returns a promise that all expired task-groups have been deleted
  */
-TaskGroup.expire = async function(now = new Date()) {
+TaskGroup.expire = async function(now) {
   assert(now instanceof Date, "now must be given as option");
   var count = 0;
   await base.Entity.scan.call(this, {
@@ -379,7 +379,7 @@ var TaskGroupMember = base.Entity.configure({
  *
  * Returns a promise that all expired task-group memberships have been deleted
  */
-TaskGroupMember.expire = async function(now = new Date()) {
+TaskGroupMember.expire = async function(now) {
   assert(now instanceof Date, "now must be given as option");
   var count = 0;
   await base.Entity.scan.call(this, {
