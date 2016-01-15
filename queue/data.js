@@ -171,7 +171,7 @@ Task.prototype.hasClaim = function() {
  *
  * Returns a promise that all expired tasks have been deleted
  */
-Task.expire = async function(now) {
+Task.expire = async function(now = new Date()) {
   assert(now instanceof Date, "now must be given as option");
   var count = 0;
   await base.Entity.scan.call(this, {
@@ -301,7 +301,7 @@ Artifact.prototype.remove = function(ignoreError) {
  *
  * Returns a promise that all expired artifacts have been deleted
  */
-Artifact.expire = async function(now) {
+Artifact.expire = async function(now = new Date()) {
   assert(now instanceof Date, "now must be given as option");
   var count = 0;
   await base.Entity.scan.call(this, {
@@ -337,6 +337,23 @@ var TaskGroup = base.Entity.configure({
   }
 });
 
+/**
+ * Expire task-groups that are past their expiration.
+ *
+ * Returns a promise that all expired task-groups have been deleted
+ */
+TaskGroup.expire = async function(now = new Date()) {
+  assert(now instanceof Date, "now must be given as option");
+  var count = 0;
+  await base.Entity.scan.call(this, {
+    expires:          base.Entity.op.lessThan(now)
+  }, {
+    limit:            250, // max number of concurrent delete operations
+    handler:          (taskGroup) => { count++; return taskGroup.remove(true); }
+  });
+  return count;
+};
+
 // Export TaskGroup
 exports.TaskGroup = TaskGroup;
 
@@ -356,6 +373,23 @@ var TaskGroupMember = base.Entity.configure({
     expires:        base.Entity.types.Date,
   }
 });
+
+/**
+ * Expire task-group memberships that are past their expiration.
+ *
+ * Returns a promise that all expired task-group memberships have been deleted
+ */
+TaskGroupMember.expire = async function(now = new Date()) {
+  assert(now instanceof Date, "now must be given as option");
+  var count = 0;
+  await base.Entity.scan.call(this, {
+    expires:          base.Entity.op.lessThan(now)
+  }, {
+    limit:            250, // max number of concurrent delete operations
+    handler:          (member) => { count++; return member.remove(true); }
+  });
+  return count;
+};
 
 // Export TaskGroupMember
 exports.TaskGroupMember = TaskGroupMember;

@@ -216,6 +216,7 @@ let load = base.loader({
         Artifact:         ctx.Artifact,
         TaskGroup:        ctx.TaskGroup,
         TaskGroupMember:  ctx.TaskGroupMember,
+        taskGroupExpiresExtension: ctx.cfg.app.taskGroupExpiresExtension,
         publisher:        ctx.publisher,
         validator:        ctx.validator,
         claimTimeout:     ctx.cfg.app.claimTimeout,
@@ -319,6 +320,43 @@ let load = base.loader({
       debug("Expiring tasks at: %s, from before %s", new Date(), now);
       let count = await Task.expire(now);
       debug("Expired %s tasks", count);
+
+      // Stop recording statistics and send any stats that we have
+      base.stats.stopProcessUsageReporting();
+      return influx.close();
+    }
+  },
+
+  // Create the task-group expiration process (periodic job)
+  'expire-task-groups': {
+    requires: ['cfg', 'TaskGroup', 'monitor', 'influx'],
+    setup: async ({cfg, TaskGroup, influx}) => {
+      var now = taskcluster.fromNow(cfg.app.taskExpirationDelay);
+      assert(!_.isNaN(now), "Can't have NaN as now");
+
+      // Expire task-groups using delay
+      debug("Expiring task-groups at: %s, from before %s", new Date(), now);
+      let count = await TaskGroup.expire(now);
+      debug("Expired %s task-groups", count);
+
+      // Stop recording statistics and send any stats that we have
+      base.stats.stopProcessUsageReporting();
+      return influx.close();
+    }
+  },
+
+  // Create the task-group membership expiration process (periodic job)
+  'expire-task-group-members': {
+    requires: ['cfg', 'TaskGroupMember', 'monitor', 'influx'],
+    setup: async ({cfg, TaskGroupMember, influx}) => {
+      var now = taskcluster.fromNow(cfg.app.taskExpirationDelay);
+      assert(!_.isNaN(now), "Can't have NaN as now");
+
+      // Expire task-group members using delay
+      debug("Expiring task-group members at: %s, from before %s",
+            new Date(), now);
+      let count = await TaskGroupMember.expire(now);
+      debug("Expired %s task-group members", count);
 
       // Stop recording statistics and send any stats that we have
       base.stats.stopProcessUsageReporting();

@@ -14,7 +14,8 @@ suite('TaskGroup features', () => {
     workerType:       'test-worker',
     schedulerId:      'dummy-scheduler',
     created:          taskcluster.fromNowJSON(),
-    deadline:         taskcluster.fromNowJSON('3 days'),
+    deadline:         taskcluster.fromNowJSON('1 days'),
+    expires:          taskcluster.fromNowJSON('2 days'),
     payload:          {},
     metadata: {
       name:           "Unit testing task",
@@ -119,6 +120,7 @@ suite('TaskGroup features', () => {
 
   test("list task-group (limit and continuationToken)", async () => {
     let taskIdA = slugid.v4();
+    let taskIdB = slugid.v4();
     let taskGroupId = slugid.v4();
 
     debug("### Creating taskA");
@@ -127,7 +129,6 @@ suite('TaskGroup features', () => {
     }, taskDef));
 
     debug("### Creating taskB");
-    let taskIdB = slugid.v4();
     await helper.queue.createTask(taskIdB, _.defaults({
       taskGroupId,
     }, taskDef));
@@ -151,8 +152,106 @@ suite('TaskGroup features', () => {
   });
 
   test("list task-group -- that is empty / doesn't exist", async () => {
-    let result = await helper.queue.listTaskGroup(slugid.v4());
+    let taskGroupId = slugid.v4();
+    let result = await helper.queue.listTaskGroup(taskGroupId);
     assert(!result.continuationToken);
     assert(result.members.length === 0);
+    assert(result.taskGroupId === taskGroupId);
+  });
+
+  test("task-group expiration", async () => {
+    let taskIdA = slugid.v4();
+    let taskIdB = slugid.v4();
+    let taskGroupId = slugid.v4();
+
+    debug("### Creating taskA");
+    var r1 = await helper.queue.createTask(taskIdA, _.defaults({
+      taskGroupId,
+    }, taskDef));
+
+    debug("### Expire task-groups");
+    await helper.expireTaskGroups();
+
+    debug("### Creating taskB");
+    // This only works because we've expired the taskGroup definition, otherwise
+    // we couldn't create a new task with same taskGroupId and different
+    // schedulerId (this is tested in one of the cases above)
+    await helper.queue.createTask(taskIdB, _.defaults({
+      taskGroupId,
+      schedulerId: 'dummy-scheduler-2',
+    }, taskDef));
+  });
+
+  test("task-group expiration (doesn't drop table)", async () => {
+    let taskIdA = slugid.v4();
+    let taskIdB = slugid.v4();
+    let taskGroupId = slugid.v4();
+
+    debug("### Creating taskA");
+    var r1 = await helper.queue.createTask(taskIdA, _.defaults({
+      taskGroupId,
+      expires: taskcluster.fromNowJSON('10 days'),
+    }, taskDef));
+
+    debug("### Expire task-groups");
+    await helper.expireTaskGroups();
+
+    debug("### Creating taskB");
+    await helper.queue.createTask(taskIdB, _.defaults({
+      taskGroupId,
+      schedulerId: 'dummy-scheduler-2',
+    }, taskDef)).then(() => {assert(false, 'expected an error')}, err => {
+      assert(err.statusCode === 409, 'Expected a 409 error');
+    });
+  });
+
+  test("task-group membership expiration", async () => {
+    let taskIdA = slugid.v4();
+    let taskGroupId = slugid.v4();
+
+    debug("### Creating taskA");
+    var r1 = await helper.queue.createTask(taskIdA, _.defaults({
+      taskGroupId,
+    }, taskDef));
+
+    let result = await helper.queue.listTaskGroup(taskGroupId);
+    assert(!result.continuationToken);
+    assert(result.members.length === 1);
+    assert(_.includes(result.members, taskIdA));
+    assert(result.taskGroupId === taskGroupId);
+
+    debug("### Expire task-group memberships");
+    await helper.expireTaskGroupMembers();
+
+    result = await helper.queue.listTaskGroup(taskGroupId);
+    assert(!result.continuationToken);
+    assert(result.members.length === 0);
+    assert(result.taskGroupId === taskGroupId);
+  });
+
+  test("task-group membership expiration (doesn't drop table)", async () => {
+    let taskIdA = slugid.v4();
+    let taskGroupId = slugid.v4();
+
+    debug("### Creating taskA");
+    var r1 = await helper.queue.createTask(taskIdA, _.defaults({
+      taskGroupId,
+      expires: taskcluster.fromNowJSON('10 days'),
+    }, taskDef));
+
+    let result = await helper.queue.listTaskGroup(taskGroupId);
+    assert(!result.continuationToken);
+    assert(result.members.length === 1);
+    assert(_.includes(result.members, taskIdA));
+    assert(result.taskGroupId === taskGroupId);
+
+    debug("### Expire task-group memberships");
+    await helper.expireTaskGroupMembers();
+
+    result = await helper.queue.listTaskGroup(taskGroupId);
+    assert(!result.continuationToken);
+    assert(result.members.length === 1);
+    assert(_.includes(result.members, taskIdA));
+    assert(result.taskGroupId === taskGroupId);
   });
 });
