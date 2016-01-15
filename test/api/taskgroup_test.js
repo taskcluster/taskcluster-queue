@@ -25,7 +25,7 @@ suite('TaskGroup features', () => {
     }
   };
 
-  test("Create two tasks", async () => {
+  test("Create two tasks with same taskGroupId", async () => {
     let taskIdA = slugid.v4();
     let taskGroupId = slugid.v4();
 
@@ -115,6 +115,7 @@ suite('TaskGroup features', () => {
     assert(!result.continuationToken);
     assert(_.includes(result.members, taskIdA));
     assert(_.includes(result.members, taskIdB));
+    assert(result.members.length === 2);
     assert(result.taskGroupId === taskGroupId);
   });
 
@@ -140,6 +141,7 @@ suite('TaskGroup features', () => {
     assert(_.includes(result.members, taskIdA) ||
            _.includes(result.members, taskIdB));
     assert(result.taskGroupId === taskGroupId);
+    assert(result.members.length === 1);
 
     result = await helper.queue.listTaskGroup(taskGroupId, {
       limit: 1,
@@ -149,6 +151,7 @@ suite('TaskGroup features', () => {
     assert(_.includes(result.members, taskIdA) ||
            _.includes(result.members, taskIdB));
     assert(result.taskGroupId === taskGroupId);
+    assert(result.members.length === 1);
   });
 
   test("list task-group -- that is empty / doesn't exist", async () => {

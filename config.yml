@@ -28,8 +28,9 @@ defaults:
     taskExpirationDelay:          '- 30 minutes'
 
     # Time extension of the expires property for task-group definitions.
-    # This is properties holding the schedulerId for a task-group, hence, we
-    # expire them later to reduce risk of abuse
+    # This is entities holding the schedulerId for a task-group, hence, we
+    # expire them later to avoid people creating tasks with a different
+    # schedulerId inside a task-group where all tasks are about to expire.
     taskGroupExpiresExtension:     6220800 # 3 days as seconds
 
     # Component property in the responseTime and process statistics
