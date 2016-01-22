@@ -1631,8 +1631,6 @@ api.declare({
   route:      '/pending/:provisionerId/:workerType',
   name:       'pendingTasks',
   stability:  base.API.stability.stable,
-  scopes:     [['queue:pending-tasks:<provisionerId>/<workerType>']],
-  deferAuth:  true,
   output:     'pending-tasks-response.json#',
   title:      "Get Number of Pending Tasks",
   description: [
@@ -1644,14 +1642,6 @@ api.declare({
 }, async function(req, res) {
   var provisionerId = req.params.provisionerId;
   var workerType    = req.params.workerType;
-
-  // Authenticate request by providing parameters
-  if(!req.satisfies({
-    provisionerId:  provisionerId,
-    workerType:     workerType
-  })) {
-    return;
-  }
 
   // Get number of pending message
   var count = await this.queueService.countPendingMessages(
