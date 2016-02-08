@@ -809,11 +809,11 @@ api.declare({
   if (!task) {
     return res.reportError(
             "ResourceNotFound",
-            "Task not found",
             [
-            "The given taskId does not correspond to a task that exists.",
+            "{{taskId}} does not correspond to a task that exists.",
             "Are you sure this task has been submitted before?"
-            ].join('\n')
+            ].join('\n'),
+            {taskId: taskId}
     );
   }
 
