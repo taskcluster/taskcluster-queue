@@ -23,13 +23,14 @@ suite('Rerun task', function() {
     metadata: {
       name:           "Unit testing task",
       description:    "Task created during unit tests",
-      owner:          'jonsafj@mozilla.com',
+      owner:          'jonasfj@mozilla.com',
       source:         'https://github.com/taskcluster/taskcluster-queue'
     },
     tags: {
       purpose:        'taskcluster-testing'
     }
   };
+
 
   test("create, claim, complete and rerun (is idempotent)", async () => {
     var taskId = slugid.v4();
@@ -85,5 +86,11 @@ suite('Rerun task', function() {
 
     debug("### Requesting task rerun (again)");
     await helper.queue.rerunTask(taskId);
+  });
+
+  test("throw error on missing task", async () => {
+    helper.queue.rerunTask(0).catch( (err) => {
+        assert.equal(err.statusCode, 404);
+    });
   });
 });

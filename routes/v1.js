@@ -807,9 +807,14 @@ api.declare({
 
   // Report 404, if task entity doesn't exist
   if (!task) {
-    return res.status(404).json({
-      message:  "Task not found"
-    });
+    return res.reportError(
+            "ResourceNotFound",
+            "Task not found",
+            [
+            "The given taskId does not correspond to a task that exists.",
+            "Are you sure this task has been submitted before?"
+            ].join('\n')
+    );
   }
 
   // Authenticate request by providing parameters
