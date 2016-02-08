@@ -31,7 +31,6 @@ suite('Rerun task', function() {
     }
   };
 
-
   test("create, claim, complete and rerun (is idempotent)", async () => {
     var taskId = slugid.v4();
 
@@ -89,7 +88,8 @@ suite('Rerun task', function() {
   });
 
   test("throw error on missing task", async () => {
-    helper.queue.rerunTask(0).catch( (err) => {
+    var taskId = slugid.v4();
+    await helper.queue.rerunTask(taskId).catch( (err) => {
         assert.equal(err.statusCode, 404);
     });
   });
