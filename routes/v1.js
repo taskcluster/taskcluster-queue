@@ -337,13 +337,14 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
     res.reportError(
       "RequestConflict", [
         "Task group {{taskGroupId}} contains tasks with",
-        "scheduler {{taskGroupSchedId}}. You are attempting",
-        "to include tasks from scheduler {{taskDefSchedId}},",
-        "which is not permitted."
+        "schedulerId {{taskGroupSchedulerId}}. You are attempting",
+        "to include tasks from schedulerId {{taskSchedulerId}},",
+        "which is not permitted.",
+        "All tasks in the same task-group must have the same schedulerId."
       ].join('\n'), {
         taskGroupId,
-        taskGroupSchedId: taskGroup.schedulerId,
-        taskDefSchedId: taskDef.schedulerId
+        taskGroupSchedulerId: taskGroup.schedulerId,
+        taskSchedulerId: taskDef.schedulerId
       });
     return false;
   }
