@@ -100,6 +100,9 @@ defaults:
     maxDelay:                 300
     maxPendingPoints:         300
 
+  raven:
+    sentryDSN:                 !env SENTRY_DSN
+
   aws:
     # Credentials with access to artifact buckets and
     # references/schemas.taskcluster.net if you wish to publish meta-data
