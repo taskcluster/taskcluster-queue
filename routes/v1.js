@@ -503,8 +503,10 @@ api.declare({
     // offer an idempotent operation in that case
     if (!_.isEqual(taskDef, def) || task.runs.length === 0) {
       return res.reportError(
-        "RequestConflict",
-        "taskId {{taskId}} already used by another task.",
+        "RequestConflict", [
+          "taskId {{taskId}} already used by another task.",
+          "This could be the result of faulty idempotency!"
+        ].join('\n'),
         {
           taskId,
         });
@@ -754,7 +756,7 @@ api.declare({
   // Validate deadline
   if (task.deadline.getTime() < new Date().getTime()) {
     return res.reportError(
-      "ResourceExpired",
+      "RequestConflict",
       "Task {{taskId}} Can't be scheduled past it's deadline of {{deadline}}.",
       {
         taskId,
@@ -858,7 +860,7 @@ api.declare({
   // Validate deadline
   if (task.deadline.getTime() < new Date().getTime()) {
     return res.reportError(
-      "ResourceExpired",
+      "RequestConflict",
       "Task {{taskId}} Can't be rescheduled past it's deadline of {{deadline}}.",
       {
         taskId,
@@ -989,7 +991,7 @@ api.declare({
   // Validate deadline
   if (task.deadline.getTime() < new Date().getTime()) {
     return res.reportError(
-      "ResourceExpired",
+      "RequestConflict",
       "Task {{taskId}} Can't be cancelled past it's deadline of {{deadline}}.",
       {
         taskId,
@@ -1198,7 +1200,7 @@ api.declare({
       "Run {{runId}} not found on task {{taskId}}.",
       {
         taskId,
-        runId: runId.toString(),
+        runId
       });
   }
   // If the run wasn't claimed by this workerGroup/workerId, then we return
@@ -1211,7 +1213,7 @@ api.declare({
       "RequestConflict",
       "Run {{runId}} was already claimed by another worker.",
       {
-        runId: runId.toString(),
+        runId,
       });
   }
 
@@ -1301,7 +1303,7 @@ api.declare({
       "Run {{runId}} not found on task {{taskId}}.",
       {
         taskId,
-        runId: runId.toString(),
+        runId
       });
   }
 
@@ -1318,7 +1320,7 @@ api.declare({
   // Check if task is past deadline
   if (task.deadline.getTime() <= Date.now()) {
     return res.reportError(
-      "ResourceExpired",
+      "RequestConflict",
       "Task {{taskId}} Can't be cancelled past it's deadline of {{deadline}}.",
       {
         taskId,
@@ -1367,7 +1369,7 @@ api.declare({
       "Run {{runId}} on task {{taskId}} is resolved or not running.",
       {
         taskId,
-        runId: runId.toString()
+        runId
       });
   }
 
@@ -1424,7 +1426,7 @@ var resolveTask = async function(req, res, taskId, runId, target) {
       "Run {{runId}} not found on task {{taskId}}.",
       {
         taskId,
-        runId: runId.toString(),
+        runId
       });
   }
 
@@ -1466,7 +1468,7 @@ var resolveTask = async function(req, res, taskId, runId, target) {
       "Run {{runId}} on task {{taskId}} is resolved or not running.",
       {
         taskId,
-        runId: runId.toString()
+        runId
       });
   }
 
@@ -1623,7 +1625,7 @@ api.declare({
       "Run {{runId}} not found on task {{taskId}}.",
       {
         taskId,
-        runId: runId.toString(),
+        runId
       });
   }
 
@@ -1677,7 +1679,7 @@ api.declare({
       "Run {{runId}} on task {{taskId}} is resolved or not running.",
       {
         taskId,
-        runId: runId.toString()
+        runId
       });
   }
 
