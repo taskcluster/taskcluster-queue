@@ -344,11 +344,18 @@ api.declare({
 /** Reply to an artifact request using taskId, runId, name and context */
 var replyWithArtifact = async function(taskId, runId, name, req, res) {
   // Load artifact meta-data from table storage
-  var artifact = await this.Artifact.load({
-    taskId:     taskId,
-    runId:      runId,
-    name:       name
-  }, true);
+  var promiseResponse = await Promise.all([
+      this.Artifact.load({
+        taskId:     taskId,
+        runId:      runId,
+        name:       name
+      }, true),
+      this.Task.load({
+        taskId: taskId
+      }, true),
+  ]);
+  var artifact = promiseResponse[0];
+  var task = promiseResponse[1];
 
   // Give a 404, if the artifact couldn't be loaded
   if (!artifact) {
@@ -361,13 +368,18 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
   if(artifact.storageType === 's3') {
     // Find url
     var url = null;
-    var prefix = artifact.details.prefix;
-    if (artifact.details.bucket === this.publicBucket.bucket) {
-      var region = this.regionResolver.getRegion(req);
-      if (region) {
-        url = 'http://' + this.publicProxies[region] + '/' + prefix;
-      } else {
-        url = this.publicBucket.createGetUrl(prefix);
+    
+    if (task.tags.useCloudMirror) {
+      throw new Exception('The metadata key "useCloudMirror" is not yet implemented');
+    } else {
+      var prefix = artifact.details.prefix;
+      if (artifact.details.bucket === this.publicBucket.bucket) {
+        var region = this.regionResolver.getRegion(req);
+        if (region) {
+          url = 'http://' + this.publicProxies[region] + '/' + prefix;
+        } else {
+          url = this.publicBucket.createGetUrl(prefix);
+        }
       }
     }
     if (artifact.details.bucket === this.privateBucket.bucket) {
