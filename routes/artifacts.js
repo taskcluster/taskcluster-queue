@@ -4,6 +4,7 @@ var _       = require('lodash');
 var assert  = require('assert');
 var Promise = require('promise');
 var base    = require('taskcluster-base');
+var urllib  = require('url');
 
 // Maximum number of artifacts to list
 const MAX_ARTIFACTS_LISTING = 10 * 1000;
@@ -369,8 +370,58 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
     // Find url
     var url = null;
     
-    if (task.tags.useCloudMirror) {
-      throw new Exception('The metadata key "useCloudMirror" is not yet implemented');
+    if (task.extra.useCloudMirror) {
+      // First, let's figure out which region the request is coming from
+      var region = this.regionResolver.getRegion(req);
+      var prefix = artifact.details.prefix;
+
+      if (artifact.details.bucket === this.publicBucket.bucket) {
+        // The implementation of taskcluster at taskcluster.net doesn't
+        // currently use us-east-1 as our canonical datacenter, but we want to
+        // make sure that we could support it.  Like in the could mirror
+        // service, we have to account for us-east-1 behaving slightly
+        // differently
+        var vhost;
+        if (this.artifactRegion === 'us-east-1') {
+          vhost = 's3.amazonaws.com';
+        } else {
+          vhost = `s3-${this.canonicalArtifactRegion}.amazonaws.com`;
+        }
+
+        // Generate the public URL for this artifact
+        var canonicalArtifactUrl = urllib.format({
+          protocol: 'https:',
+          host: vhost,
+          pathname: prefix,
+        });
+
+        if (this.artifactRegion === region) {
+          // Since we don't need a redirect, we just set things to what they
+          // are in the canonical region
+          url = canonicalArtifactUrl;
+        } else {
+          // We need to build our url path appropriately.  Note that we URL
+          // encode the artifact URL as required by the cloud-mirror api
+          var cloudMirrorPath = [
+            'v1',
+            'redirect',
+            's3',
+            region,
+            encodeURIComponent(canonicalArtifactUrl),
+          ].join('/');
+
+          // Now generate the cloud-mirror redirect
+          url = urllib.format({
+            protocol: 'https:',
+            host: this.cloudMirrorHost,
+            pathname: cloudMirrorPath,
+          });
+        }
+      } else if (artifact.details.bucket === this.privateBucket.bucket) {
+        url = await this.privateBucket.createSignedGetUrl(prefix, {
+          expires: 30 * 60
+        });
+      }
     } else {
       var prefix = artifact.details.prefix;
       if (artifact.details.bucket === this.publicBucket.bucket) {
@@ -381,11 +432,11 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
           url = this.publicBucket.createGetUrl(prefix);
         }
       }
-    }
-    if (artifact.details.bucket === this.privateBucket.bucket) {
-      url = await this.privateBucket.createSignedGetUrl(prefix, {
-        expires:    30 * 60
-      });
+      if (artifact.details.bucket === this.privateBucket.bucket) {
+        url = await this.privateBucket.createSignedGetUrl(prefix, {
+          expires:    30 * 60
+        });
+      }
     }
     assert(url, "Url should have been constructed!");
     return res.redirect(303, url);
