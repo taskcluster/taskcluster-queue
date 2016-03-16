@@ -369,11 +369,12 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
   if(artifact.storageType === 's3') {
     // Find url
     var url = null;
-    
+
     if (task.extra.useCloudMirror) {
       // First, let's figure out which region the request is coming from
       var region = this.regionResolver.getRegion(req);
       var prefix = artifact.details.prefix;
+      console.log('CLOUDMIRROR region: ' + region + ' prefix: ' + prefix);
 
       if (artifact.details.bucket === this.publicBucket.bucket) {
         // The implementation of taskcluster at taskcluster.net doesn't
@@ -394,6 +395,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
           host: vhost,
           pathname: prefix,
         });
+        console.log('CLOUDMIRROR canonical artifact url: ' + canonicalArtifactUrl);
 
         if (this.artifactRegion === region) {
           // Since we don't need a redirect, we just set things to what they
@@ -416,6 +418,8 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
             host: this.cloudMirrorHost,
             pathname: cloudMirrorPath,
           });
+
+          console.log('CLOUDMIRROR constructed url: ' + url);
         }
       } else if (artifact.details.bucket === this.privateBucket.bucket) {
         url = await this.privateBucket.createSignedGetUrl(prefix, {
