@@ -151,10 +151,10 @@ test:
     statsComponent:               'test-queue'
     queuePrefix:                  'hacks'
     queuePrefix2:                 'hacks2' # For testing deletion of queues
-    taskTableName:                'TestTasks'
-    artifactTableName:            'TestArtifacts'
-    taskGroupTableName:           'TestTaskGroups'
-    taskGroupMemberTableName:     'TestTaskGroupMembers'
+    taskTableName:                'TestTasks2'
+    artifactTableName:            'TestArtifacts2'
+    taskGroupTableName:           'TestTaskGroups2'
+    taskGroupMemberTableName:     'TestTaskGroupMembers2'
     claimQueue:                   'test-claim-queue'
     deadlineQueue:                'test-deadline-queue'
     deadlineDelay:                1000
