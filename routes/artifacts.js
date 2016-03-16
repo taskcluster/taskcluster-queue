@@ -374,34 +374,16 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
       // First, let's figure out which region the request is coming from
       var region = this.regionResolver.getRegion(req);
       var prefix = artifact.details.prefix;
+      var bucket = artifact.details.bucket;
       console.log('CLOUDMIRROR region: ' + region + ' prefix: ' + prefix);
 
-      if (artifact.details.bucket === this.publicBucket.bucket) {
-        // The implementation of taskcluster at taskcluster.net doesn't
-        // currently use us-east-1 as our canonical datacenter, but we want to
-        // make sure that we could support it.  Like in the could mirror
-        // service, we have to account for us-east-1 behaving slightly
-        // differently
-        var vhost;
-        if (this.artifactRegion === 'us-east-1') {
-          vhost = 's3.amazonaws.com';
+      if (bucket === this.publicBucket.bucket) {
+        if (!region) {
+          url = this.publicBucket.createGetUrl(prefix);
+        } else if (this.artifactRegion === region) {
+          url = this.publicBucket.createGetUrl(prefix, true);
         } else {
-          vhost = `s3-${this.canonicalArtifactRegion}.amazonaws.com`;
-        }
-
-        // Generate the public URL for this artifact
-        var canonicalArtifactUrl = urllib.format({
-          protocol: 'https:',
-          host: vhost,
-          pathname: prefix,
-        });
-        console.log('CLOUDMIRROR canonical artifact url: ' + canonicalArtifactUrl);
-
-        if (this.artifactRegion === region) {
-          // Since we don't need a redirect, we just set things to what they
-          // are in the canonical region
-          url = canonicalArtifactUrl;
-        } else {
+          var canonicalArtifact = this.publicBucket.createGetUrl(prefix, true);
           // We need to build our url path appropriately.  Note that we URL
           // encode the artifact URL as required by the cloud-mirror api
           var cloudMirrorPath = [
@@ -421,7 +403,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
 
           console.log('CLOUDMIRROR constructed url: ' + url);
         }
-      } else if (artifact.details.bucket === this.privateBucket.bucket) {
+      } else if (bucket === this.privateBucket.bucket) {
         url = await this.privateBucket.createSignedGetUrl(prefix, {
           expires: 30 * 60
         });
