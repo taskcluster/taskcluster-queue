@@ -383,7 +383,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
         } else if (this.artifactRegion === region) {
           url = this.publicBucket.createGetUrl(prefix, true);
         } else {
-          var canonicalArtifact = this.publicBucket.createGetUrl(prefix, true);
+          var canonicalArtifactUrl = this.publicBucket.createGetUrl(prefix, true);
           // We need to build our url path appropriately.  Note that we URL
           // encode the artifact URL as required by the cloud-mirror api
           var cloudMirrorPath = [
