@@ -764,6 +764,53 @@ suite('Artifacts', function() {
     assume(artifact.contentType).equals('application/json');
   });
 
+  test("listArtifacts (missing task)", async () => {
+    await helper.queue.listArtifacts(slugid.v4(), 0).then(
+      ()  => assert(false, "Expected error"),
+      err => assume(err.code).equals('ResourceNotFound'),
+    );
+  });
+
+  test("listLatestArtifacts (missing task)", async () => {
+    await helper.queue.listLatestArtifacts(slugid.v4(), 0).then(
+      ()  => assert(false, "Expected error"),
+      err => assume(err.code).equals('ResourceNotFound'),
+    );
+  });
+
+  test("listArtifacts, listLatestArtifacts (missing run)", async () => {
+    debug("### Creating task");
+    let taskId = slugid.v4();
+    await helper.queue.defineTask(taskId, taskDef);
+
+    debug("### listArtifacts (runId: 0, is missing)");
+    await helper.queue.listArtifacts(taskId, 0).then(
+      ()  => assert(false, "Expected error"),
+      err => assume(err.code).equals('ResourceNotFound'),
+    );
+
+    debug("### listLatestArtifacts (task has no runs)");
+    await helper.queue.listLatestArtifacts(taskId).then(
+      ()  => assert(false, "Expected error"),
+      err => assume(err.code).equals('ResourceNotFound'),
+    );
+
+    debug("### scheduleTask");
+    await helper.queue.scheduleTask(taskId);
+
+    debug("### listArtifacts (runId: 0, is present)");
+    await helper.queue.listArtifacts(taskId, 0);
+
+    debug("### listLatestArtifacts (works)");
+    await helper.queue.listLatestArtifacts(taskId);
+
+    debug("### listArtifacts (runId: 1, is missing)");
+    await helper.queue.listArtifacts(taskId, 1).then(
+      ()  => assert(false, "Expected error"),
+      err => assume(err.code).equals('ResourceNotFound'),
+    );
+  });
+
   test("listArtifacts, listLatestArtifacts (continuationToken)", async () => {
     debug("### Creating task");
     let taskId = slugid.v4();
