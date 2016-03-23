@@ -594,10 +594,34 @@ api.declare({
   let limit         = parseInt(req.query.limit || 1000);
   // TODO: Add support querying using prefix
 
-  let artifacts = await this.Artifact.query({
-    taskId: taskId,
-    runId:  runId,
-  }, {continuation, limit});
+  let [
+    task,
+    artifacts,
+  ] = await Promise.all([
+    this.Task.load({taskId}, true),
+    this.Artifact.query({taskId, runId}, {continuation, limit})
+  ]);
+
+  // Give a 404 if not found
+  if (!task) {
+    return res.reportError(
+      'ResourceNotFound',
+      "No task with taskId: {{taskId}} found",
+      {taskId}
+    );
+  }
+
+  // Check that we have the run
+  if (!task.runs[runId]) {
+    return res.reportError(
+      'ResourceNotFound',
+      "Task with taskId: {{taskId}} run with runId: {{runId}}\n" +
+      "task status: {{status}}", {
+      taskId, runId,
+      status: task.status(),
+    });
+  }
+
 
   let result = {
     artifacts: artifacts.entries.map(artifact => artifact.json()),
@@ -641,7 +665,7 @@ api.declare({
   // TODO: Add support querying using prefix
 
   // Load task status structure from table
-  let task = await this.Task.load({taskId: taskId}, true);
+  let task = await this.Task.load({taskId}, true);
 
   // Give a 404 if not found
   if (!task) {
@@ -665,8 +689,7 @@ api.declare({
   let runId = task.runs.length - 1;
 
   let artifacts = await this.Artifact.query({
-    taskId: taskId,
-    runId:  runId,
+    taskId, runId,
   }, {continuation, limit});
 
   let result = {
