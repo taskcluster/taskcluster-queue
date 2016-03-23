@@ -34,7 +34,7 @@
     "fast-azure-storage":   "^0.3.0",
     "xmlbuilder":           "^2.6.2",
     "assume":               "^1.2.4",
-    "source-map-support":   "^4.0.0",
+    "source-map-support":   "^0.4.0",
     "babel-runtime":        "^6.6.1",
     "babel-compile":        "^1.0.2",
     "tc-rules":             "^5.0.0",
