@@ -2,7 +2,7 @@ suite('queue/bucket_test', function() {
   var Promise       = require('promise');
   var slugid        = require('slugid');
   var assert        = require('assert');
-  var Bucket        = require('../../queue/bucket');
+  var Bucket        = require('../lib/bucket');
   var base          = require('taskcluster-base');
   var _             = require('lodash');
   var debug         = require('debug')('test:bucket_test');

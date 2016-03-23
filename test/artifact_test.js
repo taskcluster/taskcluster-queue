@@ -7,10 +7,10 @@ suite('Artifacts', function() {
   var request       = require('superagent-promise');
   var assert        = require('assert');
   var urljoin       = require('url-join');
-  var BlobUploader  = require('../queue/azure-blob-uploader-sas');
-  var Bucket        = require('../../queue/bucket');
-  var BlobStore     = require('../../queue/blobstore');
-  var data          = require('../../queue/data');
+  var BlobUploader  = require('./azure-blob-uploader-sas');
+  var Bucket        = require('../lib/bucket');
+  var BlobStore     = require('../lib/blobstore');
+  var data          = require('../lib/data');
   var base          = require('taskcluster-base');
   var taskcluster   = require('taskcluster-client');
   var {Netmask}     = require('netmask');
