@@ -8,7 +8,7 @@ suite('queue/tasks_store', function() {
   var url           = require('url');
   var request       = require('superagent-promise');
   var BlobUploader  = require('./azure-blob-uploader-sas');
-  var debug         = require('debug')('queue:test:queue:blobstore_test');
+  var debug         = require('debug')('test:blobstore_test');
 
   // Load configuration
   var cfg = base.config({profile: 'test'});

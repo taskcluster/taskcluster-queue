@@ -1,5 +1,5 @@
 suite('Query tasks', function() {
-  var debug       = require('debug')('test:api:query');
+  var debug       = require('debug')('test:query');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

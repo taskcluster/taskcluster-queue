@@ -1,5 +1,5 @@
 suite("Ping test", function() {
-  var debug       = require('debug')('test:api:ping');
+  var debug       = require('debug')('test:ping');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

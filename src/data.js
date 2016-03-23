@@ -1,11 +1,11 @@
-var base    = require('taskcluster-base');
-var debug   = require('debug')('app');
-var assert  = require('assert');
-var Promise = require('promise');
-var _       = require('lodash');
+let base    = require('taskcluster-base');
+let debug   = require('debug')('app:data');
+let assert  = require('assert');
+let Promise = require('promise');
+let _       = require('lodash');
 
 /** Entity for tracking tasks and associated state */
-var Task = base.Entity.configure({
+let Task = base.Entity.configure({
   version:          1,
   partitionKey:     base.Entity.keys.StringKey('taskId'),
   rowKey:           base.Entity.keys.ConstantKey('task'),
@@ -245,7 +245,7 @@ Task.expire = async function(now) {
 exports.Task = Task;
 
 /** Entity for tracking artifacts */
-var Artifact = base.Entity.configure({
+let Artifact = base.Entity.configure({
   version:          1,
   partitionKey:     base.Entity.keys.CompositeKey('taskId', 'runId'),
   rowKey:           base.Entity.keys.StringKey('name'),
@@ -379,7 +379,7 @@ exports.Artifact = Artifact;
  * Entity for tracking task-group existence
  * Ensuring that all tasks in a task-group has the same schedulerId.
  */
-var TaskGroup = base.Entity.configure({
+let TaskGroup = base.Entity.configure({
   version:          1,
   partitionKey:     base.Entity.keys.StringKey('taskGroupId'),
   rowKey:           base.Entity.keys.ConstantKey('task-group'),
@@ -421,7 +421,7 @@ exports.TaskGroup = TaskGroup;
  * Existence of this entity only carries value if the task also exists and has
  * the taskId and taskGroupId given here.
  */
-var TaskGroupMember = base.Entity.configure({
+let TaskGroupMember = base.Entity.configure({
   version:          1,
   partitionKey:     base.Entity.keys.StringKey('taskGroupId'),
   rowKey:           base.Entity.keys.StringKey('taskId'),
@@ -465,7 +465,7 @@ exports.TaskGroupMember = TaskGroupMember;
  * satisfied. This is tracked by deleting satisfied entries, when no entries
  * remains for taskId, the task must be scheduled.
  */
-var TaskRequirement = base.Entity.configure({
+let TaskRequirement = base.Entity.configure({
   version: 1,
   partitionKey:       base.Entity.keys.StringKey('taskId'),
   rowKey:             base.Entity.keys.StringKey('requiredTaskId'),
@@ -508,7 +508,7 @@ exports.TaskRequirement = TaskRequirement;
  * direction. This relation is used to find tasks to consider for scheduling
  * when taskId is resolved.
  */
-var TaskDependency = base.Entity.configure({
+let TaskDependency = base.Entity.configure({
   version: 1,
   partitionKey:       base.Entity.keys.StringKey('taskId'),
   rowKey:             base.Entity.keys.StringKey('dependentTaskId'),

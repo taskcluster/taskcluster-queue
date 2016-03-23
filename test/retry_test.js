@@ -1,5 +1,5 @@
 suite('Retry tasks (claim-expired)', function() {
-  var debug       = require('debug')('test:api:retry');
+  var debug       = require('debug')('test:retry');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

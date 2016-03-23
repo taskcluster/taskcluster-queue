@@ -1,5 +1,5 @@
 suite('Rerun task', function() {
-  var debug       = require('debug')('test:api:cancel');
+  var debug       = require('debug')('test:cancel');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

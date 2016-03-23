@@ -1,6 +1,6 @@
 var _           = require('lodash');
 var Promise     = require('promise');
-var debug       = require('debug')('queue:queue');
+var debug       = require('debug')('app:queue');
 var assert      = require('assert');
 var base32      = require('thirty-two');
 var querystring = require('querystring');

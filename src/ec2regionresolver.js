@@ -1,7 +1,7 @@
-var {Netmask} = require('netmask');
-var requestIp = require('request-ip');
-var request   = require('superagent-promise');
-var assert    = require('assert');
+let {Netmask} = require('netmask');
+let requestIp = require('request-ip');
+let request   = require('superagent-promise');
+let assert    = require('assert');
 
 // Static URL from which ip-ranges from AWS services can be fetched
 const AWS_IP_RANGES_URL = 'https://ip-ranges.amazonaws.com/ip-ranges.json';

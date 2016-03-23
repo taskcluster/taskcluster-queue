@@ -1,5 +1,5 @@
 suite('Resolve task', function() {
-  var debug       = require('debug')('test:api:completed');
+  var debug       = require('debug')('test:completed');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

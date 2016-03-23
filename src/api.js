@@ -1,5 +1,5 @@
 let Promise     = require('promise');
-let debug       = require('debug')('app');
+let debug       = require('debug')('app:api');
 let slugid      = require('slugid');
 let assert      = require('assert');
 let _           = require('lodash');

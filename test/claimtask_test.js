@@ -1,5 +1,5 @@
 suite('Claim task', function() {
-  var debug       = require('debug')('test:api:claim');
+  var debug       = require('debug')('test:claim');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');
