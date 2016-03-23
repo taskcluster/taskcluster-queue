@@ -1,6 +1,6 @@
 var request     = require('superagent-promise');
 var url         = require('url');
-var debug       = require('debug')('azure-blob-uploader-sas');
+var debug       = require('debug')('test:azure-blob-uploader-sas');
 var assert      = require('assert');
 var qs          = require('querystring');
 var _           = require('lodash');

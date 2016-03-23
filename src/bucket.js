@@ -1,8 +1,8 @@
-var aws         = require('aws-sdk-promise');
-var _           = require('lodash');
-var debug       = require('debug')('queue:bucket');
-var assert      = require('assert');
-var Promise     = require('promise');
+let aws         = require('aws-sdk-promise');
+let _           = require('lodash');
+let debug       = require('debug')('app:bucket');
+let assert      = require('assert');
+let Promise     = require('promise');
 
 /**
  * Create S3 bucket wrapper.

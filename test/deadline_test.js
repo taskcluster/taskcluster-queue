@@ -1,5 +1,5 @@
 suite('Deadline expiration (deadline-reaper)', function() {
-  var debug       = require('debug')('test:api:deadline');
+  var debug       = require('debug')('test:deadline');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

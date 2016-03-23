@@ -1,4 +1,4 @@
-let debug   = require('debug')('app');
+let debug   = require('debug')('app:dependency-tracker');
 let assert  = require('assert');
 let Promise = require('promise');
 let _       = require('lodash');

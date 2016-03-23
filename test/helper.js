@@ -1,14 +1,14 @@
-var assert          = require('assert');
-var Promise         = require('promise');
-var path            = require('path');
-var _               = require('lodash');
-var base            = require('taskcluster-base');
-var v1              = require('../../routes/v1');
-var exchanges       = require('../../queue/exchanges');
-var taskcluster     = require('taskcluster-client');
-var mocha           = require('mocha');
-var load            = require('../../src/main');
-var debug           = require('debug')('test:api:helper');
+let assert          = require('assert');
+let Promise         = require('promise');
+let path            = require('path');
+let _               = require('lodash');
+let base            = require('taskcluster-base');
+let taskcluster     = require('taskcluster-client');
+let mocha           = require('mocha');
+let debug           = require('debug')('test:helper');
+let v1              = require('../lib/api');
+let exchanges       = require('../lib/exchanges');
+let load            = require('../lib/main');
 
 // Some default clients for the mockAuthServer
 var defaultClients = [

@@ -1,10 +1,10 @@
-var api     = require('./v1');
-var debug   = require('debug')('queue:routes:resources');
-var _       = require('lodash');
-var assert  = require('assert');
-var Promise = require('promise');
-var base    = require('taskcluster-base');
-var urllib  = require('url');
+let debug   = require('debug')('app:artifacts');
+let _       = require('lodash');
+let assert  = require('assert');
+let Promise = require('promise');
+let base    = require('taskcluster-base');
+let urllib  = require('url');
+let api     = require('./api');
 
 /** Post artifact */
 api.declare({

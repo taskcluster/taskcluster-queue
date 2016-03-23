@@ -1,5 +1,5 @@
 suite('Task Expiration (expire-tasks)', () => {
-  var debug       = require('debug')('test:api:expireTasks');
+  var debug       = require('debug')('test:expireTasks');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

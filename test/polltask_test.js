@@ -1,5 +1,5 @@
 suite('Poll tasks', function() {
-  var debug       = require('debug')('test:api:poll');
+  var debug       = require('debug')('test:poll');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

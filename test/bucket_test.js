@@ -5,7 +5,7 @@ suite('queue/bucket_test', function() {
   var Bucket        = require('../../queue/bucket');
   var base          = require('taskcluster-base');
   var _             = require('lodash');
-  var debug         = require('debug')('queue:test:queue:bucket_test');
+  var debug         = require('debug')('test:bucket_test');
   var request       = require('superagent-promise');
 
   // Load configuration

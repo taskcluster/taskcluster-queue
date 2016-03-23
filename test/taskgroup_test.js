@@ -1,5 +1,5 @@
 suite('TaskGroup features', () => {
-  var debug       = require('debug')('test:api:taskGroup');
+  var debug       = require('debug')('test:taskGroup');
   var assert      = require('assert');
   var slugid      = require('slugid');
   var _           = require('lodash');

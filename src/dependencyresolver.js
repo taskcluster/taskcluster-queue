@@ -1,11 +1,11 @@
-var Promise       = require('promise');
-var debug         = require('debug')('app:dependency-resolver');
-var slugid        = require('slugid');
-var assert        = require('assert');
-var _             = require('lodash');
-var base          = require('taskcluster-base');
-var data          = require('./data');
-var QueueService  = require('./queueservice');
+let Promise       = require('promise');
+let debug         = require('debug')('app:dependency-resolver');
+let slugid        = require('slugid');
+let assert        = require('assert');
+let _             = require('lodash');
+let base          = require('taskcluster-base');
+let data          = require('./data');
+let QueueService  = require('./queueservice');
 
 /**
  * When a task is resolved, we put a message in the resolvedQueue, this class

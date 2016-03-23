@@ -7,7 +7,7 @@ suite('queue/QueueService', function() {
   var _             = require('lodash');
   var url           = require('url');
   var request       = require('superagent-promise');
-  var debug         = require('debug')('queue:test:queueservice');
+  var debug         = require('debug')('test:queueservice');
   var xml2js        = require('xml2js');
   var assume        = require('assume');
 
