@@ -10,24 +10,6 @@ let v1              = require('../lib/api');
 let exchanges       = require('../lib/exchanges');
 let load            = require('../lib/main');
 
-// Some default clients for the mockAuthServer
-var defaultClients = [
-  {
-    clientId:     'test-server',  // Hardcoded into config/test.js
-    accessToken:  'none',
-    scopes: [
-      '*', // Needed to issue temp creds with task.scopes in (re)claimTask
-      'queue:claim-task:*'  // Needed to issue temp creds in (re)claimTask
-    ],
-    expires:      new Date(3000, 0, 0, 0, 0, 0, 0)
-  }, {
-    clientId:     'test-client',  // Used in default Queue creation
-    accessToken:  'none',
-    scopes:       ['*'],
-    expires:      new Date(3000, 0, 0, 0, 0, 0, 0)
-  }
-];
-
 const profile = 'test';
 let loadOptions = {profile, process: 'test'};
 
@@ -89,17 +71,15 @@ helper.deadlineReaper = async () => {
   return reaper;
 };
 
-// Hold reference to authServer
-var authServer = null;
 var webServer = null;
 
 // Setup before tests
 mocha.before(async () => {
   // Create mock authentication server
   debug("### Creating mock authentication server")
-  authServer = await base.testing.createMockAuthServer({
-    port:     60407, // This is hardcoded into config/test.js
-    clients:  defaultClients
+  base.testing.fakeauth.start({
+    'test-server': ['*'],
+    'test-client': ['*']
   });
 
   webServer = await load('server', loadOptions);
@@ -156,5 +136,5 @@ mocha.afterEach(async () => {
 mocha.after(async () => {
   // Kill webServer
   await webServer.terminate();
-  await authServer.terminate();
+  base.testing.fakeauth.stop();
 });
