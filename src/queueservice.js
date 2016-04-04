@@ -643,7 +643,7 @@ class QueueService {
         }));
 
         // Sum up the messageCount property
-        return _.sum(results, 'messageCount');
+        return _.sumBy(results, 'messageCount');
       })();
     }
 
