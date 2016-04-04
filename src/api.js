@@ -1164,6 +1164,60 @@ api.declare({
   });
 });
 
+
+/** Claim any task */
+api.declare({
+  method:     'post',
+  route:      '/claim-work/<provisionerId>/<workerType>',
+  name:       'claimWork',
+  stability:  base.API.stability.stable,
+  scopes: [
+    [
+      'queue:claim-task:<provisionerId>/<workerType>',
+      'queue:worker-id:<workerGroup>/<workerId>',
+    ]
+  ],
+  deferAuth:  true,
+  input:      'task-claim-request.json#',
+  output:     'task-claim-response.json#',
+  title:      "Claim Work",
+  description: [
+    "claim any task, more to be added later..."
+  ].join('\n')
+}, async function(req, res) {
+  let provisionerId = req.params.provisionerId;
+  let workerType    = req.params.workerType;
+  let workerGroup   = req.body.workerGroup;
+  let workerId      = req.body.workerId;
+  let count         = 1;
+
+  // Authenticate request by providing parameters
+  if(!req.satisfies({
+    workerGroup,
+    workerId,
+    provisionerId,
+    workerType,
+  })) {
+    return;
+  }
+
+  let timer = null;
+  let aborted = new Promise(accept => {
+    timer = setTimeout(accept, 20 * 1000);
+    res.once('close', accept);
+  });
+
+  let result = await this.WorkClaimer.claim(
+    provisionerId, workerType, count, aborted,
+  );
+  clearTimeout(timer); // Just free up a timer no longer needed
+
+  return res.reply({
+    tasks: result,
+  });
+});
+
+
 /** Claim a task */
 api.declare({
   method:     'post',
@@ -1184,7 +1238,7 @@ api.declare({
   deferAuth:  true,
   input:      'task-claim-request.json#',
   output:     'task-claim-response.json#',
-  title:      "Claim task",
+  title:      "Claim Task",
   description: [
     "claim a task, more to be added later..."
   ].join('\n')
