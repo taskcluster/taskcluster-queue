@@ -109,7 +109,7 @@ let load = base.loader({
           publicBucket:   ctx.publicArtifactBucket,
           privateBucket:  ctx.privateArtifactBucket
         },
-        monitor: ctx.monitor.prefix('artifact'),
+        monitor: ctx.monitor.prefix('table.artifacts'),
       });
       await Artifact.ensureTable();
       return Artifact;
@@ -123,7 +123,7 @@ let load = base.loader({
       let Task = data.Task.setup({
         table:            cfg.app.taskTableName,
         credentials:      cfg.azure,
-        monitor: monitor.prefix('task'),
+        monitor: monitor.prefix('table.tasks'),
       });
       await Task.ensureTable();
       return Task;
@@ -137,7 +137,7 @@ let load = base.loader({
       let TaskGroup = data.TaskGroup.setup({
         table:            cfg.app.taskGroupTableName,
         credentials:      cfg.azure,
-        monitor: monitor.prefix('taskgroup'),
+        monitor: monitor.prefix('table.taskgroups'),
       });
       await TaskGroup.ensureTable();
       return TaskGroup;
@@ -151,7 +151,7 @@ let load = base.loader({
       let TaskGroupMember = data.TaskGroupMember.setup({
         table:            cfg.app.taskGroupMemberTableName,
         credentials:      cfg.azure,
-        monitor: monitor.prefix('taskgroupmember'),
+        monitor: monitor.prefix('tabel.taskgroupmembers'),
       });
       await TaskGroupMember.ensureTable();
       return TaskGroupMember;
@@ -165,7 +165,7 @@ let load = base.loader({
       let TaskRequirement = data.TaskRequirement.setup({
         table:            cfg.app.taskRequirementTableName,
         credentials:      cfg.azure,
-        monitor: monitor.prefix('taskrequirement'),
+        monitor: monitor.prefix('table.taskrequirements'),
       });
       await TaskRequirement.ensureTable();
       return TaskRequirement;
@@ -179,7 +179,7 @@ let load = base.loader({
       let TaskDependency = data.TaskDependency.setup({
         table:            cfg.app.taskDependencyTableName,
         credentials:      cfg.azure,
-        monitor: monitor.prefix('taskdependency'),
+        monitor: monitor.prefix('table.taskdependencies'),
       });
       await TaskDependency.ensureTable();
       return TaskDependency;
