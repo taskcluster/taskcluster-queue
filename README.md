@@ -21,8 +21,8 @@ Development
 -----------
 
 To run tests you'll need a configuration file with access credentials for S3
-and Azure Blob and Table Storage, as well as pulse credentials and an influx db
-account. To do this, create a local configuration file
+and Azure Blob and Table Storage, as well as pulse credentials.
+To do this, create a local configuration file
 `taskcluster-queue.conf.json` in the root directory of the taskcluster-queue
 project, populated with your credentials like this:
 
@@ -40,9 +40,6 @@ project, populated with your credentials like this:
   "pulse": {
     "username":           "xxx",
     "password":           "xxx"
-  },
-  "influx": {
-    "connectionString":   "https://xxx:xxx@xxx.influxdb.com:8087/db/xxx"
   }
 }
 ```
