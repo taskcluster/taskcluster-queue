@@ -26,11 +26,12 @@ let load = base.loader({
   },
 
   monitor: {
-    requires: ['profile', 'cfg'],
-    setup: ({profile, cfg}) => base.monitor({
+    requires: ['process', 'profile', 'cfg'],
+    setup: ({process, profile, cfg}) => base.monitor({
       project: 'taskcluster-queue',
       credentials: cfg.taskcluster.credentials,
       mock: profile === 'test',
+      process,
     })
   },
 
@@ -319,7 +320,7 @@ let load = base.loader({
   // Create the artifact expiration process (periodic job)
   'expire-artifacts': {
     requires: ['cfg', 'Artifact', 'monitor'],
-    setup: async ({cfg, Artifact}) => {
+    setup: async ({cfg, Artifact, monitor}) => {
       // Find an artifact expiration delay
       let now = taskcluster.fromNow(cfg.app.artifactExpirationDelay);
       assert(!_.isNaN(now), "Can't have NaN as now");
@@ -327,6 +328,10 @@ let load = base.loader({
       debug("Expiring artifacts at: %s, from before %s", new Date(), now);
       let count = await Artifact.expire(now);
       debug("Expired %s artifacts", count);
+
+      monitor.count("expire-artifacts.done");
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
     }
   },
 
@@ -337,6 +342,10 @@ let load = base.loader({
       debug("Expiring queues at: %s", new Date());
       let count = await queueService.deleteUnusedWorkerQueues();
       debug("Expired %s queues", count);
+
+      monitor.count("expire-queues.done");
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
     }
   },
 
@@ -351,6 +360,10 @@ let load = base.loader({
       debug("Expiring tasks at: %s, from before %s", new Date(), now);
       let count = await Task.expire(now);
       debug("Expired %s tasks", count);
+
+      monitor.count("expire-tasks.done");
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
     }
   },
 
@@ -365,6 +378,10 @@ let load = base.loader({
       debug("Expiring task-groups at: %s, from before %s", new Date(), now);
       let count = await TaskGroup.expire(now);
       debug("Expired %s task-groups", count);
+
+      monitor.count("expire-task-groups.done");
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
     }
   },
 
@@ -380,6 +397,10 @@ let load = base.loader({
             new Date(), now);
       let count = await TaskGroupMember.expire(now);
       debug("Expired %s task-group members", count);
+
+      monitor.count("expire-task-group-members.done");
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
     }
   },
 
@@ -394,6 +415,10 @@ let load = base.loader({
       debug("Expiring task-dependency at: %s, from before %s", new Date(), now);
       let count = await TaskDependency.expire(now);
       debug("Expired %s task-dependency", count);
+
+      monitor.count("expire-task-dependency.done");
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
     }
   },
 
@@ -408,6 +433,10 @@ let load = base.loader({
       debug("Expiring task-requirement at: %s, from before %s", new Date(), now);
       let count = await TaskRequirement.expire(now);
       debug("Expired %s task-requirement", count);
+
+      monitor.count("expire-task-requirement.done");
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
     }
   },
 
