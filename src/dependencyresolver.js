@@ -96,7 +96,7 @@ class DependencyResolver extends events.EventEmitter {
           this.monitor.count('handled-messages-success', 1);
         } catch (err) {
           this.monitor.count('handled-messages-error', 1);
-          this.reportError(err, 'warning');
+          this.monitor.reportError(err, 'warning');
         }
       }));
 
