@@ -131,7 +131,7 @@ suite('task.dependencies', function() {
 
     debug('### listTaskDependents');
     let d1 = await helper.queue.listDependentTasks(taskIdA);
-    assume(d1.taskId).equals(taskIdB);
+    assume(d1.taskId).equals(taskIdA);
     assume(d1.tasks).has.length(0);
 
     debug('### Create taskB, taskC, taskD, taskE')
@@ -163,6 +163,22 @@ suite('task.dependencies', function() {
       helper.events.waitFor('d-pending'),
       helper.events.waitFor('e-pending'),
     ]);
+
+    debug('### listTaskDependents, limit = 2');
+    let d3 = await helper.queue.listDependentTasks(taskIdA, {limit: 2});
+    assume(d3.tasks).has.length(2);
+    assume(d3).ownProperty('continuationToken');
+    let d4 = await helper.queue.listDependentTasks(taskIdA, {
+      limit: 2,
+      continuationToken: d3.continuationToken,
+    });
+    assume(d4.tasks).has.length(2);
+    assume(d4).not.has.ownProperty('continuationToken');
+    let tids = _.flatten([d3.tasks, d4.tasks]).map(t => t.status.taskId);
+    assume(tids).contains(taskIdB);
+    assume(tids).contains(taskIdC);
+    assume(tids).contains(taskIdD);
+    assume(tids).contains(taskIdE);
   });
 
   test('taskA, taskB <- taskC && taskA <- taskD', async () => {
