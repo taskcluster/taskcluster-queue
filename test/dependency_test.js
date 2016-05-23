@@ -68,6 +68,15 @@ suite('task.dependencies', function() {
       workerId:       'my-worker'
     });
     await helper.queue.reportCompleted(taskIdB, 0);
+
+    debug('### listTaskDependents');
+    let d1 = await helper.queue.listDependentTasks(taskIdA);
+    assume(d1.taskId).equals(taskIdA);
+    assume(d1.tasks).has.length(1);
+    assume(d1.tasks[0].status.taskId).equals(taskIdB);
+    let d2 = await helper.queue.listDependentTasks(taskIdB);
+    assume(d2.taskId).equals(taskIdB);
+    assume(d2.tasks).has.length(0);
   });
 
   test('taskA <- taskB, taskC, taskD, taskE', async () => {
