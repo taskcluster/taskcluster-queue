@@ -45,7 +45,12 @@
     "xmlbuilder": "^2.6.2"
   },
   "devDependencies": {
-    "mocha": "^2.2.1"
+    "mocha": "^2.2.1",
+    "mocha-eslint": "^2.0.1",
+    "babel-eslint": "^6.0.0",
+    "taskcluster-lib-testing": "^1.0.0",
+    "eslint-config-taskcluster": "^1.0.0",
+    "eslint-plugin-taskcluster": "^1.0.0"
   },
   "engines": {
     "node": "^5.8.0",
