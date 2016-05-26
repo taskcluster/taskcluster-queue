@@ -58,23 +58,25 @@ let load = base.loader({
 
   // Create artifact bucket instances
   publicArtifactBucket: {
-    requires: ['cfg'],
-    setup: async ({cfg}) => {
+    requires: ['cfg', 'monitor'],
+    setup: async ({cfg, monitor}) => {
       let bucket = new Bucket({
         bucket:           cfg.app.publicArtifactBucket,
         credentials:      cfg.aws,
         bucketCDN:        cfg.app.publicArtifactBucketCDN,
+        monitor:          monitor.prefix('public-bucket'),
       });
       await bucket.setupCORS();
       return bucket;
     }
   },
   privateArtifactBucket: {
-    requires: ['cfg'],
-    setup: async ({cfg}) => {
+    requires: ['cfg', 'monitor'],
+    setup: async ({cfg, monitor}) => {
       let bucket = new Bucket({
         bucket:           cfg.app.privateArtifactBucket,
-        credentials:      cfg.aws
+        credentials:      cfg.aws,
+        monitor:          monitor.prefix('private-bucket'),
       });
       await bucket.setupCORS();
       return bucket;
@@ -108,7 +110,8 @@ let load = base.loader({
         context: {
           blobStore:      ctx.artifactStore,
           publicBucket:   ctx.publicArtifactBucket,
-          privateBucket:  ctx.privateArtifactBucket
+          privateBucket:  ctx.privateArtifactBucket,
+          monitor:        ctx.monitor.prefix('data.Artifact'),
         },
         monitor: ctx.monitor.prefix('table.artifacts'),
       });
@@ -248,6 +251,7 @@ let load = base.loader({
         credentials:      ctx.cfg.taskcluster.credentials,
         cloudMirrorHost:  ctx.cfg.app.cloudMirrorHost,
         artifactRegion:   ctx.cfg.aws.region,
+        monitor:          ctx.monitor.prefix('api-context'),
       },
       validator:        ctx.validator,
       authBaseUrl:      ctx.cfg.taskcluster.authBaseUrl,

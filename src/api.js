@@ -118,6 +118,7 @@ var api = new base.API({
     'publicProxies',
     'credentials',
     'dependencyTracker',
+    'monitor',
   ],
 });
 
@@ -1093,8 +1094,10 @@ api.declare({
   // Get the last run, there should always be one
   var run = _.last(task.runs);
   if (!run) {
-    debug("[alert-operator] There should exist a run after cancelTask! " +
-          " taskId: %s, status: %j", task.taskId, task.status());
+    let err = new Error('There should exist a run after cancelTask!');
+    err.taskId = task.taskId;
+    err.status = task.status();
+    this.monitor.reportError(err);
   }
 
   // Construct status object
