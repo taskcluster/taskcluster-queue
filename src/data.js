@@ -473,7 +473,7 @@ exports.TaskGroupMember = TaskGroupMember;
  * remains for taskId, the task must be scheduled.
  */
 let TaskRequirement = base.Entity.configure({
-  version: 1,
+  version:            1,
   partitionKey:       base.Entity.keys.StringKey('taskId'),
   rowKey:             base.Entity.keys.StringKey('requiredTaskId'),
   properties: {
@@ -516,7 +516,7 @@ exports.TaskRequirement = TaskRequirement;
  * when taskId is resolved.
  */
 let TaskDependency = base.Entity.configure({
-  version: 1,
+  version:            1,
   partitionKey:       base.Entity.keys.StringKey('taskId'),
   rowKey:             base.Entity.keys.StringKey('dependentTaskId'),
   properties: {
