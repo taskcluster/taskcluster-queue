@@ -229,7 +229,7 @@ let load = base.loader({
       'cfg', 'publisher', 'validator',
       'Task', 'Artifact', 'TaskGroup', 'TaskGroupMember', 'queueService',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
-      'regionResolver', 'monitor', 'dependencyTracker'
+      'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency'
     ],
     setup: (ctx) => v1.setup({
       context: {
@@ -238,6 +238,7 @@ let load = base.loader({
         TaskGroup:        ctx.TaskGroup,
         TaskGroupMember:  ctx.TaskGroupMember,
         taskGroupExpiresExtension: ctx.cfg.app.taskGroupExpiresExtension,
+        TaskDependency:   ctx.TaskDependency,
         dependencyTracker: ctx.dependencyTracker,
         publisher:        ctx.publisher,
         validator:        ctx.validator,
