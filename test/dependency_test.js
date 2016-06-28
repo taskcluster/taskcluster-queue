@@ -16,11 +16,11 @@ suite('task.dependencies', function() {
     expires:          taskcluster.fromNowJSON('2 days'),
     payload:          {},
     metadata: {
-      name:           "Unit testing task",
-      description:    "Task created during unit tests",
+      name:           'Unit testing task',
+      description:    'Task created during unit tests',
       owner:          'jonsafj@mozilla.com',
-      source:         'https://github.com/taskcluster/taskcluster-queue'
-    }
+      source:         'https://github.com/taskcluster/taskcluster-queue',
+    },
   };
 
   test('taskA <- taskB', async () => {
