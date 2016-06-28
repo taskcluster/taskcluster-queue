@@ -280,11 +280,14 @@ let load = base.loader({
       'cfg', 'Task', 'queueService', 'publisher', 'monitor',
       'dependencyTracker',
     ],
-    setup: ({cfg, Task, queueService, publisher, dependencyTracker}) => {
+    setup: ({
+      cfg, Task, queueService, publisher, dependencyTracker, monitor,
+    }) => {
       let resolver = new ClaimResolver({
         Task, queueService, publisher, dependencyTracker,
         pollingDelay:   cfg.app.claim.pollingDelay,
-        parallelism:    cfg.app.claim.parallelism
+        parallelism:    cfg.app.claim.parallelism,
+        monitor:        monitor.prefix('claim-reaper'),
       });
       resolver.start();
       return resolver;
@@ -297,11 +300,14 @@ let load = base.loader({
       'cfg', 'Task', 'queueService', 'publisher', 'monitor',
       'dependencyTracker',
     ],
-    setup: ({cfg, Task, queueService, publisher, dependencyTracker}) => {
+    setup: ({
+      cfg, Task, queueService, publisher, dependencyTracker, monitor,
+    }) => {
       let resolver = new DeadlineResolver({
         Task, queueService, publisher, dependencyTracker,
         pollingDelay:   cfg.app.deadline.pollingDelay,
-        parallelism:    cfg.app.deadline.parallelism
+        parallelism:    cfg.app.deadline.parallelism,
+        monitor:        monitor.prefix('deadline-reaper'),
       });
       resolver.start();
       return resolver;
