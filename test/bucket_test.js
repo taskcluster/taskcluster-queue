@@ -29,7 +29,7 @@ suite('queue/bucket_test', function() {
         credentials:  cfg.aws,
         monitor,
       });
-    })
+    });
   } else {
     console.log("WARNING: Skipping 'Bucket' tests, missing user-config.yml");
     this.pending = true;

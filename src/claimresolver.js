@@ -157,7 +157,7 @@ class ClaimResolver {
     // report an error
     if (task.takenUntil.getTime() !== takenUntil.getTime()) {
       let err = new Error('Task takenUntil does not match takenUntil from ' +
-                          'message, taskId: ' + taskId ' this only happens ' +
+                          'message, taskId: ' + taskId + ' this only happens ' +
                           'if conditional load does not work');
       err.taskId = taskId;
       err.taskTakenUntil = task.takenUntil.toJSON();
