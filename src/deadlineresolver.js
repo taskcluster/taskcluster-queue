@@ -149,7 +149,7 @@ class DeadlineResolver {
     // report error
     if (task.deadline.getTime() !== deadline.getTime()) {
       let err = new Error('Task deadline does not match deadline from ' +
-                    'message, taskId: ' + taskId ' this only happens ' +
+                    'message, taskId: ' + taskId + ' this only happens ' +
                     'if conditional load does not work');
       err.taskId = taskId;
       err.taskDeadline= task.deadline.toJSON();

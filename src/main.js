@@ -192,15 +192,16 @@ let load = base.loader({
 
   // Create QueueService to manage azure queues
   queueService: {
-    requires: ['cfg'],
-    setup: ({cfg}) => new QueueService({
+    requires: ['cfg', 'monitor'],
+    setup: ({cfg, monitor}) => new QueueService({
       prefix:           cfg.app.queuePrefix,
       credentials:      cfg.azure,
       claimQueue:       cfg.app.claimQueue,
       resolvedQueue:    cfg.app.resolvedQueue,
       deadlineQueue:    cfg.app.deadlineQueue,
-      deadlineDelay:    cfg.app.deadlineDelay
-    })
+      deadlineDelay:    cfg.app.deadlineDelay,
+      monitor:          monitor.prefix('queue-service'),
+    }),
   },
 
   // Create dependencyTracker
