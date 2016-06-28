@@ -31,7 +31,7 @@ var Bucket = function(options) {
            "bucketCDN shouldn't end with slash");
   }
   // Store the monitor
-  this.monitor = monitor;
+  this.monitor = options.monitor;
   // Ensure access to the bucket property
   this.bucket = options.bucket;
   // Create S3 client

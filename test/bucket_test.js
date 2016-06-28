@@ -17,7 +17,7 @@ suite('queue/bucket_test', function() {
   if (cfg.aws  && cfg.aws.accessKeyId) {
     before(async () => {
       monitor = await base.monitor({
-        crednetials: {},
+        credentials: {},
         project: 'test',
         mock: true,
         patchGlobal: false,
