@@ -37,9 +37,9 @@ class DependencyResolver {
     assert(options.monitor !== null, 'options.monitor required!');
 
     // Remember options
-    this.dependencyTracker = options.dependencyTracker;
-    this.queueService = options.queueService;
-    this.monitor = options.monitor;
+    this.dependencyTracker  = options.dependencyTracker;
+    this.queueService       = options.queueService;
+    this.monitor            = options.monitor;
 
     // Set polling delay and parallelism
     this._pollingDelay  = options.pollingDelay;
