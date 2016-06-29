@@ -121,7 +121,7 @@ suite('task.priority', () => {
       // Parse XML
       var xml = await new Promise((accept, reject) => {
         xml2js.parseString(res.text, (err, json) => {
-          err ? reject(err) : accept(json)
+          err ? reject(err) : accept(json);
         });
       });
 
@@ -129,7 +129,7 @@ suite('task.priority', () => {
       // repeat, this is appropriate for testing only!
       assume(xml.QueueMessagesList.QueueMessage).is.an('array');
 
-      for(let msg of xml.QueueMessagesList.QueueMessage) {
+      for (let msg of xml.QueueMessagesList.QueueMessage) {
         try {
           var data = msg.MessageText[0];
           var payload = JSON.parse(new Buffer(data, 'base64').toString());
@@ -141,7 +141,7 @@ suite('task.priority', () => {
             highIndex = index;
           }
 
-        } catch(err) {
+        } catch (err) {
           // Ignore errors here
           debug('err parsing message body: %s, JSON: %j', err, err, err.stack);
         }

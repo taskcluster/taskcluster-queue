@@ -89,7 +89,7 @@ suite('Rerun task', function() {
 
   test('throw error on missing task', async () => {
     let taskId = slugid.v4();
-    await helper.queue.rerunTask(taskId).catch( (err) => {
+    await helper.queue.rerunTask(taskId).catch(err => {
       assert.equal(err.statusCode, 404);
       assert.equal(err.code, 'ResourceNotFound');
     });

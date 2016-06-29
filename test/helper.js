@@ -100,7 +100,7 @@ mocha.before(async () => {
         clientId:       'test-client',
         accessToken:    'none',
       },
-      authorizedScopes: (scopes.length > 0 ? scopes : undefined),
+      authorizedScopes: scopes.length > 0 ? scopes : undefined,
     });
   };
 

@@ -76,7 +76,7 @@ suite('queue/bucket_test', function() {
     var url     = await bucket.createPutUrl(key, {
       contentType:      'application/json',
       expires:          60 * 10,
-    })
+    });
 
     var res = await request.put(url).send({message: 'Hello'}).end();
     assert(res.ok, 'put request failed');

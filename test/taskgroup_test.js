@@ -30,10 +30,10 @@ suite('TaskGroup features', () => {
     let taskGroupId = slugid.v4();
 
     await helper.events.listenFor('is-defined', helper.queueEvents.taskDefined({
-      taskId:   taskIdA
+      taskId:   taskIdA,
     }));
     await helper.events.listenFor('is-pending', helper.queueEvents.taskPending({
-      taskId:   taskIdA
+      taskId:   taskIdA,
     }));
 
     debug('### Creating taskA');
@@ -91,7 +91,7 @@ suite('TaskGroup features', () => {
     await helper.queue.createTask(taskIdB, _.defaults({
       taskGroupId,
       schedulerId: 'dummy-scheduler-2',
-    }, taskDef)).then(() => {assert(false, 'expected an error')}, err => {
+    }, taskDef)).then(() => {assert(false, 'expected an error');}, err => {
       assert(err.statusCode === 409, 'Expected a 409 error');
     });
   });
@@ -204,7 +204,7 @@ suite('TaskGroup features', () => {
     await helper.queue.createTask(taskIdB, _.defaults({
       taskGroupId,
       schedulerId: 'dummy-scheduler-2',
-    }, taskDef)).then(() => {assert(false, 'expected an error')}, err => {
+    }, taskDef)).then(() => {assert(false, 'expected an error');}, err => {
       assert(err.statusCode === 409, 'Expected a 409 error');
     });
   });

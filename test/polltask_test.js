@@ -33,16 +33,16 @@ suite('Poll tasks', function() {
         name:           'Unit testing task',
         description:    'Task created during unit tests',
         owner:          'jonsafj@mozilla.com',
-        source:         'https://github.com/taskcluster/taskcluster-queue'
+        source:         'https://github.com/taskcluster/taskcluster-queue',
       },
       tags: {
-        purpose:        'taskcluster-testing'
+        purpose:        'taskcluster-testing',
       },
       extra: {
         myUsefulDetails: {
-          property:     'that is useful by external service!!'
-        }
-      }
+          property:     'that is useful by external service!!',
+        },
+      },
     };
     var taskId = slugid.v4();
 
@@ -53,7 +53,6 @@ suite('Poll tasks', function() {
     );
     await helper.queue.createTask(taskId, taskDef);
 
-
     debug('### Access Tasks from azure queue');
     helper.scopes(
       'queue:poll-task-urls',
@@ -63,7 +62,6 @@ suite('Poll tasks', function() {
       'no-provisioner', 'poll-test-worker',
     );
     assume(r1.queues).is.not.empty();
-
 
     helper.scopes(
       'queue:claim-task',
@@ -84,7 +82,7 @@ suite('Poll tasks', function() {
       // Parse XML
       var xml = await new Promise((accept, reject) => {
         xml2js.parseString(res.text, (err, json) => {
-          err ? reject(err) : accept(json)
+          err ? reject(err) : accept(json);
         });
       });
 

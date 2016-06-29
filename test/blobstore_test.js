@@ -18,7 +18,7 @@ suite('queue/tasks_store', function() {
   if (cfg.azure && cfg.azure.accountKey) {
     blobstore = new BlobStore({
       container:    cfg.app.artifactContainer,
-      credentials:  cfg.azure
+      credentials:  cfg.azure,
     });
   } else {
     console.log('WARNING: Skipping "blobstore" tests, missing user-config.yml');
@@ -124,7 +124,7 @@ suite('queue/tasks_store', function() {
 
     return Promise.all([
       uploader.putBlock(block1, '{"block1_says": "Hello world",\n'),
-      uploader.putBlock(block2, '"block2_says": "Hello Again"}\n')
+      uploader.putBlock(block2, '"block2_says": "Hello Again"}\n'),
     ]).then(function() {
       return uploader.putBlockList([block1, block2], 'application/json');
     }).then(function() {
