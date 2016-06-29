@@ -27,7 +27,7 @@ suite('Deadline expiration (deadline-reaper)', function() {
       },
     };
     return {taskId: slugid.v4(), task};
-  }
+  };
 
   test('Resolve unscheduled task deadline', async () => {
     var {taskId, task} = makeTask();
@@ -70,7 +70,7 @@ suite('Deadline expiration (deadline-reaper)', function() {
 
     debug('### Start listening');
     await helper.events.listenFor('except', helper.queueEvents.taskException({
-      taskId:         taskId
+      taskId,
     }));
 
     debug('### Start deadlineReaper');
@@ -101,7 +101,7 @@ suite('Deadline expiration (deadline-reaper)', function() {
     debug('### Claim task');
     var r2 = await helper.queue.claimTask(taskId, 0, {
       workerGroup:    'my-worker-group',
-      workerId:       'my-worker'
+      workerId:       'my-worker',
     });
 
     debug('### Start listening');

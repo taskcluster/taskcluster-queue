@@ -23,7 +23,7 @@ var BlobStore = function(options) {
   // http://dl.windowsazure.com/nodestoragedocs/index.html
   this.service = azure.createBlobService(
     options.credentials.accountName,
-    options.credentials.accountKey
+    options.credentials.accountKey,
   ).withFilter(new azure.ExponentialRetryPolicyFilter());
 };
 

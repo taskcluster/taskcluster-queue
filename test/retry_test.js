@@ -21,7 +21,7 @@ suite('Retry tasks (claim-expired)', function() {
       name:           'Unit testing task',
       description:    'Task created during unit tests',
       owner:          'jonsafj@mozilla.com',
-      source:         'https://github.com/taskcluster/taskcluster-queue'
+      source:         'https://github.com/taskcluster/taskcluster-queue',
     },
   };
 
@@ -34,17 +34,17 @@ suite('Retry tasks (claim-expired)', function() {
     debug('### Claim task (runId: 0)');
     var r2 = await helper.queue.claimTask(taskId, 0, {
       workerGroup:    'my-worker-group',
-      workerId:       'my-worker'
+      workerId:       'my-worker',
     });
 
     debug('### Start listening');
     await helper.events.listenFor('is-pending', helper.queueEvents.taskPending({
       taskId:         taskId,
-      runId:          1
+      runId:          1,
     }));
     await helper.events.listenFor('except-0', helper.queueEvents.taskException({
       taskId:         taskId,
-      runId:          0
+      runId:          0,
     }));
 
     debug('### Start claimReaper');
@@ -72,14 +72,14 @@ suite('Retry tasks (claim-expired)', function() {
     debug('### Claim task (runId: 1)');
     var r4 = await helper.queue.claimTask(taskId, 1, {
       workerGroup:    'my-worker-group',
-      workerId:       'my-worker'
+      workerId:       'my-worker',
     });
     assume(r4.status.retriesLeft).equals(0);
 
     debug('### Start listening for task-exception');
     await helper.events.listenFor('except-1', helper.queueEvents.taskException({
       taskId:         taskId,
-      runId:          1
+      runId:          1,
     }));
 
     debug('### Start claimReaper (again)');

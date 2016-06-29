@@ -132,7 +132,7 @@ suite('queue/QueueService', function() {
       provisionerId:      provisionerId,
       workerType:         workerType,
       priority:           'normal',
-      deadline:           new Date(new Date().getTime() + 5 * 60 * 1000)
+      deadline:           new Date(new Date().getTime() + 5 * 60 * 1000),
     };
 
     // Put message into pending queue
@@ -141,7 +141,7 @@ suite('queue/QueueService', function() {
 
     // Get signedPollUrl and signedDeleteUrl
     var {
-      queues
+      queues,
     } = await queueService.signedPendingPollUrls(provisionerId, workerType);
 
     // Get a message
@@ -158,7 +158,7 @@ suite('queue/QueueService', function() {
       // Parse XML
       var json = await new Promise((accept, reject) => {
         xml2js.parseString(res.text, (err, json) => {
-          err ? reject(err) : accept(json)
+          err ? reject(err) : accept(json);
         });
       });
 
@@ -176,7 +176,7 @@ suite('queue/QueueService', function() {
       assert(payload.taskId === taskId, 'Got wrong taskId, try again in 5 min');
 
       return [message, payload];
-    }).catch(err => {throw new Error('Failed to poll queue')});
+    }).catch(err => {throw new Error('Failed to poll queue');});
 
     debug('### Delete pending message');
     var deleteMessageUrl = queue.signedDeleteUrl
@@ -203,7 +203,7 @@ suite('queue/QueueService', function() {
 
     // Get signedPollUrl and signedDeleteUrl
     var {
-      queues
+      queues,
     } = await queueService.signedPendingPollUrls(provisionerId, workerType);
 
     // Get a message
@@ -220,7 +220,7 @@ suite('queue/QueueService', function() {
       // Parse XML
       var json = await new Promise((accept, reject) => {
         xml2js.parseString(res.text, (err, json) => {
-          err ? reject(err) : accept(json)
+          err ? reject(err) : accept(json);
         });
       });
 
@@ -238,7 +238,7 @@ suite('queue/QueueService', function() {
       assert(payload.taskId === taskId, 'Got wrong taskId, try again in 5 min');
 
       return [message, payload];
-    }).catch(err => {throw new Error('Failed to poll queue')});
+    }).catch(err => {throw new Error('Failed to poll queue');});
 
     debug('### Delete pending message');
     var deleteMessageUrl = queue.signedDeleteUrl
@@ -254,7 +254,7 @@ suite('queue/QueueService', function() {
       workerType
     );
     debug('pending message count: %j', count);
-    assert(typeof(count) === 'number', 'Expected count as number!');
+    assert(typeof count === 'number', 'Expected count as number!');
   });
 
   test('deleteUnusedWorkerQueues (can delete queues)', async () => {
@@ -282,7 +282,6 @@ suite('queue/QueueService', function() {
       }
     }));
   });
-
 
   test('deleteUnusedWorkerQueues (respects meta-data)', async () => {
     // Ensure a queue with updated meta-data exists

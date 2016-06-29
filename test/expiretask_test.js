@@ -29,10 +29,10 @@ suite('Task Expiration (expire-tasks)', function() {
       },
     };
     return {taskId: slugid.v4(), task};
-  }
+  };
 
   test('expire completed task', async () => {
-   var {taskId, task} = makeTask('2 day');
+    var {taskId, task} = makeTask('2 day');
 
     debug('### Creating task');
     var r1 = await helper.queue.createTask(taskId, task);
@@ -65,7 +65,7 @@ suite('Task Expiration (expire-tasks)', function() {
   });
 
   test('expire won\'t drop table', async () => {
-   var {taskId, task} = makeTask('12 day');
+    var {taskId, task} = makeTask('12 day');
 
     debug('### Creating task');
     var r1 = await helper.queue.createTask(taskId, task);

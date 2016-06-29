@@ -399,7 +399,7 @@ suite('Resolve task', function() {
     });
 
     await helper.events.listenFor('pending', helper.queueEvents.taskPending({
-      taskId:   taskId
+      taskId,
     }));
 
     debug('### Reporting task exception (worker-shutdown)');

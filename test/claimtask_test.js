@@ -73,7 +73,6 @@ suite('Claim task', function() {
     var r2 = await helper.queue.status(taskId);
     assume(r2.status).deep.equals(r1.status);
 
-
     debug('### reclaimTask');
     await base.testing.sleep(100);
     // Again we talking about the first run, so runId must still be 0
@@ -101,7 +100,6 @@ suite('Claim task', function() {
     assume(takenUntil4.getTime()).is.greaterThan(takenUntil3.getTime() - 1);
   });
 
-
   test('claimTask is idempotent', async () => {
     var taskId = slugid.v4();
     await helper.queue.createTask(taskId, taskDef);
@@ -125,7 +123,6 @@ suite('Claim task', function() {
       debug('Got error as expected: %j', err, err);
     });
   });
-
 
   test('claimTask requires scopes', async () => {
     var taskId = slugid.v4();

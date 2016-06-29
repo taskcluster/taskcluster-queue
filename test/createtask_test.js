@@ -31,7 +31,7 @@ suite('Create task', function() {
       name:           'Unit testing task',
       description:    'Task created during unit tests',
       owner:          'jonsafj@mozilla.com',
-      source:         'https://github.com/taskcluster/taskcluster-queue'
+      source:         'https://github.com/taskcluster/taskcluster-queue',
     },
     tags: {
       purpose:        'taskcluster-testing',
@@ -105,7 +105,6 @@ suite('Create task', function() {
     });
   });
 
-
   test('defineTask', async () => {
     var taskId = slugid.v4();
 
@@ -138,7 +137,7 @@ suite('Create task', function() {
 
     await helper.events.listenFor('pending', helper.queueEvents.taskPending({
       taskId,
-    }))
+    }));
 
     var gotMessage = helper.events.waitFor('pending').then((message) => {
       assert(taskIsScheduled, 'Got pending message before scheduleTask');
