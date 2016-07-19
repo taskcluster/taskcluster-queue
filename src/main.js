@@ -162,6 +162,20 @@ let load = base.loader({
     },
   },
 
+  // Create task-group size table (uses TaskGroupMember entity)
+  TaskGroupSize: {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
+      let TaskGroupSize = data.TaskGroupMember.setup({
+        table:            cfg.app.taskGroupSizeTableName,
+        credentials:      cfg.azure,
+        monitor:          monitor.prefix('table.taskgroupsizes'),
+      });
+      await TaskGroupSize.ensureTable();
+      return TaskGroupSize;
+    },
+  },
+
   // Create TaskRequirement table
   TaskRequirement: {
     requires: ['cfg', 'monitor', 'process'],
@@ -207,7 +221,8 @@ let load = base.loader({
   // Create dependencyTracker
   dependencyTracker: {
     requires: [
-      'Task', 'publisher', 'queueService', 'TaskDependency', 'TaskRequirement',
+      'Task', 'publisher', 'queueService', 'TaskDependency',
+      'TaskRequirement', 'TaskGroupSize',
     ],
     setup: (ctx) => new DependencyTracker(ctx),
   },
@@ -226,8 +241,8 @@ let load = base.loader({
 
   api: {
     requires: [
-      'cfg', 'publisher', 'validator',
-      'Task', 'Artifact', 'TaskGroup', 'TaskGroupMember', 'queueService',
+      'cfg', 'publisher', 'validator', 'Task', 'Artifact',
+      'TaskGroup', 'TaskGroupMember', 'TaskGroupSize', 'queueService',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
     ],
@@ -237,6 +252,7 @@ let load = base.loader({
         Artifact:         ctx.Artifact,
         TaskGroup:        ctx.TaskGroup,
         TaskGroupMember:  ctx.TaskGroupMember,
+        TaskGroupSize:    ctx.TaskGroupSize,
         taskGroupExpiresExtension: ctx.cfg.app.taskGroupExpiresExtension,
         TaskDependency:   ctx.TaskDependency,
         dependencyTracker: ctx.dependencyTracker,
@@ -410,6 +426,25 @@ let load = base.loader({
       debug('Expired %s task-group members', count);
 
       monitor.count('expire-task-group-members.done');
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
+    },
+  },
+
+  // Create the task-group size expiration process (periodic job)
+  'expire-task-group-sizes': {
+    requires: ['cfg', 'TaskGroupSize', 'monitor'],
+    setup: async ({cfg, TaskGroupSize, monitor}) => {
+      var now = taskcluster.fromNow(cfg.app.taskExpirationDelay);
+      assert(!_.isNaN(now), 'Can\'t have NaN as now');
+
+      // Expire task-group sizes using delay
+      debug('Expiring task-group sizes at: %s, from before %s',
+            new Date(), now);
+      let count = await TaskGroupSize.expire(now);
+      debug('Expired %s task-group sizes', count);
+
+      monitor.count('expire-task-group-sizes.done');
       monitor.stopResourceMonitoring();
       await monitor.flush();
     },

@@ -16,6 +16,7 @@ let base    = require('taskcluster-base');
  *   queueService:      QueueService instance
  *   TaskDependency:    data.TaskDependency instance
  *   TaskRequirement:   data.TaskRequirement instance
+ *   TaskGroupSize:     data.TaskGroupMember instance
  * }
  */
 class DependencyTracker {
@@ -27,6 +28,7 @@ class DependencyTracker {
     assert(options.queueService,    'Expected options.queueService');
     assert(options.TaskDependency,  'Expected options.TaskDependency');
     assert(options.TaskRequirement, 'Expected options.TaskRequirement');
+    assert(options.TaskGroupSize,   'Expected options.TaskGroupSize');
 
     // Store options on this object
     this.Task             = options.Task;
@@ -34,6 +36,7 @@ class DependencyTracker {
     this.queueService     = options.queueService;
     this.TaskDependency   = options.TaskDependency;
     this.TaskRequirement  = options.TaskRequirement;
+    this.TaskGroupSize    = options.TaskGroupSize;
   }
 
   /**
@@ -252,6 +255,30 @@ class DependencyTracker {
         }
       },
     });
+
+    let task = await this.Task.load({taskId: taskId});
+
+    console.log(task.status());
+
+    // We set this to -1 because we'll at least be adding 1 for
+    // the currently completing task every time.
+    let remaining = -1;
+
+    await this.TaskGroupSize.query({taskGroupId: task.taskGroupId}, {
+      handler: async (sizeCounter) => {
+        remaining += 1;
+        if (sizeCounter.taskId === taskId) {
+          await sizeCounter.remove();
+        }
+      },
+    });
+
+    if (remaining === 0) {
+      await this.publisher.taskGroupResolved({
+        status: task.status(),
+        taskGroupId: task.taskGroupId,
+      }, []);
+    }
   }
 
   /** Returns true, if some task requirement is blocking the task */
