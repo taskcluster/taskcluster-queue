@@ -297,3 +297,23 @@ exchanges.declare({
   routingKeyBuilder:  commonRoutingKeyBuilder,
   CCBuilder:          commonCCBuilder,
 });
+
+/** Task group resolved exchange */
+exchanges.declare({
+  exchange:           'task-group-resolved',
+  name:               'taskGroupResolved',
+  title:              'Task Group Resolved',
+  description: [
+    'Whenever a task group has run to completion (success is not considered),',
+    'a message will be sent on this exchange. It can be listened to to know',
+    'when a group is "complete". There is no guarantee that this group is now',
+    'intert. It can have more tasks added to it by the scheduler, but at least',
+    'for the time being, it is done. If another task is added to this group and',
+    'it completes, this message will be sent again.',
+  ].join('\n'),
+  routingKey:         buildCommonRoutingKey(),
+  schema:             'task-group-resolved.json#',
+  messageBuilder:     commonMessageBuilder,
+  routingKeyBuilder:  commonRoutingKeyBuilder,
+  CCBuilder:          commonCCBuilder,
+});

@@ -107,6 +107,7 @@ var api = new base.API({
     'TaskGroup',          // data.TaskGroup instance
     'taskGroupExpiresExtension', // Time delay before expiring a task-group
     'TaskGroupMember',    // data.TaskGroupMember instance
+    'TaskGroupSize',      // data.TaskGroupMember instance (but in a different table)
     'TaskDependency',     // data.TaskDependency instance
     'publicBucket',       // bucket instance for public artifacts
     'privateBucket',      // bucket instance for private artifacts
@@ -486,6 +487,18 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
     }
   });
 
+  // Now we walso add the task to the group size counters as well
+  await ctx.TaskGroupSize.create({
+    taskGroupId,
+    taskId,
+    expires: new Date(taskDef.expires),
+  }).catch(err => {
+    // If the entity already exists, then we're happy no need to crash
+    if (!err || err.code !== 'EntityAlreadyExists') {
+      throw err;
+    }
+  });
+
   return true;
 };
 
@@ -648,7 +661,7 @@ api.declare({
   if (task.state() === 'unscheduled') {
     // Track dependencies, adds a pending run if ready to run
     let err = await this.dependencyTracker.trackDependencies(task);
-    // We get an error here the task will be left in state = 'unscheduled',
+    // If we get an error here the task will be left in state = 'unscheduled',
     // any attempt to use the same taskId will fail. And eventually the task
     // will be resolved deadline-expired. But since createTask never returned
     // successfully...
