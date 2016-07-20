@@ -258,8 +258,6 @@ class DependencyTracker {
 
     let task = await this.Task.load({taskId: taskId});
 
-    console.log(task.status());
-
     // We set this to -1 because we'll at least be adding 1 for
     // the currently completing task every time.
     let remaining = -1;
