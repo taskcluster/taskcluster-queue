@@ -11,32 +11,32 @@ let base    = require('taskcluster-base');
  *
  * Options:
  * {
- *   Task:              data.Task instance
- *   publisher:         publisher from exchanges
- *   queueService:      QueueService instance
- *   TaskDependency:    data.TaskDependency instance
- *   TaskRequirement:   data.TaskRequirement instance
- *   TaskGroupSize:     data.TaskGroupMember instance
+ *   Task:               data.Task instance
+ *   publisher:          publisher from exchanges
+ *   queueService:       QueueService instance
+ *   TaskDependency:     data.TaskDependency instance
+ *   TaskRequirement:    data.TaskRequirement instance
+ *   TaskGroupActiveSet: data.TaskGroupMember instance
  * }
  */
 class DependencyTracker {
   constructor(options = {}) {
     // Validate options
-    assert(options,                 'options are required');
-    assert(options.Task,            'Expected options.Task');
-    assert(options.publisher,       'Expected options.publisher');
-    assert(options.queueService,    'Expected options.queueService');
-    assert(options.TaskDependency,  'Expected options.TaskDependency');
-    assert(options.TaskRequirement, 'Expected options.TaskRequirement');
-    assert(options.TaskGroupSize,   'Expected options.TaskGroupSize');
+    assert(options,                    'options are required');
+    assert(options.Task,               'Expected options.Task');
+    assert(options.publisher,          'Expected options.publisher');
+    assert(options.queueService,       'Expected options.queueService');
+    assert(options.TaskDependency,     'Expected options.TaskDependency');
+    assert(options.TaskRequirement,    'Expected options.TaskRequirement');
+    assert(options.TaskGroupActiveSet, 'Expected options.TaskGroupActiveSet');
 
     // Store options on this object
-    this.Task             = options.Task;
-    this.publisher        = options.publisher;
-    this.queueService     = options.queueService;
-    this.TaskDependency   = options.TaskDependency;
-    this.TaskRequirement  = options.TaskRequirement;
-    this.TaskGroupSize    = options.TaskGroupSize;
+    this.Task               = options.Task;
+    this.publisher          = options.publisher;
+    this.queueService       = options.queueService;
+    this.TaskDependency     = options.TaskDependency;
+    this.TaskRequirement    = options.TaskRequirement;
+    this.TaskGroupActiveSet = options.TaskGroupActiveSet;
   }
 
   /**
@@ -220,7 +220,8 @@ class DependencyTracker {
   }
 
   /** Track resolution of a task, scheduling any dependent tasks */
-  async resolveTask(taskId, resolution) {
+  async resolveTask(taskId, taskGroupId, resolution) {
+    console.log(taskId, taskGroupId, resolution);
     assert(resolution === 'completed' || resolution === 'failed' ||
          resolution === 'exception',
          'resolution must be completed, failed or exception');
@@ -256,26 +257,26 @@ class DependencyTracker {
       },
     });
 
-    let task = await this.Task.load({taskId: taskId});
+    if (taskGroupId != 'unknown') {
+      // We set this to -1 because we'll at least be adding 1 for
+      // the currently completing task every time.
+      let remaining = -1;
 
-    // We set this to -1 because we'll at least be adding 1 for
-    // the currently completing task every time.
-    let remaining = -1;
+      await this.TaskGroupActiveSet.query({taskGroupId}, {
+        handler: async (sizeCounter) => {
+          remaining += 1;
+          if (sizeCounter.taskId === taskId) {
+            await sizeCounter.remove();
+          }
+        },
+      });
 
-    await this.TaskGroupSize.query({taskGroupId: task.taskGroupId}, {
-      handler: async (sizeCounter) => {
-        remaining += 1;
-        if (sizeCounter.taskId === taskId) {
-          await sizeCounter.remove();
-        }
-      },
-    });
-
-    if (remaining === 0) {
-      await this.publisher.taskGroupResolved({
-        status: task.status(),
-        taskGroupId: task.taskGroupId,
-      }, []);
+      if (remaining === 0) {
+        await this.publisher.taskGroupResolved({
+          status: task.status(),
+          taskGroupId,
+        }, []);
+      }
     }
   }
 

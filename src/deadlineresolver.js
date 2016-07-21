@@ -212,7 +212,7 @@ class DeadlineResolver {
       debug('Resolved taskId: %s, by deadline', taskId);
 
       // Update dependency tracker
-      await this.dependencyTracker.resolveTask(taskId, 'exception');
+      await this.dependencyTracker.resolveTask(taskId, task.taskGroupId, 'exception');
 
       // Publish messages about the last run
       await this.publisher.taskException({
