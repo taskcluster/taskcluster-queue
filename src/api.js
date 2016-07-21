@@ -106,7 +106,7 @@ var api = new base.API({
     'TaskGroup',          // data.TaskGroup instance
     'taskGroupExpiresExtension', // Time delay before expiring a task-group
     'TaskGroupMember',    // data.TaskGroupMember instance
-    'TaskGroupSize',      // data.TaskGroupMember instance (but in a different table)
+    'TaskGroupActiveSet', // data.TaskGroupMember instance (but in a different table)
     'TaskDependency',     // data.TaskDependency instance
     'publicBucket',       // bucket instance for public artifacts
     'privateBucket',      // bucket instance for private artifacts
@@ -486,7 +486,7 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
   });
 
   // Now we walso add the task to the group size counters as well
-  await ctx.TaskGroupSize.create({
+  await ctx.TaskGroupActiveSet.create({
     taskGroupId,
     taskId,
     expires: new Date(taskDef.expires),
