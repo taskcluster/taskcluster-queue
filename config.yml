@@ -18,7 +18,7 @@ defaults:
     artifactTableName:            Artifacts
     taskGroupTableName:           TaskGroups
     taskGroupMemberTableName:     TaskGroupMembers
-    taskGroupSizeTableName:       TaskGroupSizes
+    taskGroupActiveSetTableName:  TaskGroupActiveSets
     taskRequirementTableName:     TaskRequirement
     taskDependencyTableName:      TaskDependency
 
@@ -127,7 +127,7 @@ production:
     artifactTableName:            'QueueArtifacts'
     taskGroupTableName:           'QueueTaskGroups'
     taskGroupMemberTableName:     'QueueTaskGroupMembers'
-    taskGroupSizeTableName:       'QueueTaskGroupSizes'
+    taskGroupActiveSetTableName:  'QueueTaskGroupActiveSets'
     taskRequirementTableName:     'QueueTaskRequirement'
     taskDependencyTableName:      'QueueTaskDependency'
     publicArtifactBucketProxies:
@@ -157,7 +157,7 @@ test:
     artifactTableName:            'TestArtifacts2'
     taskGroupTableName:           'TestTaskGroups2'
     taskGroupMemberTableName:     'TestTaskGroupMembers2'
-    taskGroupSizeTableName:       'TestTaskSizeMembers2'
+    taskGroupActiveSetTableName:  'TestTaskSizeMembers2'
     taskRequirementTableName:     'TestTaskRequirement2'
     taskDependencyTableName:      'TestTaskDependency2'
     claimQueue:                   'test-claim-queue'
