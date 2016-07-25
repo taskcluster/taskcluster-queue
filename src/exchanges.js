@@ -124,6 +124,26 @@ var buildCommonRoutingKey = function(options) {
   ];
 };
 
+/** Build common routing key construct for task-group-messages for `exchanges.declare` */
+var buildTaskGroupRoutingKey = function(options) {
+  options = options || {};
+  return [
+    {
+      name:             'routingKeyKind',
+      summary:          'Identifier for the routing-key kind. This is ' +
+                        'always `\'primary\'` for the formalized routing key.',
+      constant:         'primary',
+      required:         true,
+    },
+    {
+      name:             'taskGroupId',
+      summary:          '`taskGroupId` for the taskGroup this message concerns',
+      required:         true,
+      maxSize:          22,
+    },
+  ];
+};
+
 /** Build an AMQP compatible message from a message */
 var commonMessageBuilder = function(message) {
   message.version = 1;
@@ -311,9 +331,9 @@ exchanges.declare({
     'for the time being, it is done. If another task is added to this group and',
     'it completes, this message will be sent again.',
   ].join('\n'),
-  routingKey:         buildCommonRoutingKey(),
+  routingKey:         buildTaskGroupRoutingKey(),
   schema:             'task-group-resolved.json#',
   messageBuilder:     commonMessageBuilder,
-  routingKeyBuilder:  commonRoutingKeyBuilder,
+  routingKeyBuilder:  (message, routes) => { return {taskGroupId: message.taskGroupId}; },
   CCBuilder:          commonCCBuilder,
 });
