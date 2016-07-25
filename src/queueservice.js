@@ -321,11 +321,10 @@ class QueueService {
     });
 
     // Convert to neatly consumable format
-    // TODO: Remove 'unknown' after transition to new message format is complete.
     return messages.map(m => {
       return {
         taskId:       m.payload.taskId,
-        taskGroupId:  m.payload.taskGroupId || 'unknown',
+        taskGroupId:  m.payload.taskGroupId,
         resolution:   m.payload.resolution,
         remove:       m.remove,
       };

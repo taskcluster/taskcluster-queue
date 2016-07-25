@@ -39,7 +39,7 @@ suite('TaskGroup features', () => {
       taskId:   taskIdA,
     }));
     await helper.events.listenFor('task-group-resolved', helper.queueEvents.taskGroupResolved({
-      taskGroupId:   taskGroupId,
+      taskGroupId: taskGroupId,
     }));
 
     debug('### Creating taskA');
