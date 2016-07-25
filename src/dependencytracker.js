@@ -221,7 +221,6 @@ class DependencyTracker {
 
   /** Track resolution of a task, scheduling any dependent tasks */
   async resolveTask(taskId, taskGroupId, resolution) {
-    console.log(taskId, taskGroupId, resolution);
     assert(resolution === 'completed' || resolution === 'failed' ||
          resolution === 'exception',
          'resolution must be completed, failed or exception');
@@ -257,26 +256,18 @@ class DependencyTracker {
       },
     });
 
-    if (taskGroupId != 'unknown') {
-      // We set this to -1 because we'll at least be adding 1 for
-      // the currently completing task every time.
-      let remaining = -1;
+    await this.TaskGroupActiveSet.remove({taskId, taskGroupId}, true);
 
-      await this.TaskGroupActiveSet.query({taskGroupId}, {
-        handler: async (sizeCounter) => {
-          remaining += 1;
-          if (sizeCounter.taskId === taskId) {
-            await sizeCounter.remove();
-          }
-        },
-      });
+    // check for emptiness of the partition
+    let result = await this.TaskGroupActiveSet.query({taskGroupId}, {limit: 1});
 
-      if (remaining === 0) {
-        await this.publisher.taskGroupResolved({
-          status: task.status(),
-          taskGroupId,
-        }, []);
-      }
+    // We assume this generally won't happen
+    assert(result.entries.length > 0 || !result.continuation, 'hmm... this is bad, see comment in isBlocked()');
+
+    if (result.entries.length == 0) {
+      await this.publisher.taskGroupResolved({
+        taskGroupId,
+      }, []);
     }
   }
 

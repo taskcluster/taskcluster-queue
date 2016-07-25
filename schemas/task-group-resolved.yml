@@ -6,6 +6,7 @@ description: |
   case this message will be sent again once it finishes.
 type:               object
 properties:
+  version:    {$const: message-version}
   taskGroupId:
     title:          "Task-Group Identifier"
     description: |
@@ -14,3 +15,4 @@ properties:
     pattern:        {$const: slugid-pattern}
 required:
  - taskGroupId
+additionalProperties: false
