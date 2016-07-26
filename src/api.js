@@ -434,9 +434,9 @@ var patchAndValidateTaskDef = function(taskId, taskDef) {
 let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
   let taskGroupId = taskDef.taskGroupId;
   let taskGroup = await ctx.TaskGroup.load({taskGroupId}, true);
+  let expires = new Date(taskDef.expires);
   let taskGroupExpiration = new Date(
-    new Date(taskDef.expires).getTime() +
-    ctx.taskGroupExpiresExtension * 1000
+    expires.getTime() + ctx.taskGroupExpiresExtension * 1000
   );
   if (!taskGroup) {
     taskGroup = await ctx.TaskGroup.create({
@@ -468,7 +468,7 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
   }
   // Update taskGroup.expires if necessary
   await taskGroup.modify(taskGroup => {
-    if (taskGroup.expires.getTime() < new Date(taskDef.expires).getTime()) {
+    if (taskGroup.expires.getTime() < expires.getTime()) {
       taskGroup.expires = taskGroupExpiration;
     }
   });
@@ -477,7 +477,7 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
   await ctx.TaskGroupMember.create({
     taskGroupId,
     taskId,
-    expires: new Date(taskDef.expires),
+    expires,
   }).catch(err => {
     // If the entity already exists, then we're happy no need to crash
     if (!err || err.code !== 'EntityAlreadyExists') {
@@ -485,15 +485,33 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
     }
   });
 
-  // Now we walso add the task to the group size counters as well
+  // Now we also add the task to the group size counters as well
   await ctx.TaskGroupActiveSet.create({
     taskGroupId,
     taskId,
-    expires: new Date(taskDef.expires),
-  }).catch(err => {
+    expires,
+  }).catch(async (err) => {
     // If the entity already exists, then we're happy no need to crash
     if (!err || err.code !== 'EntityAlreadyExists') {
       throw err;
+    }
+
+    let active = await ctx.TaskGroupActiveSet.load({taskId, taskGroupId});
+
+    if (!_.isEqual(new Date(active.expires), expires)) {
+      return res.reportError('RequestConflict', [
+        'TaskGroupActiveSet for taskId:{{taskId}} taskGroupId:{{taskGroupId}}',
+        'already exists with a different expires time! This could be the fault',
+        'of faulty idempotency.',
+        '\n',
+        'New time: {{expires}}',
+        'Existing time: {{oldExpires}}',
+      ].join('\n'), {
+        taskId,
+        taskGroupId,
+        expires,
+        oldExpires: new Date(active.expires),
+      });
     }
   });
 
