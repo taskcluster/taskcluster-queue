@@ -333,10 +333,11 @@ api.declare({
 /** Reply to an artifact request using taskId, runId, name and context */
 var replyWithArtifact = async function(taskId, runId, name, req, res) {
   // Load artifact meta-data from table storage
-  let [artifact, task] = await Promise.all([
-    this.Artifact.load({taskId, runId, name}, true),
-    this.Task.load({taskId}, true),
-  ]);
+  let artifact = await this.Artifact.load({
+    taskId:     taskId,
+    runId:      runId,
+    name:       name
+  }, true);
 
   // Give a 404, if the artifact couldn't be loaded
   if (!artifact) {
