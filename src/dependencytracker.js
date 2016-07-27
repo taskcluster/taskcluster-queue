@@ -261,8 +261,16 @@ class DependencyTracker {
     // check for emptiness of the partition
     let result = await this.TaskGroupActiveSet.query({taskGroupId}, {limit: 1});
 
-    // We assume this generally won't happen
-    assert(result.entries.length > 0 || !result.continuation, 'hmm... this is bad, see comment in isBlocked()');
+    // We assume this generally won't happen, see comment in isBlocked(...)
+    // which also uses a query operation with limit = 1 to check for partition emptiness.
+    if (result.entries.length === 0 && result.continuation) {
+      let err = new Error('Single request emptiness check invariant failed. ' +
+                          'This is a flawed assumption in resolveTask()');
+      err.taskId = taskId;
+      err.taskGroupId = taskGroupId;
+      err.result = result;
+      throw err;
+    }
 
     if (result.entries.length == 0) {
       await this.publisher.taskGroupResolved({
@@ -280,11 +288,13 @@ class DependencyTracker {
     // we better not make assumptions about their APIs being sane. But since
     // we're not filtering here I fully expect that we should able to get the
     // first entry. Just we could if we specified both partitionKey and rowKey.
-    assert(
-      result.entries.length > 0 || !result.continuation,
-      'Single request emptiness checking invariant failed, this is a ' +
-      'flawed assumption in our code. Search the code for "emptiness checking "'
-    );
+    if (result.entries.length === 0 && result.continuation) {
+      let err = new Error('Single request emptiness check invariant failed. ' +
+                          'This is a flawed assumption in isBlocked()');
+      err.taskId = taskId;
+      err.result = result;
+      throw err;
+    }
 
     // If we have any entries the taskId is blocked!
     return result.entries.length > 0;
