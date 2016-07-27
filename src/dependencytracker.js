@@ -256,27 +256,7 @@ class DependencyTracker {
       },
     });
 
-    await this.TaskGroupActiveSet.remove({taskId, taskGroupId}, true);
-
-    // check for emptiness of the partition
-    let result = await this.TaskGroupActiveSet.query({taskGroupId}, {limit: 1});
-
-    // We assume this generally won't happen, see comment in isBlocked(...)
-    // which also uses a query operation with limit = 1 to check for partition emptiness.
-    if (result.entries.length === 0 && result.continuation) {
-      let err = new Error('Single request emptiness check invariant failed. ' +
-                          'This is a flawed assumption in resolveTask()');
-      err.taskId = taskId;
-      err.taskGroupId = taskGroupId;
-      err.result = result;
-      throw err;
-    }
-
-    if (result.entries.length == 0) {
-      await this.publisher.taskGroupResolved({
-        taskGroupId,
-      }, []);
-    }
+    await this.updateTaskGroupActiveSet(taskId, taskGroupId)
   }
 
   /** Returns true, if some task requirement is blocking the task */
@@ -298,6 +278,36 @@ class DependencyTracker {
 
     // If we have any entries the taskId is blocked!
     return result.entries.length > 0;
+  }
+
+  /**
+   * Remove a resolved task from the working set and check for task-group resolution
+   *
+   * If a task-group has no active tasks left in it, we are free to send a message
+   * that the group is "resolved" for the time being.
+   */
+  async updateTaskGroupActiveSet(taskId, taskGroupId) {
+    await this.TaskGroupActiveSet.remove({taskId, taskGroupId}, true);
+
+    // check for emptiness of the partition
+    let result = await this.TaskGroupActiveSet.query({taskGroupId}, {limit: 1});
+
+    // We assume this generally won't happen, see comment in isBlocked(...)
+    // which also uses a query operation with limit = 1 to check for partition emptiness.
+    if (result.entries.length === 0 && result.continuation) {
+      let err = new Error('Single request emptiness check invariant failed. ' +
+                          'This is a flawed assumption in resolveTask()');
+      err.taskId = taskId;
+      err.taskGroupId = taskGroupId;
+      err.result = result;
+      throw err;
+    }
+
+    if (result.entries.length == 0) {
+      await this.publisher.taskGroupResolved({
+        taskGroupId,
+      }, []);
+    }
   }
 
   /**
