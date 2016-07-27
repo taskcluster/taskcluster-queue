@@ -500,17 +500,10 @@ let ensureTaskGroup = async (ctx, taskId, taskDef, res) => {
 
     if (!_.isEqual(new Date(active.expires), expires)) {
       return res.reportError('RequestConflict', [
-        'TaskGroupActiveSet for taskId:{{taskId}} taskGroupId:{{taskGroupId}}',
-        'already exists with a different expires time! This could be the fault',
-        'of faulty idempotency.',
-        '\n',
-        'New time: {{expires}}',
-        'Existing time: {{oldExpires}}',
+        'taskId {{taskId}} already used by another task.',
+        'This could be the result of faulty idempotency!',
       ].join('\n'), {
         taskId,
-        taskGroupId,
-        expires,
-        oldExpires: new Date(active.expires),
       });
     }
   });
