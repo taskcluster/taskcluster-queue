@@ -362,6 +362,7 @@ class QueueService {
     return messages.map(m => {
       return {
         taskId:       m.payload.taskId,
+        taskGroupId:  m.payload.taskGroupId,
         deadline:     new Date(m.payload.deadline),
         remove:       m.remove,
       };
