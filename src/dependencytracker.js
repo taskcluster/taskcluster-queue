@@ -256,7 +256,7 @@ class DependencyTracker {
       },
     });
 
-    await this.updateTaskGroupActiveSet(taskId, taskGroupId)
+    await this.updateTaskGroupActiveSet(taskId, taskGroupId);
   }
 
   /** Returns true, if some task requirement is blocking the task */
