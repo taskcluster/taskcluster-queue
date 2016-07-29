@@ -431,6 +431,7 @@ api.declare({
   scopes: [
     ['queue:get-artifact:<name>'],
   ],
+  output:     'blob',
   deferAuth:  true,
   title:      'Get Artifact from Run',
   description: [
@@ -469,6 +470,7 @@ api.declare({
   scopes: [
     ['queue:get-artifact:<name>'],
   ],
+  output:     'blob',
   deferAuth:  true,
   title:      'Get Artifact from Latest Run',
   description: [
