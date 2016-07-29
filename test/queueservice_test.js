@@ -50,7 +50,7 @@ suite('queue/QueueService', function() {
   test('putDeadlineMessage, pollDeadlineQueue', async () => {
     var taskId      = slugid.v4();
     var taskGroupId = slugid.v4();
-    var schedulerId = 'fake-garbage-scheduler';
+    var schedulerId = slugid.v4();
     var deadline    = new Date(new Date().getTime() + 2 * 1000);
     debug('Putting message with taskId: %s, taskGroupId: %s', taskId, taskGroupId);
     // Put message
@@ -104,7 +104,7 @@ suite('queue/QueueService', function() {
   test('putResolvedMessage, pollResolvedQueue', async () => {
     var taskId      = slugid.v4();
     var taskGroupId = slugid.v4();
-    var schedulerId = 'fake-garbage-scheduler';
+    var schedulerId = slugid.v4();
     debug('Putting message with taskId: %s, taskGroupId: %s', taskId, taskGroupId);
     // Put message
     await queueService.putResolvedMessage(taskId, taskGroupId, schedulerId, 'completed');
