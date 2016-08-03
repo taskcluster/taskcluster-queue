@@ -341,7 +341,7 @@ exchanges.declare({
 exchanges.declare({
   exchange:           'task-group-resolved',
   name:               'taskGroupResolved',
-  title:              'Task Group Resolved',
+  title:              'Task Group Resolved Messages',
   description: [
     'A message is published on task-group-resolved whenever all scheduled',
     'tasks in a task group are resolved, regardless of whether they resolve',
