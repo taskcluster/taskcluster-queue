@@ -6,6 +6,7 @@ let _             = require('lodash');
 let base          = require('taskcluster-base');
 let data          = require('./data');
 let QueueService  = require('./queueservice');
+let events        = require('events');
 
 /**
  * When a task is resolved, we put a message in the resolvedQueue, this class
@@ -22,20 +23,23 @@ class DependencyResolver {
    *   pollingDelay:        // Number of ms to sleep between polling
    *   parallelism:         // Number of polling loops to run in parallel
    *                        // Each handles up to 32 messages in parallel
+   *   monitor:             // base.monitor instance
    * }
    */
   constructor(options = {}) {
     assert(options,                   'options are required');
     assert(options.dependencyTracker, 'Expected options.dependencyTracker');
     assert(options.queueService,      'Expected options.queueService');
-    assert(typeof(options.pollingDelay) === 'number',
-           "Expected pollingDelay to be a number");
-    assert(typeof(options.parallelism) === 'number',
-           "Expected parallelism to be a number");
+    assert(typeof options.pollingDelay === 'number',
+           'Expected pollingDelay to be a number');
+    assert(typeof options.parallelism === 'number',
+           'Expected parallelism to be a number');
+    assert(options.monitor !== null, 'options.monitor required!');
 
     // Remember options
-    this.dependencyTracker = options.dependencyTracker;
-    this.queueService = options.queueService;
+    this.dependencyTracker  = options.dependencyTracker;
+    this.queueService       = options.queueService;
+    this.monitor            = options.monitor;
 
     // Set polling delay and parallelism
     this._pollingDelay  = options.pollingDelay;
@@ -47,7 +51,6 @@ class DependencyResolver {
     this._stopping      = false;
   }
 
-
   /** Start polling for resolved-task messages */
   start() {
     if (this._done) {
@@ -57,14 +60,18 @@ class DependencyResolver {
 
     // Start a loop for the amount of parallelism desired
     let loops = [];
-    for(var i = 0; i < this._parallelism; i++) {
+    for (var i = 0; i < this._parallelism; i++) {
       loops.push(this._pollResolvedTasks());
     }
 
     // Create promise that we're done looping
-    this._done = Promise.all(loops).catch((err) => {
-      debug("Error: %s, as JSON: %j", err, err, err.stack);
-      throw err;
+    this._done = Promise.all(loops).catch(async (err) => {
+      console.log('Crashing the process: %s, as json: %j', err, err);
+      // TODO: use this.monitor.reportError(err); when PR lands:
+      // https://github.com/taskcluster/taskcluster-lib-monitor/pull/27
+      await this.monitor.reportError(err, 'error', {});
+      // Crash the process
+      process.exit(1);
     }).then(() => {
       this._done = null;
     });
@@ -78,23 +85,30 @@ class DependencyResolver {
 
   /** Poll for messages and handle them in a loop */
   async _pollResolvedTasks() {
-    while(!this._stopping) {
+    while (!this._stopping) {
       let messages = await this.queueService.pollResolvedQueue();
-      debug("Fetched %s messages", messages.length);
+      this.monitor.count('resolved-queue-poll-requests', 1);
+      this.monitor.count('resolved-queue-polled-messages', messages.length);
+      debug('Fetched %s messages', messages.length);
 
       await Promise.all(messages.map(async (m) => {
         // Don't let a single task error break the loop, it'll be retried later
         // as we don't remove message unless they are handled
         try {
-          await this.dependencyTracker.resolveTask(m.taskId, m.resolution);
+          await this.dependencyTracker.resolveTask(m.taskId, m.taskGroupId, m.schedulerId, m.resolution);
           await m.remove();
+          this.monitor.count('handled-messages-success', 1);
         } catch (err) {
-          debug("[alert-operator] Failed to handle message: %j" +
-                ", with err: %s, as JSON: %j", message, err, err, err.stack);
+          this.monitor.count('handled-messages-error', 1);
+          this.monitor.reportError(err, 'warning');
         }
       }));
 
-      if(messages.length === 0 && !this._stopping) {
+      if (messages.length === 0 && !this._stopping) {
+        // Count that the queue is empty, we should have this happen regularly.
+        // otherwise, we're not keeping up with the messages. We can setup
+        // alerts to notify us if this doesn't happen for say 40 min.
+        this.monitor.count('resolved-queue-empty');
         await new Promise(accept => setTimeout(accept, this._pollingDelay));
       }
     }
