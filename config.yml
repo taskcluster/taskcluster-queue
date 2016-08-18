@@ -18,6 +18,7 @@ defaults:
     artifactTableName:            Artifacts
     taskGroupTableName:           TaskGroups
     taskGroupMemberTableName:     TaskGroupMembers
+    taskGroupActiveSetTableName:  TaskGroupActiveSets
     taskRequirementTableName:     TaskRequirement
     taskDependencyTableName:      TaskDependency
 
@@ -34,9 +35,6 @@ defaults:
     # expire them later to avoid people creating tasks with a different
     # schedulerId inside a task-group where all tasks are about to expire.
     taskGroupExpiresExtension:     6220800 # 3 days as seconds
-
-    # Component property in the responseTime and process statistics
-    statsComponent:               queue
 
     # Prefix for azure queues (at most 6 characters)
     queuePrefix:                  queue
@@ -111,17 +109,6 @@ defaults:
     username:                 !env PULSE_USERNAME
     password:                 !env PULSE_PASSWORD
 
-  influx:
-    connectionString:         !env INFLUX_CONNECTION
-    maxDelay:                 300
-    maxPendingPoints:         300
-
-  raven:
-    # This can be grabbed from the settings of the sentry project
-    # and is a string that looks like:
-    # https://<pubkey>:<privkey>@app.getsentry.com/<port>
-    sentryDSN:                 !env SENTRY_DSN
-
   aws:
     # Credentials with access to artifact buckets and
     # references/schemas.taskcluster.net if you wish to publish meta-data
@@ -140,12 +127,14 @@ production:
     artifactTableName:            'QueueArtifacts'
     taskGroupTableName:           'QueueTaskGroups'
     taskGroupMemberTableName:     'QueueTaskGroupMembers'
+    taskGroupActiveSetTableName:  'QueueTaskGroupActiveSets'
     taskRequirementTableName:     'QueueTaskRequirement'
     taskDependencyTableName:      'QueueTaskDependency'
-    publicArtifactBucketProxies:
-      'us-east-1':  's3-copy-proxy-us-east-1.taskcluster.svc.tutum.io'
-      'us-west-1':  's3-copy-proxy-us-west-1.taskcluster.svc.tutum.io'
-    usePublicArtifactBucketProxy: !env:bool USE_PUBLIC_ARTIFACT_BUCKET_PROXY
+    cloudMirrorRegions:
+      - us-east-1
+      - us-west-1
+      - eu-central-1
+    useCloudMirror: !env:bool USE_PUBLIC_ARTIFACT_BUCKET_PROXY
   taskcluster:
     authBaseUrl:      https://auth.taskcluster.net/v1
   server:
@@ -163,13 +152,13 @@ test:
     publicArtifactBucket:         'test-bucket-for-any-garbage'
     privateArtifactBucket:        'test-bucket-for-any-garbage2'
     artifactContainer:            'artifacts'
-    statsComponent:               'test-queue'
     queuePrefix:                  'hacks'
     queuePrefix2:                 'hacks2' # For testing deletion of queues
     taskTableName:                'TestTasks2'
     artifactTableName:            'TestArtifacts2'
     taskGroupTableName:           'TestTaskGroups2'
     taskGroupMemberTableName:     'TestTaskGroupMembers2'
+    taskGroupActiveSetTableName:  'TestTaskSizeMembers2'
     taskRequirementTableName:     'TestTaskRequirement2'
     taskDependencyTableName:      'TestTaskDependency2'
     claimQueue:                   'test-claim-queue'

@@ -6,12 +6,13 @@ let _             = require('lodash');
 let base          = require('taskcluster-base');
 let data          = require('./data');
 let QueueService  = require('./queueservice');
+let events        = require('events');
 
 /** State that are considered resolved */
 const RESOLVED_STATES = [
   'completed',
   'failed',
-  'exception'
+  'exception',
 ];
 
 /**
@@ -23,6 +24,11 @@ const RESOLVED_STATES = [
  *
  * Notice, that the task may not exists. Or the task may have different
  * `deadline`, we shall only handle task if the `deadline` match.
+ *
+ * The deadline message serves 3 purposes:
+ * A) Resolve old tasks
+ * B) Resolve tasks that failed to create properly
+ * C) Clean up TaskGroupActiveSet and publish message about task-group finished.
  */
 class DeadlineResolver {
   /**
@@ -37,26 +43,29 @@ class DeadlineResolver {
    *   pollingDelay:      // Number of ms to sleep between polling
    *   parallelism:       // Number of polling loops to run in parallel
    *                      // Each handles up to 32 messages in parallel
+   *   monitor:           // base.monitor instance
    * }
    */
   constructor(options) {
-    assert(options, "options must be given");
+    assert(options, 'options must be given');
     assert(options.Task.prototype instanceof data.Task,
-           "Expected data.Task instance");
+           'Expected data.Task instance');
     assert(options.queueService instanceof QueueService,
-           "Expected instance of QueueService");
-    assert(options.dependencyTracker, "Expected a DependencyTracker instance");
-    assert(options.publisher, "Expected a publisher");
-    assert(typeof(options.pollingDelay) === 'number',
-           "Expected pollingDelay to be a number");
-    assert(typeof(options.parallelism) === 'number',
-           "Expected parallelism to be a number");
+           'Expected instance of QueueService');
+    assert(options.dependencyTracker, 'Expected a DependencyTracker instance');
+    assert(options.publisher, 'Expected a publisher');
+    assert(typeof options.pollingDelay === 'number',
+           'Expected pollingDelay to be a number');
+    assert(typeof options.parallelism === 'number',
+           'Expected parallelism to be a number');
+    assert(options.monitor !== null, 'options.monitor required!');
     this.Task               = options.Task;
     this.queueService       = options.queueService;
     this.dependencyTracker  = options.dependencyTracker;
     this.publisher          = options.publisher;
     this.pollingDelay       = options.pollingDelay;
     this.parallelism        = options.parallelism;
+    this.monitor            = options.monitor;
 
     // Promise that polling is done
     this.done               = null;
@@ -73,13 +82,17 @@ class DeadlineResolver {
 
     // Start a loop for the amount of parallelism desired
     var loops = [];
-    for(var i = 0; i < this.parallelism; i++) {
+    for (var i = 0; i < this.parallelism; i++) {
       loops.push(this.poll());
     }
     // Create promise that we're done looping
-    this.done = Promise.all(loops).catch((err) => {
-      debug("Error: %s, as JSON: %j", err, err, err.stack);
-      throw err;
+    this.done = Promise.all(loops).catch(async (err) => {
+      console.log('Crashing the process: %s, as json: %j', err, err);
+      // TODO: use this.monitor.reportError(err); when PR lands:
+      // https://github.com/taskcluster/taskcluster-lib-monitor/pull/27
+      await this.monitor.reportError(err, 'error', {});
+      // Crash the process
+      process.exit(1);
     }).then(() => {
       this.done = null;
     });
@@ -93,20 +106,25 @@ class DeadlineResolver {
 
   /** Poll for messages and handle them in a loop */
   async poll() {
-    while(!this.stopping) {
+    while (!this.stopping) {
       var messages = await this.queueService.pollDeadlineQueue();
-      debug("Fetched %s messages", messages.length);
+      debug('Fetched %s messages', messages.length);
 
-      await Promise.all(messages.map((message) => {
+      await Promise.all(messages.map(async (message) => {
         // Don't let a single task error break the loop, it'll be retried later
         // as we don't remove message unless they are handled
-        return this.handleMessage(message).catch((err) => {
-          debug("[alert-operator] Failed to handle message: %j" +
-                ", with err: %s, as JSON: %j", message, err, err, err.stack);
-        });
+        try {
+          await this.handleMessage(message);
+        } catch (err) {
+          this.monitor.reportError(err, 'warning');
+        }
       }));
 
-      if(messages.length === 0 && !this.stopping) {
+      if (messages.length === 0 && !this.stopping) {
+        // Count that the queue is empty, we should have this happen regularly.
+        // otherwise, we're not keeping up with the messages. We can setup
+        // alerts to notify us if this doesn't happen for say 40 min.
+        this.monitor.count('deadline-queue-empty');
         await this.sleep(this.pollingDelay);
       }
     }
@@ -118,33 +136,35 @@ class DeadlineResolver {
   }
 
   /** Handle advisory message about deadline expiration */
-  async handleMessage({taskId, deadline, remove}) {
+  async handleMessage({taskId, taskGroupId, schedulerId, deadline, remove}) {
     // Query for entity for which we have exact rowKey too, limit to 1, and
     // require that deadline matches. This is essentially a conditional load
     // operation
     var {entries: [task]} = await this.Task.query({
       taskId:     taskId,   // Matches an exact entity
-      deadline:   deadline  // Load conditionally
+      deadline:   deadline, // Load conditionally
     }, {
       matchRow:   'exact',  // Validate that we match row key exactly
-      limit:      1         // Load at most one entity, no need to search
+      limit:      1,        // Load at most one entity, no need to search
     });
 
-    // If the task doesn't exist, we'll log and be done, it's an interesting
-    // metric that's all
+    // If the task doesn't exist we're done
     if (!task) {
-      debug("[not-a-bug] Task doesn't exist, taskId: %s, deadline: %s",
-            taskId, deadline.toJSON());
+      await this.dependencyTracker.updateTaskGroupActiveSet(taskId, taskGroupId, schedulerId);
       return remove();
     }
 
     // Check if this is the deadline we're supposed to be resolving for, if
     // this check fails, then the conditional load must have failed so we should
-    // alert operator!
+    // report error
     if (task.deadline.getTime() !== deadline.getTime()) {
-      debug("[alert-operator] Task deadline doesn't match deadline from " +
-            "message, taskId: %s, task.deadline: %s, message.deadline: %s ",
-            taskId, task.deadline.toJSON(), deadline.toJSON());
+      let err = new Error('Task deadline does not match deadline from ' +
+                    'message, taskId: ' + taskId + ' this only happens ' +
+                    'if conditional load does not work');
+      err.taskId = taskId;
+      err.taskDeadline= task.deadline.toJSON();
+      err.messageDeadline= deadline.toJSON();
+      await this.monitor.reportError(err);
       return remove();
     }
 
@@ -160,7 +180,7 @@ class DeadlineResolver {
           reasonCreated:    'exception',
           reasonResolved:   'deadline-exceeded',
           scheduled:        now,
-          resolved:         now
+          resolved:         now,
         });
       }
 
@@ -173,8 +193,12 @@ class DeadlineResolver {
         // If a run that isn't the last run is unresolved, it violates an
         // invariant and we shall log and error...
         if (task.runs.length - 1 !== runId) {
-          debug("[alert-operator] runId: %s, isn't the last of %s, but " +
-                "isn't resolved. run info: %j", runId, taskId, run);
+          let err = new Error('runId: ' + runId + ' is not the last of: ' +
+                              taskId + ' but it is not resolved');
+          err.taskId = taskId;
+          err.runId = runId;
+          err.run = run;
+          this.monitor.reportError(err);
         }
 
         // Resolve run as deadline-exceeded
@@ -191,15 +215,15 @@ class DeadlineResolver {
     var run = _.last(task.runs);
     if (run.reasonResolved  === 'deadline-exceeded' &&
         run.state           === 'exception') {
-      debug("Resolved taskId: %s, by deadline", taskId);
+      debug('Resolved taskId: %s, by deadline', taskId);
 
       // Update dependency tracker
-      await this.dependencyTracker.resolveTask(taskId, 'exception');
+      await this.dependencyTracker.resolveTask(taskId, task.taskGroupId, task.schedulerId, 'exception');
 
       // Publish messages about the last run
       await this.publisher.taskException({
         status:   task.status(),
-        runId:    task.runs.length - 1
+        runId:    task.runs.length - 1,
       }, task.routes);
     }
 
@@ -209,4 +233,3 @@ class DeadlineResolver {
 
 // Export DeadlineResolver
 module.exports = DeadlineResolver;
-
