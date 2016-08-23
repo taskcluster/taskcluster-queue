@@ -1282,7 +1282,6 @@ api.declare({
   });
 });
 
-
 /** Claim any task */
 api.declare({
   method:     'post',
@@ -1293,15 +1292,15 @@ api.declare({
     [
       'queue:claim-task:<provisionerId>/<workerType>',
       'queue:worker-id:<workerGroup>/<workerId>',
-    ]
+    ],
   ],
   deferAuth:  true,
   input:      'task-claim-request.json#',
   output:     'task-claim-response.json#',
-  title:      "Claim Work",
+  title:      'Claim Work',
   description: [
-    "claim any task, more to be added later..."
-  ].join('\n')
+    'Claim any task, more to be added later...',
+  ].join('\n'),
 }, async function(req, res) {
   let provisionerId = req.params.provisionerId;
   let workerType    = req.params.workerType;
@@ -1310,7 +1309,7 @@ api.declare({
   let count         = 1;
 
   // Authenticate request by providing parameters
-  if(!req.satisfies({
+  if (!req.satisfies({
     workerGroup,
     workerId,
     provisionerId,
@@ -1334,7 +1333,6 @@ api.declare({
     tasks: result,
   });
 });
-
 
 /** Claim a task */
 api.declare({
