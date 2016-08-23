@@ -45,7 +45,7 @@ class HintPoller {
       this.poll().catch(err => {
         this.started = false;
         // Resolve everything as failed
-        this.destroy()
+        this.destroy();
         let requests = this.requests;
         this.requests = [];
         requests.map(r => r.reject(err));
@@ -139,7 +139,7 @@ class WorkClaimer extends events.EventEmitter {
     // As soon as we have claims we return so work can get started.
     // We don't try to claim up to the count, that could take time and we risk
     // dropping the claims in case of server crash.
-    while(claims.length === 0 && !done) {
+    while (claims.length === 0 && !done) {
       // Get a HintPoller
       let key = provisionerId + '/' + workerType;
       let hintPoller = this._hintPollers[key];
@@ -153,7 +153,7 @@ class WorkClaimer extends events.EventEmitter {
       // Try to claim all the hints
       claims = await Promise.all(hints.map(async(hint) => {
         try {
-          return await this.claimTask(hint)
+          return await this.claimTask(hint);
         } catch (err) {
           this._monitor.reportError(err, 'warning', {
             comment: 'claimTask from hint failed',

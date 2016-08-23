@@ -160,8 +160,9 @@ class QueueService {
           msg.messageText,
           msg.messageId,
           msg.popReceipt, {
-          visibilityTimeout: 0,
-        }),
+            visibilityTimeout: 0,
+          },
+        ),
       };
     });
   }
@@ -671,10 +672,12 @@ class QueueService {
           count,
         });
         return messages.map(m => {
-          taskId:   m.payload.taskId,
-          runId:    m.payload.runId,
-          remove:   m.remove,
-          release:  m.release,
+          return {
+            taskId:   m.payload.taskId,
+            runId:    m.payload.runId,
+            remove:   m.remove,
+            release:  m.release,
+          };
         });
       };
     });
