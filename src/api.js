@@ -71,6 +71,7 @@ var RUN_ID_PATTERN      = /^[1-9]*[0-9]+$/;
  *   regionResolver: // Instance of EC2RegionResolver,
  *   credentials:    // TaskCluster credentials for issuing temp creds on claim
  *   dependencyTracker: // Instance of DependencyTracker
+ *   workClaimer:    // WorkClaimer instance from workclaimer.js
  * }
  */
 var api = new base.API({
@@ -119,6 +120,7 @@ var api = new base.API({
     'credentials',        // TC credentials for issuing temp creds on claim
     'dependencyTracker',  // Instance of DependencyTracker
     'monitor',            // base.monitor instance
+    'workClaimer',        // Instance of WorkClaimer
   ],
 });
 
@@ -1285,28 +1287,28 @@ api.declare({
 /** Claim any task */
 api.declare({
   method:     'post',
-  route:      '/claim-work/<provisionerId>/<workerType>',
+  route:      '/claim-work/:provisionerId/:workerType',
   name:       'claimWork',
   stability:  base.API.stability.stable,
   scopes: [
     [
-      'queue:claim-task:<provisionerId>/<workerType>',
+      'queue:claim-work:<provisionerId>/<workerType>',
       'queue:worker-id:<workerGroup>/<workerId>',
     ],
   ],
   deferAuth:  true,
-  input:      'task-claim-request.json#',
-  output:     'task-claim-response.json#',
+  input:      'claim-work-request.json#',
+  output:     'claim-work-response.json#',
   title:      'Claim Work',
   description: [
-    'Claim any task, more to be added later...',
+    'Claim any task, more to be added later... long polling up to 20s.',
   ].join('\n'),
 }, async function(req, res) {
   let provisionerId = req.params.provisionerId;
   let workerType    = req.params.workerType;
   let workerGroup   = req.body.workerGroup;
   let workerId      = req.body.workerId;
-  let count         = 1;
+  let count         = req.body.tasks;
 
   // Authenticate request by providing parameters
   if (!req.satisfies({
@@ -1318,14 +1320,15 @@ api.declare({
     return;
   }
 
+  // Allow request to hand
   let timer = null;
   let aborted = new Promise(accept => {
     timer = setTimeout(accept, 20 * 1000);
     res.once('close', accept);
   });
 
-  let result = await this.WorkClaimer.claim(
-    provisionerId, workerType, count, aborted,
+  let result = await this.workClaimer.claim(
+    provisionerId, workerType, workerGroup, workerId, count, aborted,
   );
   clearTimeout(timer); // Just free up a timer no longer needed
 
@@ -1388,42 +1391,13 @@ api.declare({
     return;
   }
 
-  // Set takenUntil to now + claimTimeout
-  var takenUntil = new Date();
-  takenUntil.setSeconds(takenUntil.getSeconds() + this.claimTimeout);
-
-  var msgPut = false;
-  await task.modify(async (task) => {
-    var run = task.runs[runId];
-
-    // No modifications required if there is no run, or the run isn't pending
-    if (task.runs.length - 1 !== runId || run.state !== 'pending') {
-      return;
-    }
-
-    // Put claim-expiration message in queue, if not already done, remember
-    // that the modifier given to task.modify may be called more than once!
-    if (!msgPut) {
-      await this.queueService.putClaimMessage(taskId, runId, takenUntil);
-      msgPut = true;
-    }
-
-    // Change state of the run (claiming it)
-    run.state         = 'running';
-    run.workerGroup   = workerGroup;
-    run.workerId      = workerId;
-    run.takenUntil    = takenUntil.toJSON();
-    run.started       = new Date().toJSON();
-
-    // Set takenUntil on the task
-    task.takenUntil   = takenUntil;
-  });
-
-  // Find run that we (may) have modified
-  var run = task.runs[runId];
+  // Claim task
+  let result = await this.workClaimer.claimTask(
+    taskId, runId, workerGroup, workerId, task,
+  );
 
   // If the run doesn't exist return ResourceNotFound
-  if (!run) {
+  if (result === 'run-not-found') {
     return res.reportError(
       'ResourceNotFound',
       'Run {{runId}} not found on task {{taskId}}.', {
@@ -1432,12 +1406,9 @@ api.declare({
       },
     );
   }
-  // If the run wasn't claimed by this workerGroup/workerId, then we return
-  // RequestConflict as it must have claimed by someone else
-  if (task.runs.length - 1  !== runId ||
-      run.state             !== 'running' ||
-      run.workerGroup       !== workerGroup ||
-      run.workerId          !== workerId) {
+
+  // If already claimed we return RequestConflict
+  if (result === 'conflict') {
     return res.reportError(
       'RequestConflict',
       'Run {{runId}} was already claimed by another worker.', {
@@ -1446,41 +1417,8 @@ api.declare({
     );
   }
 
-  // Construct status object
-  var status = task.status();
-
-  // Publish task running message, it's important that we publish even if this
-  // is a retry request and we didn't make any changes in task.modify
-  await this.publisher.taskRunning({
-    status:       status,
-    runId:        runId,
-    workerGroup:  workerGroup,
-    workerId:     workerId,
-    takenUntil:   run.takenUntil,
-  }, task.routes);
-
-  // Create temporary credentials for the task
-  let credentials = taskcluster.createTemporaryCredentials({
-    start:  new Date(Date.now() - 15 * 60 * 1000),
-    expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
-    scopes: [
-      'queue:reclaim-task:' + taskId + '/' + runId,
-      'queue:resolve-task:' + taskId + '/' + runId,
-      'queue:create-artifact:' + taskId + '/' + runId,
-    ].concat(task.scopes),
-    credentials: this.credentials,
-  });
-
   // Reply to caller
-  return res.reply({
-    status:       status,
-    runId:        runId,
-    workerGroup:  workerGroup,
-    workerId:     workerId,
-    takenUntil:   run.takenUntil,
-    task:         await task.definition(),
-    credentials:  credentials,
-  });
+  return res.reply(result);
 });
 
 /** Reclaim a task */
