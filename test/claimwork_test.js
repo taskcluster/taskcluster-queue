@@ -54,7 +54,7 @@ suite('queue.claimWork', () => {
       workerGroup:  'my-worker-group',
       workerId:     'my-worker',
     }).then(
-      () => assert(false, "Expected error"),
+      () => assert(false, 'Expected error'),
       err => assert(err.code, err.code),
     );
 
@@ -67,7 +67,7 @@ suite('queue.claimWork', () => {
       workerGroup:  'my-worker-group',
       workerId:     'my-worker',
     }).then(
-      () => assert(false, "Expected error"),
+      () => assert(false, 'Expected error'),
       err => assert(err.code, err.code),
     );
   });
@@ -176,7 +176,6 @@ suite('queue.claimWork', () => {
     await queue.reportCompleted(taskId, 0);
   });
 
-
   test('claimWork gets "high" before "normal" priority', async() => {
     let taskIdA = slugid.v4();
     let taskIdB = slugid.v4();
@@ -193,8 +192,8 @@ suite('queue.claimWork', () => {
     });
     // I guess this could be slightly intermittent, if queues are slow to
     // provide the message...
-    assert(r1.tasks.length === 1, "Expected a task");
-    assert(r1.tasks[0].status.taskId === taskIdA, "Expected high priorty task");
+    assert(r1.tasks.length === 1, 'Expected a task');
+    assert(r1.tasks[0].status.taskId === taskIdA, 'Expected high priorty task');
 
     debug('### ClaimWork');
     let r2 = await helper.queue.claimWork('no-provisioner', workerType, {
@@ -202,7 +201,7 @@ suite('queue.claimWork', () => {
       workerId:     'my-worker',
       tasks:        1,
     });
-    assert(r2.tasks.length === 1, "Expected a task");
-    assert(r2.tasks[0].status.taskId === taskIdB, "Expected high priorty task");
+    assert(r2.tasks.length === 1, 'Expected a task');
+    assert(r2.tasks[0].status.taskId === taskIdB, 'Expected high priorty task');
   });
 });
