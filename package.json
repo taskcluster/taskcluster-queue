@@ -53,7 +53,7 @@
     "eslint-plugin-taskcluster": "^1.0.2"
   },
   "engines": {
-    "node": "^5.8.0",
+    "node": "^6.3.0",
     "npm": "^3.7.3"
   }
 }
