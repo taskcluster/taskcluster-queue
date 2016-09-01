@@ -54,15 +54,7 @@ var launch = async function(cfg) {
         start:        taskcluster.fromNow('- 15 min'),
         expiry:       taskcluster.fromNow('4 hours'),
         scopes: [
-          'queue:*',
-          'index:*',
-          'assume:*',
-          'scheduler:*',
-          'auth:azure-table-access:taskclusterdev/*',
-          'docker-worker:cache:*',
-          'docker-worker:image:taskcluster/*',
-          'docker-worker:capability:device:loopbackVideo',
-          'docker-worker:capability:device:loopbackAudio',
+          'queue:create-task:no-provisioner/test-worker',
         ],
         credentials:  cfg.taskcluster.credentials,
       });
@@ -73,14 +65,6 @@ var launch = async function(cfg) {
         agent:            agent,
         authorizedScopes: [
           'queue:create-task:no-provisioner/test-worker',
-          'index:-random-scope.that-is-a-non-trivial.string',
-          'assume:*',
-          'scheduler:-random-scope.that-is-a-non-trivial.string',
-          'auth:azure-table-access:taskclusterdev/*',
-          'docker-worker:cache:*',
-          'docker-worker:image:taskcluster/*',
-          'docker-worker:capability:device:loopbackVideo',
-          'docker-worker:capability:device:loopbackAudio',
         ],
       });
       while (true) {
