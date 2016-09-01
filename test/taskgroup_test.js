@@ -84,8 +84,11 @@ suite('TaskGroup features', () => {
       workerGroup:    'my-worker-group',
       workerId:       'my-worker',
     });
-    await helper.queue.reportCompleted(taskIdB, 0);
+    // Allow any message to arrive, so we're resonably sure
+    // there isn't one on the wire
+    await new Promise(resolve => setTimeout(resolve, 250));
     shouldveResolved = true;
+    await helper.queue.reportCompleted(taskIdB, 0);
 
     let tgf = await taskGroupResolvedHandler;
     assume(tgf.payload.taskGroupId).equals(taskGroupId);
