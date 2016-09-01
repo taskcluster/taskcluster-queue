@@ -196,7 +196,7 @@ load-test:
     publicArtifactBucket:         'test-bucket-for-any-garbage'
     privateArtifactBucket:        'test-bucket-for-any-garbage2'
     artifactContainer:            'artifacts'
-    queuePrefix:                  'loadtestq'
+    queuePrefix:                  'ltq'
     taskTableName:                'LoadTestTasks2'
     artifactTableName:            'LoadTestArtifacts2'
     taskGroupTableName:           'LoadTestTaskGroups2'
