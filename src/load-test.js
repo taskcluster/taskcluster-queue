@@ -30,7 +30,7 @@ var launch = async function(cfg) {
     return Math.round(n * 100) / 100;
   };
 
-  const CYCLE_SECONDS = 30; //10 * 60; // Normally 3
+  const CYCLE_SECONDS = 3 * 60; //10 * 60; // Normally 3
 
   var success = 0;
   var failed  = 0;
@@ -88,7 +88,7 @@ var launch = async function(cfg) {
   };
 
   //  2 req in parallel
-  while (loops < 2) { startLoop(); }
+  /*while (loops < 2) { startLoop(); }
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
 
@@ -100,26 +100,28 @@ var launch = async function(cfg) {
   while (loops < 8) { startLoop(); }
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
+  */
   // 16 req in parallel
   while (loops < 16) { startLoop(); }
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
-
+/*
   // 32 req in parallel
   while (loops < 32) { startLoop(); }
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
+*/
 
   // 48 req in parallel
   while (loops < 48) { startLoop(); }
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
   //*/
-/*
   // 64 req in parallel
   while (loops < 64) { startLoop(); }
   await base.testing.sleep(CYCLE_SECONDS * 1000);
   summary();
+  /*
 
   // 128 req in parallel
   while (loops < 128{ ) startLoop(); }
