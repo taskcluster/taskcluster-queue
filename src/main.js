@@ -31,7 +31,7 @@ let load = base.loader({
     setup: ({process, profile, cfg}) => base.monitor({
       project: 'taskcluster-queue',
       credentials: cfg.taskcluster.credentials,
-      mock: profile === 'test',
+      mock: cfg.monitor.mock,
       process,
     }),
   },

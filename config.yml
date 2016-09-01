@@ -117,6 +117,9 @@ defaults:
     region:           us-west-2
     apiVersion:       2014-01-01
 
+  monitor:
+    mock:             true
+
 # Configuration in production
 production:
   app:
@@ -142,6 +145,8 @@ production:
     env:              production
     forceSSL:         true
     trustProxy:       true
+  monitor:
+    mock:             false
 
 # Configuration of tests
 test:
