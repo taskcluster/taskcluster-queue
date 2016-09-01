@@ -30,7 +30,7 @@ var launch = async function(cfg) {
     return Math.round(n * 100) / 100;
   };
 
-  const CYCLE_SECONDS = 10 * 60; // Normally 3
+  const CYCLE_SECONDS = 30; //10 * 60; // Normally 3
 
   var success = 0;
   var failed  = 0;
@@ -148,4 +148,3 @@ var launch = async function(cfg) {
 
 // Export launch in-case anybody cares
 module.exports = launch;
-
