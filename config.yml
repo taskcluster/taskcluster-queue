@@ -213,10 +213,6 @@ load-test:
     deadlineQueue:                'load-test-deadline-queue'
     publicArtifactBucketProxies:
       'us-east-1':    'proxy-for-us-east-1'
-  taskcluster:
-    credentials:
-      clientId:       test-server
-      accessToken:    none
   server:
     publicUrl:        https://tc-queue-load-test.herokuapp.com
     env:              development
