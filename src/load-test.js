@@ -55,6 +55,8 @@ var launch = async function(cfg) {
         expiry:       taskcluster.fromNow('4 hours'),
         scopes: [
           'queue:create-task:no-provisioner/test-worker',
+          'queue:claim-task:no-provisioner/test-worker',
+          'queue:worker-id:no-worker/dummy-worker',
         ],
         credentials:  cfg.taskcluster.credentials,
       });
@@ -65,10 +67,26 @@ var launch = async function(cfg) {
         agent:            agent,
         authorizedScopes: [
           'queue:create-task:no-provisioner/test-worker',
+          'queue:claim-task:no-provisioner/test-worker',
+          'queue:worker-id:no-worker/dummy-worker',
         ],
       });
       while (true) {
-        await queue.createTask(slugid.v4(), makeTask()).then(() => {
+        await (async() => {
+          let taskId = slugid.v4();
+          await queue.createTask(taskId, makeTask());
+          let result = await queue.claimTask(taskId, 0, {
+            workerGroup:  'no-worker',
+            workerId:     'dummy-worker',
+          });
+          let q2 = new taskcluster.Queue({
+            credentials:      result.credentials,
+            baseUrl:          cfg.server.publicUrl + '/v1',
+            retries:          0,
+            agent:            agent,
+          });
+          await q2.reportCompleted(taskId, 0);
+        })().then(() => {
           success += 1;
         }, (err) => {
           failed += 1;
