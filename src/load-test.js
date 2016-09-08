@@ -7,6 +7,7 @@ var taskcluster   = require('taskcluster-client');
 var slugid        = require('slugid');
 var https         = require('https');
 var http          = require('http');
+var api           = require('./api');
 
 var makeTask = () => {
   return {
@@ -56,11 +57,16 @@ var launch = async function(cfg) {
         scopes: [
           'queue:create-task:no-provisioner/test-worker',
           'queue:claim-task:no-provisioner/test-worker',
+          'queue:claim-work:no-provisioner/test-worker',
           'queue:worker-id:no-worker/dummy-worker',
         ],
         credentials:  cfg.taskcluster.credentials,
       });
-      var queue = new taskcluster.Queue({
+      let reference = api.reference({
+        baseUrl:          cfg.server.publicUrl + '/v1',
+      });
+      let Queue = taskcluster.createClient(reference);
+      var queue = new Queue({
         credentials:      tempCreds,
         retries:          0,
         baseUrl:          cfg.server.publicUrl + '/v1',
@@ -68,6 +74,7 @@ var launch = async function(cfg) {
         authorizedScopes: [
           'queue:create-task:no-provisioner/test-worker',
           'queue:claim-task:no-provisioner/test-worker',
+          'queue:claim-work:no-provisioner/test-worker',
           'queue:worker-id:no-worker/dummy-worker',
         ],
       });
@@ -75,17 +82,28 @@ var launch = async function(cfg) {
         await (async() => {
           let taskId = slugid.v4();
           await queue.createTask(taskId, makeTask());
+          
           let result = await queue.claimTask(taskId, 0, {
             workerGroup:  'no-worker',
             workerId:     'dummy-worker',
+          });//*/
+          /*let r = await queue.claimWork('no-provisioner', 'test-worker', {
+            workerGroup:  'no-worker',
+            workerId:     'dummy-worker',
+            tasks: 1,
           });
-          let q2 = new taskcluster.Queue({
+          let result = r.tasks[0];
+          if (!result) {
+            failed += 1;
+            return;
+          }*/
+          let q2 = new Queue({
             credentials:      result.credentials,
             baseUrl:          cfg.server.publicUrl + '/v1',
             retries:          0,
             agent:            agent,
           });
-          await q2.reportCompleted(taskId, 0);
+          await q2.reportCompleted(result.status.taskId, 0);
         })().then(() => {
           success += 1;
         }, (err) => {
