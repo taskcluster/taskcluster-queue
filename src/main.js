@@ -98,44 +98,16 @@ let load = base.loader({
     },
   },
 
-  azCreds: {
-    requires: ['cfg'],
-    setup: async({cfg}) => {
-      let azure = require('fast-azure-storage');
-      let table = new azure.Table({
-        accountId: cfg.azure.accountName,
-        accessKey: cfg.azure.accountKey,
-      });
-      return (tableName) => {
-        return {
-          accountName: cfg.azure.accountName,
-          sas() {
-            return table.sas(tableName, {
-              expiry:   new Date(Date.now() + 20 * 60 * 1000),
-              permissions: {
-                read:   true,
-                add:    true,
-                update: true,
-                delete: true,
-              },
-            });
-          },
-        };
-      };
-    },
-  },
-
   // Create artifacts table
   Artifact: {
     requires: [
       'cfg', 'monitor', 'process',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
-      'azCreds',
     ],
     setup: async (ctx) => {
       let Artifact = data.Artifact.setup({
         table:            ctx.cfg.app.artifactTableName,
-        credentials:      ctx.azCreds(ctx.cfg.app.artifactTableName),
+        credentials:      ctx.cfg.azure,
         context: {
           blobStore:      ctx.artifactStore,
           publicBucket:   ctx.publicArtifactBucket,
@@ -144,91 +116,91 @@ let load = base.loader({
         },
         monitor:          ctx.monitor.prefix('table.artifacts'),
       });
-      //await Artifact.ensureTable();
+      await Artifact.ensureTable();
       return Artifact;
     },
   },
 
   // Create task table
   Task: {
-    requires: ['cfg', 'monitor', 'process', 'azCreds'],
-    setup: async ({cfg, monitor, process, azCreds}) => {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
       let Task = data.Task.setup({
         table:            cfg.app.taskTableName,
-        credentials:      azCreds(cfg.app.taskTableName),
+        credentials:      cfg.azure,
         monitor:          monitor.prefix('table.tasks'),
       });
-      //await Task.ensureTable();
+      await Task.ensureTable();
       return Task;
     },
   },
 
   // Create task-group table
   TaskGroup: {
-    requires: ['cfg', 'monitor', 'process', 'azCreds'],
-    setup: async ({cfg, monitor, process, azCreds}) => {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
       let TaskGroup = data.TaskGroup.setup({
         table:            cfg.app.taskGroupTableName,
-        credentials:      azCreds(cfg.app.taskGroupTableName),
+        credentials:      cfg.azure,
         monitor:          monitor.prefix('table.taskgroups'),
       });
-      //await TaskGroup.ensureTable();
+      await TaskGroup.ensureTable();
       return TaskGroup;
     },
   },
 
   // Create task-group member table
   TaskGroupMember: {
-    requires: ['cfg', 'monitor', 'process', 'azCreds'],
-    setup: async ({cfg, monitor, process, azCreds}) => {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
       let TaskGroupMember = data.TaskGroupMember.setup({
         table:            cfg.app.taskGroupMemberTableName,
-        credentials:      azCreds(cfg.app.taskGroupMemberTableName),
+        credentials:      cfg.azure,
         monitor:          monitor.prefix('table.taskgroupmembers'),
       });
-      //await TaskGroupMember.ensureTable();
+      await TaskGroupMember.ensureTable();
       return TaskGroupMember;
     },
   },
 
   // Create task-group size table (uses TaskGroupMember entity)
   TaskGroupActiveSet: {
-    requires: ['cfg', 'monitor', 'process', 'azCreds'],
-    setup: async ({cfg, monitor, process, azCreds}) => {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
       let TaskGroupActiveSet = data.TaskGroupMember.setup({
         table:            cfg.app.taskGroupActiveSetTableName,
-        credentials:      azCreds(cfg.app.taskGroupActiveSetTableName),
+        credentials:      cfg.azure,
         monitor:          monitor.prefix('table.taskgroupactivesets'),
       });
-      //await TaskGroupActiveSet.ensureTable();
+      await TaskGroupActiveSet.ensureTable();
       return TaskGroupActiveSet;
     },
   },
 
   // Create TaskRequirement table
   TaskRequirement: {
-    requires: ['cfg', 'monitor', 'process', 'azCreds'],
-    setup: async ({cfg, monitor, process, azCreds}) => {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
       let TaskRequirement = data.TaskRequirement.setup({
         table:            cfg.app.taskRequirementTableName,
-        credentials:      azCreds(cfg.app.taskRequirementTableName),
+        credentials:      cfg.azure,
         monitor:          monitor.prefix('table.taskrequirements'),
       });
-      //await TaskRequirement.ensureTable();
+      await TaskRequirement.ensureTable();
       return TaskRequirement;
     },
   },
 
   // Create TaskDependency table
   TaskDependency: {
-    requires: ['cfg', 'monitor', 'process', 'azCreds'],
-    setup: async ({cfg, monitor, process, azCreds}) => {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
       let TaskDependency = data.TaskDependency.setup({
         table:            cfg.app.taskDependencyTableName,
-        credentials:      azCreds(cfg.app.taskDependencyTableName),
+        credentials:      cfg.azure,
         monitor:          monitor.prefix('table.taskdependencies'),
       });
-      //await TaskDependency.ensureTable();
+      await TaskDependency.ensureTable();
       return TaskDependency;
     },
   },
