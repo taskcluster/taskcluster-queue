@@ -1320,7 +1320,7 @@ api.declare({
     return;
   }
 
-  // Allow request to hand
+  // Allow request to abort their claim request, if the connection closes
   let timer = null;
   let aborted = new Promise(accept => {
     timer = setTimeout(accept, 20 * 1000);
@@ -1390,7 +1390,7 @@ api.declare({
   })) {
     return;
   }
-  
+
   // Check if task is past deadline
   if (task.deadline.getTime() <= Date.now()) {
     return res.reportError(
