@@ -644,7 +644,7 @@ class QueueService {
   }
 
   /**
-   * Return pending queues as list of poll(count) in.order of priority.
+   * Return pending queues as list of poll(count) in order of priority.
    *
    * A poll(count) function returns up-to count messages, where each message
    * is on the form:
@@ -660,7 +660,7 @@ class QueueService {
     let queueNames = await this.ensurePendingQueue(
       provisionerId, workerType,
     );
-    // Order by priorty (and convert to array)
+    // Order by priority (and convert to array)
     let queues = PRIORITIES.map(priority => queueNames[priority]);
 
     // For each queue, return poll(count) function
