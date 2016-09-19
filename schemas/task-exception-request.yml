@@ -46,7 +46,7 @@ properties:
       `public/superseded-by` containing the taskId of the task that superseded
       this one.
       **Report `intermittent-task`** if the task explicitely requested a retry
-      because task is intermitttent. Workers can choose whether or not to
+      because task is intermittent. Workers can choose whether or not to
       support this, but workers shouldn't blindly report this for every task
       that fails.
 additionalProperties:   false
