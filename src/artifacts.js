@@ -460,6 +460,20 @@ api.declare({
   return replyWithArtifact.call(this, taskId, runId, name, req, res);
 });
 
+/** Tell me which region the queue thinks that requester is in */
+api.declare({
+  method: 'get',
+  route: '/request-region',
+  name: 'get-request-region',
+  title: 'Determine region of request as the queue sees it',
+  description: [
+    'Determine the region from which the queue thinks the request',
+    'originates.  This is mainly used as a diagnositic tools',
+  ].join('\ '),
+}, async (req, res) => {
+  res.status(200).json(this.regionResolver.getRegion(req));
+});
+
 /** Get latest artifact from task */
 api.declare({
   method:     'get',
