@@ -9,6 +9,7 @@ var base        = require('taskcluster-base');
 var azure       = require('fast-azure-storage');
 var crypto      = require('crypto');
 var taskcluster = require('taskcluster-client');
+var slugid      = require('slugid');
 
 /** Timeout for azure queue requests */
 var AZURE_QUEUE_TIMEOUT     = 7 * 1000;
@@ -588,6 +589,7 @@ class QueueService {
     return this._putMessage(queueNames[task.priority], {
       taskId:     task.taskId,
       runId:      runId,
+      hintId:     slugid.v4(),
     }, {
       ttl:          timeToDeadline,
       visibility:   0,
