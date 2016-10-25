@@ -6,9 +6,9 @@ let base            = require('taskcluster-base');
 let taskcluster     = require('taskcluster-client');
 let mocha           = require('mocha');
 let debug           = require('debug')('test:helper');
-let v1              = require('../lib/api');
-let exchanges       = require('../lib/exchanges');
-let load            = require('../lib/main');
+let v1              = require('../src/api');
+let exchanges       = require('../src/exchanges');
+let load            = require('../src');
 
 const profile = 'test';
 let loadOptions = {profile, process: 'test'};

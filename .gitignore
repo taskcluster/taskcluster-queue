@@ -1,5 +1,4 @@
 /taskcluster-queue.conf.json
 /node_modules/
 /user-config.yml
-/lib/
-/.test/
+build
