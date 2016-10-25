@@ -10,8 +10,15 @@ addons:
     - g++-4.8
 cache:
   directories:
-    - node_modules
-script: npm test
+      - $HOME/.npm
+      - $HOME/.yarn-cache
+      - node_modules
+before_install:
+  - npm install --global yarn --cache-min 999999999
+install:
+  - yarn
+script:
+  - npm test
 env:
   global:
   - CXX=g++-4.8

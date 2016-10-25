@@ -2,7 +2,7 @@ suite('queue/tasks_store', function() {
   var Promise       = require('promise');
   var slugid        = require('slugid');
   var assert        = require('assert');
-  var BlobStore     = require('../lib/blobstore');
+  var BlobStore     = require('../src/blobstore');
   var base          = require('taskcluster-base');
   var _             = require('lodash');
   var url           = require('url');
