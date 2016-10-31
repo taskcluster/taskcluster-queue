@@ -356,6 +356,9 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
       if (!region) {
         debug('artifact from CDN for ip: %s', req.headers['x-forwarded-for']);
         url = this.publicBucket.createGetUrl(prefix);
+      } else if (req.headers['x-taskcluster-skip-cache'] === 'true') {
+        // Skip cache and go to cloud-front
+        url = this.publicBucket.createGetUrl(prefix);
       } else if (this.artifactRegion === region) {
         url = this.publicBucket.createGetUrl(prefix, true);
       } else {
@@ -446,6 +449,13 @@ api.declare({
     'stored externally. Either way, the response may not be JSON. So API',
     'client users might want to generate a signed URL for this end-point and',
     'use that URL with a normal HTTP client.',
+    '',
+    '**Caching**, artifacts may be cached in data centers closer to the',
+    'workers in-order to reduce bandwidth costs. This can lead to response',
+    'times at upwards 30 seconds. Caching can be skipped by setting the header',
+    '`x-taskcluster-skip-cache: true`, this should only be used for resources',
+    'where request volume is known to be extremely low.',
+    '(This feature may be disabled in the future, use is sparingly!)',
   ].join('\n'),
 }, async function(req, res) {
   var taskId = req.params.taskId;
