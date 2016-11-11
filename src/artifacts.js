@@ -353,10 +353,11 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
     var bucket = artifact.details.bucket;
 
     if (bucket === this.publicBucket.bucket) {
+      let skipCacheHeader = (req.headers['x-taskcluster-skip-cache'] || '').toLowerCase();
       if (!region) {
         debug('artifact from CDN for ip: %s', req.headers['x-forwarded-for']);
         url = this.publicBucket.createGetUrl(prefix);
-      } else if (req.headers['x-taskcluster-skip-cache'] === 'true') {
+      } else if (skipCacheHeader === 'true' || skipCacheHeader === '1') {
         // Skip cache and go to cloud-front
         url = this.publicBucket.createGetUrl(prefix);
       } else if (this.artifactRegion === region) {
@@ -451,10 +452,10 @@ api.declare({
     'use that URL with a normal HTTP client.',
     '',
     '**Caching**, artifacts may be cached in data centers closer to the',
-    'workers in-order to reduce bandwidth costs. This can lead to response',
-    'times at upwards 30 seconds. Caching can be skipped by setting the header',
+    'workers in-order to reduce bandwidth costs. This can lead to longer',
+    'response times. Caching can be skipped by setting the header',
     '`x-taskcluster-skip-cache: true`, this should only be used for resources',
-    'where request volume is known to be extremely low.',
+    'where request volume is known to be low, and caching not useful.',
     '(This feature may be disabled in the future, use is sparingly!)',
   ].join('\n'),
 }, async function(req, res) {
