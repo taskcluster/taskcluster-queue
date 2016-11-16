@@ -62,29 +62,23 @@ let load = loader({
     }),
   },
 
-  reference: {
-    requires: ['cfg'],
-    setup: ({cfg}) => exchanges.reference({
-      exchangePrefix:   cfg.app.exchangePrefix,
-      credentials:      cfg.pulse,
-    }),
-  },
   docs: {
-    requires: ['cfg', 'validator', 'reference'],
-    setup: ({cfg, validator, reference}) => docs.documenter({
+    requires: ['cfg', 'validator'],
+    setup: ({cfg, validator}) => docs.documenter({
       credentials: cfg.taskcluster.credentials,
       tier: 'core',
       schemas: validator.schemas,
       project: 'queue',
-      references: [
-        {
-          name: 'api',
-          reference: v1.reference({baseUrl: cfg.server.publicUrl + '/v1'}),
-        }, {
-          name: 'events',
-          reference: reference,
-        },
-      ],
+      references: [{
+        name: 'api',
+        reference: v1.reference({baseUrl: cfg.server.publicUrl + '/v1'}),
+      }, {
+        name: 'events',
+        reference: exchanges.reference({
+          exchangePrefix:   cfg.app.exchangePrefix,
+          credentials:      cfg.pulse,
+        }),
+      }],
     }),
   },
 
