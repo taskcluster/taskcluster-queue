@@ -1,6 +1,5 @@
 let assert      = require('assert');
 let _           = require('lodash');
-let Promise     = require('promise');
 let events      = require('events');
 let taskcluster = require('taskcluster-client');
 
@@ -25,7 +24,7 @@ class HintPoller {
   }
 
   requestClaim(count, aborted) {
-    assert(!this.destroyed, 'requestClaim() called after destroy()')
+    assert(!this.destroyed, 'requestClaim() called after destroy()');
     // Make a request for count tasks
     let request = null;
     let result = new Promise((resolve, reject) => {
