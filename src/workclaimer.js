@@ -37,7 +37,7 @@ class HintPoller {
         _.pull(this.requests, request);
         // Resolve request empty array
         request.resolve([]);
-      }).catch(err => process.nextTick(() => this.parent.emit('error', err)));
+      }).catch(reject);
 
       // Start polling
       this.start();
