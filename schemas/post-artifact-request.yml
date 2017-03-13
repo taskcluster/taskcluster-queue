@@ -3,6 +3,49 @@ title:              "Post Artifact Request"
 description: "Request a authorization to put and artifact or posting of a URL as an artifact. Note that the `storageType` property is referenced in the response as well."
 type:               object
 oneOf:
+  - title:          "Blob Artifact Request"
+    description: |
+      Request for to upload a generic blob artifact.
+    type:           object
+    properties:
+      storageType:
+        description: |
+          Artifact storage type, in this case `'blob'`
+        type:       string
+        enum:
+          - blob
+      contentType:
+        description: |
+          Artifact mime-type, when uploading artifact to the signed
+          `PUT` URL returned from this request this must given with the
+           `ContentType` header. Please, provide correct mime-type,
+           this make tooling a lot easier, specifically,
+           always using `application/json` for JSON artifacts.
+        type:       string
+        maxLength:  255
+      sha256:       {type: string, pattern: '^[0-9a-f]{64}$'}
+      md5:          {type: string, pattern: '^[0-9a-f]{32}$'}
+      parts:
+        type:       array
+        items:
+          type:     object
+          properties:
+            sha256:       {type: string, pattern: '^[0-9a-f]{64}$'}
+            md5:          {type: string, pattern: '^[0-9a-f]{32}$'}
+            size:         {type: integer, minimum: 0}            
+          additionalProperties: false
+          required:
+            - sha256
+            - md5
+            - size
+        minItems: 1
+    additionalProperties: false
+    required:
+      - storageType
+      - contentType
+      - sha256
+      - md5
+      - parts
   - title:          "S3 Artifact Request"
     description: |
       Request for a signed PUT URL that will allow you to upload an artifact
