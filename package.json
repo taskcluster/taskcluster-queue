@@ -48,11 +48,11 @@
     "xmlbuilder": "^2.6.2"
   },
   "devDependencies": {
-    "babel-eslint": "^6.0.0",
+    "babel-eslint": "^7.1.1",
     "eslint-config-taskcluster": "^2.0.0",
     "eslint-plugin-taskcluster": "^1.0.2",
     "mocha": "^2.2.1",
-    "mocha-eslint": "^2.0.1",
+    "mocha-eslint": "^3.0.1",
     "taskcluster-lib-testing": "^1.0.0"
   },
   "engine-strict": true,
