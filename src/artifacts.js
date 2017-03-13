@@ -35,19 +35,30 @@ api.declare({
     'intermediate artifacts from data processing applications, as the',
     'artifacts can be set to expire a few days later.',
     '',
-    'We currently support 4 different `storageType`s, each storage type have',
+    'We currently support 3 different `storageType`s, each storage type have',
     'slightly different features and in some cases difference semantics.',
+    'We also have 2 deprecated `storageType`s which are only maintained for',
+    'backwards compatiability and should not be used in new implementations',
     '',
-    '**S3 artifacts**, is useful for static files which will be stored on S3.',
-    'When creating an S3 artifact the queue will return a pre-signed URL',
-    'to which you can do a `PUT` request to upload your artifact. Note',
-    'that `PUT` request **must** specify the `content-length` header and',
-    '**must** give the `content-type` header the same value as in the request',
-    'to `createArtifact`.',
+    '**Blob artifacts**, are useful for storing large files.  Currently, these',
+    'are all stored in S3 but there are facilities for adding support for other',
+    'backends in futre.  A call for this type of artifact must provide information',
+    'about the file which will be uploaded.  This includes sha256 sums and sizes.',
+    'This method will return a list of general form HTTP requests which are signed',
+    'by AWS S3 credentials managed by the Queue.  Once these requests are completed',
+    'the list of `ETag` values returned by the requests must be passed to the',
+    'queue `completeArtifact` method',
     '',
-    '**Azure artifacts**, are stored in _Azure Blob Storage_ service, which',
-    'given the consistency guarantees and API interface offered by Azure is',
-    'more suitable for artifacts that will be modified during the execution',
+    '**S3 artifacts**, DEPRECATED is useful for static files which will be',
+    'stored on S3. When creating an S3 artifact the queue will return a',
+    'pre-signed URL to which you can do a `PUT` request to upload your',
+    'artifact. Note that `PUT` request **must** specify the `content-length`',
+    'header and **must** give the `content-type` header the same value as in',
+    'the request to `createArtifact`.',
+    '',
+    '**Azure artifacts**, DEPRECATED are stored in _Azure Blob Storage_ service',
+    'which given the consistency guarantees and API interface offered by Azure',
+    'is more suitable for artifacts that will be modified during the execution',
     'of the task. For example docker-worker has a feature that persists the',
     'task log to Azure Blob Storage every few seconds creating a somewhat',
     'live log. A request to create an Azure artifact will return a URL',
@@ -414,6 +425,34 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
   err.artifact = artifact.json();
   this.monitor.reportError(err);
 };
+
+/** Complete artifact */
+api.declare({
+  method:     'put',
+  route:      '/task/:taskId/runs/:runId/artifacts/:name(*)',
+  name:       'completeArtifact',
+  stability:  API.stability.experimental,
+  scopes: [
+    [
+      'queue:create-artifact:<name>',
+      'assume:worker-id:<workerGroup>/<workerId>',
+    ], [
+      'queue:create-artifact:<taskId>/<runId>',
+    ],
+  ],
+  deferAuth:  true,
+  //input:      'post-artifact-request.json#',
+  //output:     'post-artifact-response.json#',
+  title:      'Complete Artifact',
+  description: 'tbd',
+}, async function(req, res) {
+  var taskId      = req.params.taskId;
+  var runId       = parseInt(req.params.runId, 10);
+  var name        = req.params.name;
+  var input       = req.body;
+
+  throw new Error('Method not yet implemented');
+});
 
 /** Get artifact from run */
 api.declare({
