@@ -4,7 +4,40 @@ let assert  = require('assert');
 let Promise = require('promise');
 let API     = require('taskcluster-lib-api');
 let urllib  = require('url');
+let crypto  = require('crypto');
 let api     = require('./api');
+
+/**
+ * Encode a storage key for storing in the blob storage type backends We do
+ * this to get better partitioning in S3 which gives us better performance.
+ *
+ * Basically `${md5hash(taskId + runId + name).slice(0,7)}/${taskId}/${runId}/${name}`
+ */
+function encodeBlobKey(taskId, runId, name) {
+  assert(typeof taskId === 'string');
+  assert(typeof runId === 'string');
+  assert(typeof name === 'string');
+  let key = taskId + runId + name;
+  let hashedKey = crypto.createHash('md5').update(key).digest('hex');
+  return `${hashedKey.slice(0, 7)}/${taskId}/${runId}/${name}`;
+}
+
+/**
+ * The reverse of encodeBlobKey.  This will take a key and return an object
+ * with the taskId, runId and name of the artifact.  This method will throw if
+ * the result would not encode into an identical key.
+ */
+function decodeBlobKey(key) {
+  assert(typeof key === 'string');
+  let keyParts = key.split('/');
+  assert(keyParts.length >= 3);
+  let taskId = keyParts[0];
+  let runId = keyParts[1];
+  let name = keyParts.slice(3).join('/');
+  let expected = encodeBlobKey(taskId, runId, name);
+  assert(expected === key)
+  return {taskId, runId, name};
+}
 
 /** Post artifact */
 api.declare({
@@ -187,7 +220,31 @@ api.declare({
   var isPublic = /^public\//.test(name);
   var details  = {};
   switch (storageType) {
+    case 'blob':
+      // Generate the details that we'll be using.
+      details.size = input.size;
+      details.sha256 = input.sha256;
+      if (input.parts) {
+        details.parts = input.parts;
+      }
+      // TODO: These ought to be configurable
+      details.provider = 's3'; // MAKECONFIG
+      details.region = 'us-east-1'; // MAKECONFIG
+      if (input.encoding) {
+        details.encoding = input.encoding;
+      }
+      if (isPublic) {
+        details.bucket = 'taskcluster-blobs'; // MAKECONFIG
+      } else {
+        details.bucket = 'taskcluster-private-blobs'; // MAKECONFIG
+      }
+
+      details.key = encodeBlobKey(taskId, runId, name);
+
+      break;
     case 's3':
+      // TODO: Once we're deprecating this artifact type, we'll throw an error
+      // here
       if (isPublic) {
         details.bucket  = this.publicBucket.bucket;
       } else {
@@ -197,6 +254,8 @@ api.declare({
       break;
 
     case 'azure':
+      // TODO: Once we're deprecating this artifact type, we'll throw an error
+      // here
       details.container = this.blobStore.container;
       details.path      = [taskId, runId, name].join('/');
       break;
@@ -214,8 +273,9 @@ api.declare({
       throw new Error('Unknown storageType: ' + storageType);
   }
 
+  let artifact;
   try {
-    var artifact = await this.Artifact.create({
+    artifact = await this.Artifact.create({
       taskId,
       runId,
       name,
@@ -265,6 +325,13 @@ api.declare({
         });
     }
 
+    if (artifact.storageType === 'blob') {
+      if (artifact.details.uploadId) {
+        // TODO: Here's where we return a new set of signed requests to do
+        // with this.s3Controller.genereate....();
+      }
+    }
+
     // Update expiration and detail, which may have been modified
     await artifact.modify((artifact) => {
       artifact.expires = expires;
@@ -272,16 +339,71 @@ api.declare({
     });
   }
 
-  // Publish message about artifact creation
-  await this.publisher.artifactCreated({
-    status:         task.status(),
-    artifact:       artifact.json(),
-    workerGroup,
-    workerId,
-    runId,
-  }, task.routes);
+
+  // This event is *invalid* for s3/azure storage types so we'll stop sending it.
+  // It's only valid for error, reference and blob
+  if (artifact.storageType === 'error' || artifact.storageType === 'reference') {
+    // Publish message about artifact creation
+    await this.publisher.artifactCreated({
+      status:         task.status(),
+      artifact:       artifact.json(),
+      workerGroup,
+      workerId,
+      runId,
+    }, task.routes);
+  }
 
   switch (artifact.storageType) {
+    case 'blob':
+      let requests;
+      let uploadId;
+      // If we're supposed to do a multipart upload, we should generate an UploadId
+      // if it doesn't already exist.  We should store that ID in the entity
+      if (artifact.details.parts) {
+        if (!artifact.details.uploadId) {
+          uploadId = await this.s3Controller.initiateMultipartUpload({
+            bucket: artifact.details.bucket,
+            key: artifact.details.key,
+            sha256: artifact.details.sha256,
+            size: artifact.details.size,
+            metadata: {taskId, runId, name},
+            tags: {taskId, runId, name},
+            contentType: artifact.contentType,
+            contentEncoding: artifact.details.encoding || undefined,
+          });
+          await artifact.modify(_artifact => {
+            _artifact.details.uploadId = uploadId;
+          });
+        } else {
+          uploadId = artifact.details.uploadId;
+        }
+        requests = await this.s3Controller.generateMultipartRequests({
+          bucket: artifact.details.bucket,
+          key: artifact.details.bucket,
+          uploadId: uploadId,
+          parts: artifact.details.parts,
+        });
+      } else {
+        let singlePartRequest = await this.s3Controller.generateSinglepartRequests({
+          bucket: artifact.details.bucket,
+          key: artifact.details.key,
+          sha256: artifact.details.sha256,
+          size: artifact.details.size,
+          metadata: {taskId, runId, name},
+          tags: {taskId, runId, name},
+          contentType: artifact.contentType,
+          contentEncoding: artifact.details.encoding || undefined,
+        });
+        requests = [singlePartRequest];
+      }
+      res.reply({
+        storageType: 'blob',
+        contentType: artifact.contentType,
+        contentLength: artifact.size,
+        contentSHA256: artifact.sha256,
+        requests: requests,
+      });
+      break;
     case 's3':
       // Reply with signed S3 URL
       var expiry = new Date(new Date().getTime() + 30 * 60 * 1000);
@@ -446,11 +568,26 @@ api.declare({
   title:      'Complete Artifact',
   description: 'tbd',
 }, async function(req, res) {
-  var taskId      = req.params.taskId;
-  var runId       = parseInt(req.params.runId, 10);
-  var name        = req.params.name;
-  var input       = req.body;
+  let taskId      = req.params.taskId;
+  let runId       = parseInt(req.params.runId, 10);
+  let name        = req.params.name;
+  let input       = req.body;
 
+  // Hmm, list destructuring is probably better here
+  let _res = await Promise.all([
+    this.Artifact.load({taskId, runId, name}, true),
+    this.Task.load({taskId}, true),
+  ]);
+
+
+  // This needs to be done here:
+  //    await this.publisher.artifactCreated({
+  //      status:         task.status(),
+  //      artifact:       artifact.json(),
+  //      workerGroup,
+  //      workerId,
+  //      runId,
+  //    }, task.routes);
   throw new Error('Method not yet implemented');
 });
 
