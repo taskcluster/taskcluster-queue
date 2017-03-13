@@ -47,9 +47,7 @@ oneOf:
     additionalProperties: false
     required:
       - storageType
-      - putUrl
-      - expires
-      - contentType
+      - parts
   - title:          "S3 Artifact Response"
     description: |
       Response to a request for a signed PUT URL that will allow you to
