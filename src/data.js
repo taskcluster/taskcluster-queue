@@ -290,6 +290,30 @@ let Artifact = Entity.configure({
     'publicBucket',   // Public artifact bucket wrapping S3
     'monitor',        // base.monitor instance
   ],
+}).configure({
+  version: 2,
+  properties: {
+    taskId:         Entity.types.SlugId,
+    runId:          Entity.types.Number,
+    name:           Entity.types.String,
+    storageType:    Entity.types.String,
+    contentType:    Entity.types.String,
+    details:        Entity.types.JSON,
+    expires:        Entity.types.Date,
+    /** 
+     * Present is a number field which represents an artifact being present and
+     * the upload being completed.  The handling logic for the artifact's
+     * storage type will fully define what that means for a given storage type.
+     *
+     * Because there are no boolean fields in Azure-Entities which allow for
+     * fast scanning based on properties (we could use JSON), we're using a
+     * number in place of a boolean.  0 means false, 1 means present
+     */
+    present:        Entity.types.Number,
+  },
+  migrate(item) {
+    item.present: 1,
+  };
 });
 
 /** Return JSON representation of artifact meta-data */
