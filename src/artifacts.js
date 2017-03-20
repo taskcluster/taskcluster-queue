@@ -17,9 +17,7 @@ function encodeBlobKey(taskId, runId, name) {
   assert(typeof taskId === 'string');
   assert(typeof runId === 'string');
   assert(typeof name === 'string');
-  let key = taskId + runId + name;
-  let hashedKey = crypto.createHash('md5').update(key).digest('hex');
-  return `${hashedKey.slice(0, 7)}/${taskId}/${runId}/${name}`;
+  return `${taskId}/${runId}/${name}`;
 }
 
 /**
@@ -33,7 +31,7 @@ function decodeBlobKey(key) {
   assert(keyParts.length >= 3);
   let taskId = keyParts[0];
   let runId = keyParts[1];
-  let name = keyParts.slice(3).join('/');
+  let name = keyParts.slice(2).join('/');
   let expected = encodeBlobKey(taskId, runId, name);
   assert(expected === key)
   return {taskId, runId, name};
@@ -227,6 +225,7 @@ api.declare({
   // Construct details for different storage types
   var isPublic = /^public\//.test(name);
   var details  = {};
+  let uploadId;
   switch (storageType) {
     case 'blob':
       // Generate the details that we'll be using.
@@ -241,6 +240,7 @@ api.declare({
       if (input.encoding) {
         details.encoding = input.encoding;
       }
+
       if (isPublic) {
         details.bucket = 'taskcluster-blobs'; // MAKECONFIG
       } else {
@@ -248,7 +248,20 @@ api.declare({
       }
 
       details.key = encodeBlobKey(taskId, runId, name);
-
+      if (input.parts) {
+        uploadId = await this.s3Controller.initiateMultipartUpload({
+          bucket: details.bucket,
+          key: details.key,
+          sha256: details.sha256,
+          size: details.size,
+          metadata: {taskId, runId, name},
+          tags: {taskId, runId, name},
+          contentType: contentType,
+          contentEncoding: details.encoding || undefined,
+        });
+        debug(`Multipart Artifact init ${bucket}/${key} ${uploadId}`);
+        details.uploadId = uploadId;
+      }
       break;
     case 's3':
       // TODO: Once we're deprecating this artifact type, we'll throw an error
@@ -319,8 +332,42 @@ api.declare({
     }
 
     // Check that details match, unless this has storageType 'reference', we'll
-    // workers to overwrite redirect artifacts
-    if (storageType !== 'reference' &&
+    // workers to overwrite redirect artifacts.  We handle blob artifacts
+    // differently than other all the other artifacts.  We consider a second
+    // creation of the same blob a non-error.  If the blob is a multipart
+    // upload we need to handle an already-existing uploadId gracefully.  In
+    // the case of a conflict, we will cancel the uploadId created in *this*
+    // request and will eventually return requests based on the existing
+    // uploadId.
+    if (storageType === 'blob') {
+      let storedWithoutUploadId = _.omit(artifact.details, 'uploadId');
+      let inputWithoutUploadId = _.omit(details, 'uploadId');
+
+      // The two good conditions are that the details are identical or that
+      // they're multipart uploads and the uploadId is the only differing
+      // attribute.  In that case, we'll cancel the uploadId we just created
+      if (_.isEqual(artifacts.details, details) {
+        // Do nothing!
+      } else if (details.parts && _.isEqual(storedWithoutUploadId, inputWithoutUploadId) {
+        if (artifact.details.uploadId !== details.uploadId) {
+          await this.s3Controller.abortMultipartUpload({
+            bucket: details.bucket,
+            key: details.key,
+            uploadId: details.uploadId,
+          });
+        }
+      } else {
+        return res.reportError('RequestConflict',
+          'Artifact already exists, with different contentType or error message\n\n' +
+          'Existing artifact information: {{originalArtifact}}', {
+            originalArtifact: {
+              storageType:  artifact.storageType,
+              contentType:  artifact.contentType,
+              expires:      artifact.expires,
+            },
+          });
+      }
+    } else if (storageType !== 'reference' &&
         !_.isEqual(artifact.details, details)) {
       return res.reportError('RequestConflict',
         'Artifact already exists, with different contentType or error message\n\n' +
@@ -333,13 +380,6 @@ api.declare({
         });
     }
 
-    if (artifact.storageType === 'blob') {
-      if (artifact.details.uploadId) {
-        // TODO: Here's where we return a new set of signed requests to do
-        // with this.s3Controller.genereate....();
-      }
-    }
-
     // Update expiration and detail, which may have been modified
     await artifact.modify((artifact) => {
       artifact.expires = expires;
@@ -349,7 +389,8 @@ api.declare({
 
 
   // This event is *invalid* for s3/azure storage types so we'll stop sending it.
-  // It's only valid for error, reference and blob
+  // It's only valid for error, reference and blob, but we should only send it
+  // here for error and reference storageTypes
   if (artifact.storageType === 'error' || artifact.storageType === 'reference') {
     // Publish message about artifact creation
     await this.publisher.artifactCreated({
@@ -368,23 +409,6 @@ api.declare({
       // If we're supposed to do a multipart upload, we should generate an UploadId
       // if it doesn't already exist.  We should store that ID in the entity
       if (artifact.details.parts) {
-        if (!artifact.details.uploadId) {
-          uploadId = await this.s3Controller.initiateMultipartUpload({
-            bucket: artifact.details.bucket,
-            key: artifact.details.key,
-            sha256: artifact.details.sha256,
-            size: artifact.details.size,
-            metadata: {taskId, runId, name},
-            tags: {taskId, runId, name},
-            contentType: artifact.contentType,
-            contentEncoding: artifact.details.encoding || undefined,
-          });
-          await artifact.modify(_artifact => {
-            _artifact.details.uploadId = uploadId;
-          });
-        } else {
-          uploadId = artifact.details.uploadId;
-        }
         requests = await this.s3Controller.generateMultipartRequests({
           bucket: artifact.details.bucket,
           key: artifact.details.bucket,
@@ -468,6 +492,56 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
   // Give a 404, if the artifact couldn't be loaded
   if (!artifact) {
     return res.reportError('ResourceNotFound', 'Artifact not found', {});
+  }
+
+  if (artifact.storageType === 'blob') {
+    // Most of the time, the same base options are used.
+    let getOpts = {
+      bucket: artifact.details.bucket,
+      key: artifact.details.key,
+    };
+
+    if (artifact.details.bucket === 'taskcluster-private-blobs') { // MAKECONFIG
+      // TODO: Make sure that we can set expiration of these signed urls
+      getOpts.signed = true;
+      return res.redirect(303, this.s3Controller.generateGetUrl(getOpts));
+    } else if (artifact.details.bucket === 'taskcluster-blobs') { // MAKECONFIG
+      let region = this.regionResolver.getRegion(req);
+
+      // Let's find and figure out whether to skip caches
+      let skipCacheHeader = (req.headers['x-taskcluster-skip-cache' || '').toLowerCase();
+      if (skipCacheHeader === 'true' || skipCacheHeader === '1') {
+        skipCacheHeader = true;
+      } else {
+        skipCacheHeader = false;
+      }
+
+      let canonicalUrl = this.s3Controller.generateGetUrl(getOpts);
+
+      if (region === artifact.details.region || skipCacheHeader) {
+        return res.redirect(303, canonicalUrl);
+      } else if (!region) {
+        // TODO: Change this so we munge the URL into a cloud-front URL This is
+        // not part of the following else if block because this is where the
+        // cloud-front smarts might end up living
+        return res.redirect(303, canonicalUrl);
+      } else {
+        let cloudMirrorPath = [
+          'v1',
+          'redirect',
+          's3',
+          region,
+          encodeURIComponent(canonicalUrl),
+        ].join('/');
+        return res.redirect(303, urllib.format({
+          protocol: 'https:',
+          host: this.cloudMirrorHost,
+          pathname: cloudMirrorPath,
+        }));
+      }
+    } else {
+      throw new Error('Using a bucket we should not');
+    }
   }
 
   // Handle S3 artifacts
@@ -582,21 +656,52 @@ api.declare({
   let input       = req.body;
 
   // Hmm, list destructuring is probably better here
-  let _res = await Promise.all([
+  let [artifact, task] = await Promise.all([
     this.Artifact.load({taskId, runId, name}, true),
     this.Task.load({taskId}, true),
   ]);
 
+  // TODO: Have a shortcut here where things which are already
+  // marked as present short circuit
 
-  // This needs to be done here:
-  //    await this.publisher.artifactCreated({
-  //      status:         task.status(),
-  //      artifact:       artifact.json(),
-  //      workerGroup,
-  //      workerId,
-  //      runId,
-  //    }, task.routes);
-  throw new Error('Method not yet implemented');
+  let run = task.runs[runId];
+  if (!run) {
+    return res.reportError('InputError',
+      'Run not found',
+      {});
+  }
+  let workerGroup = run.workerGroup;
+  let workerId = run.workerId;
+
+  // Authenticate request by providing parameters
+  if (!req.satisfies({
+    taskId,
+    runId,
+    workerGroup,
+    workerId,
+    name,
+  })) {
+    return;
+  }
+
+  if (artifact.storageType === 'blob') {
+    // TODO: Once we have Artifact.present flag, we should set it
+    await this.publisher.artifactCreated({
+      status: task.status(),
+      artifact: artifact.json(),
+      workerGroup,
+      workerId,
+      runId,
+    }, task.routes);
+    return res.reply({
+      outcome: 'success',
+    });
+  } else {
+    throw new Error('Only supported storageType artifacts may be marked completed');
+  }
+
+
+
 });
 
 /** Get artifact from run */
