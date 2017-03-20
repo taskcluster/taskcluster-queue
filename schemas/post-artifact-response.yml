@@ -5,6 +5,49 @@ description: |
   Note that the `storageType` property is referenced in the request as well.
 type:               object
 oneOf:
+  - title:          "Blob Artifact Response"
+    description: |
+      Response to a request for creating a generic blob artifact.
+    type:           object
+    properties:
+      storageType:
+        description: |
+          Artifact storage type, in this case `'blob'`
+        type:       string
+        enum:
+          - blob
+      parts:
+        type:       array
+        items:
+          type:     object
+          properties:
+            method:
+              type: string
+              enum:
+                - put
+                - post
+                - delete
+                - patch
+                - get
+            url:
+              type: string
+              format: uri            
+            headers:
+              type: object
+              additionalProperties:
+                type: string
+            size: {type: integer, mimimum: 0}
+          additionalProperties: false
+          required:
+            - method
+            - url
+            - headers
+            - size
+        minItems:   1
+    additionalProperties: false
+    required:
+      - storageType
+      - parts
   - title:          "S3 Artifact Response"
     description: |
       Response to a request for a signed PUT URL that will allow you to
