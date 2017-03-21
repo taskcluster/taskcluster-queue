@@ -343,9 +343,9 @@ api.declare({
       // The two good conditions are that the details are identical or that
       // they're multipart uploads and the uploadId is the only differing
       // attribute.  In that case, we'll cancel the uploadId we just created
-      if (_.isEqual(artifacts.details, details) {
+      if (_.isEqual(artifacts.details, details)) {
         // Do nothing!
-      } else if (details.parts && _.isEqual(storedWithoutUploadId, inputWithoutUploadId) {
+      } else if (details.parts && _.isEqual(storedWithoutUploadId, inputWithoutUploadId)) {
         if (artifact.details.uploadId !== details.uploadId) {
           await this.s3Controller.abortMultipartUpload({
             bucket: details.bucket,
@@ -511,7 +511,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
       let region = this.regionResolver.getRegion(req);
 
       // Let's find and figure out whether to skip caches
-      let skipCacheHeader = (req.headers['x-taskcluster-skip-cache' || '').toLowerCase();
+      let skipCacheHeader = (req.headers['x-taskcluster-skip-cache'] || '').toLowerCase();
       if (skipCacheHeader === 'true' || skipCacheHeader === '1') {
         skipCacheHeader = true;
       } else {
