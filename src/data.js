@@ -370,8 +370,8 @@ let Artifact = Entity.configure({
     present:        Entity.types.Number,
   },
   migrate(item) {
-    item.present: 1,
-  };
+    item.present = 1;
+  },
 });
 
 /** Return JSON representation of artifact meta-data */
