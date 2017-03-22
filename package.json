@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "compile": "babel-compile -p taskcluster src:lib test:.test",
-    "test": "./test/runtests.sh",
+    "test": "mocha .test/*_test.js",
     "pretest": "yarn run compile",
     "install": "yarn run compile"
   },
