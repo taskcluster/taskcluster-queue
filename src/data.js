@@ -369,6 +369,12 @@ let Artifact = Entity.configure({
      */
     present:        Entity.types.Number,
   },
+  context: [
+    'blobStore',      // BlobStore instance wrapping Azure Blob Storage
+    'privateBucket',  // Private artifact bucket wrapping S3
+    'publicBucket',   // Public artifact bucket wrapping S3
+    'monitor',        // base.monitor instance
+  ],
   migrate(item) {
     item.present = 1;
   },
