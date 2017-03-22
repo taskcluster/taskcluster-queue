@@ -23,6 +23,7 @@ let monitor             = require('taskcluster-lib-monitor');
 let validator           = require('taskcluster-lib-validate');
 let docs                = require('taskcluster-lib-docs');
 let App                 = require('taskcluster-lib-app');
+let remoteS3            = require('remotely-signed-s3');
 
 // Create component loader
 let load = loader({
@@ -284,13 +285,20 @@ let load = loader({
     },
   },
 
+  s3Controller: {
+    requires: ['cfg'],
+    setup: async ({cfg}) => {
+      return new remoteS3.Controller({region: 'us-east-1'}); // MAKECONFIG
+    },
+  },
+
   api: {
     requires: [
       'cfg', 'publisher', 'validator', 'Task', 'Artifact',
       'TaskGroup', 'TaskGroupMember', 'TaskGroupActiveSet', 'queueService',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
-      'workClaimer',
+      'workClaimer', 's3Controller',
     ],
     setup: (ctx) => v1.setup({
       context: {
@@ -315,6 +323,7 @@ let load = loader({
         artifactRegion:   ctx.cfg.aws.region,
         monitor:          ctx.monitor.prefix('api-context'),
         workClaimer:      ctx.workClaimer,
+        s3Controller:     ctx.s3Controller,
       },
       validator:        ctx.validator,
       authBaseUrl:      ctx.cfg.taskcluster.authBaseUrl,
