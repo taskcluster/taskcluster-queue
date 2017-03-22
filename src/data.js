@@ -377,6 +377,7 @@ let Artifact = Entity.configure({
   ],
   migrate(item) {
     item.present = 1;
+    return item;
   },
 });
 
@@ -401,6 +402,11 @@ Artifact.prototype.json = function() {
 Artifact.prototype.remove = function(ignoreError) {
   // Promise that deleted underlying artifact, and keep reference to context
   var deleted = Promise.resolve();
+
+  if (this.storageType === 'blob') {
+    // TODO: Implement this!
+    return;
+  }
 
   // Handle S3 artifacts
   if (this.storageType === 's3') {
@@ -464,10 +470,10 @@ Artifact.expire = async function(now) {
   assert(now instanceof Date, 'now must be given as option');
   var count = 0;
   await Entity.scan.call(this, {
-    expires:          Entity.op.lessThan(now),
+    expires: Entity.op.lessThan(now),
   }, {
-    limit:            250, // max number of concurrent delete operations
-    handler:          (item) => { count++; return item.remove(true); },
+    limit:   250, // max number of concurrent delete operations
+    handler: (item) => { count++; return item.remove(true); },
   });
   return count;
 };
