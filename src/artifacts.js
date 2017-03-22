@@ -15,7 +15,7 @@ let api     = require('./api');
  */
 function encodeBlobKey(taskId, runId, name) {
   assert(typeof taskId === 'string');
-  assert(typeof runId === 'string');
+  assert(typeof runId === 'number');
   assert(typeof name === 'string');
   return `${taskId}/${runId}/${name}`;
 }
@@ -232,8 +232,19 @@ api.declare({
       // Generate the details that we'll be using.
       details.size = input.size;
       details.sha256 = input.sha256;
+      // We want to ensure, for idempotency reasons, that any following
+      // requests to createArtifact() use the same set of part information.
+      // Instead of storing the entire parts list in the entity, we'll instead
+      // store a hash of the JSON serialized version of the list.
+      //
+      // Note that this means that for loaded entities we'll need to use the
+      // details.partsHash field to check whether we're multipart or not
+      // instead of the details.parts list
       if (input.parts) {
-        details.parts = input.parts;
+        let partsHash = crypto.createHash('sha256');
+        partsHash.update(JSON.stringify(input.parts));
+        partsHash = partsHash.digest('hex');
+        details.partsHash = partsHash;
       }
       // TODO: These ought to be configurable
       details.provider = 's3'; // MAKECONFIG
@@ -351,9 +362,9 @@ api.declare({
       // The two good conditions are that the details are identical or that
       // they're multipart uploads and the uploadId is the only differing
       // attribute.  In that case, we'll cancel the uploadId we just created
-      if (_.isEqual(artifacts.details, details)) {
+      if (_.isEqual(artifact.details, details)) {
         // Do nothing!
-      } else if (details.parts && _.isEqual(storedWithoutUploadId, inputWithoutUploadId)) {
+      } else if (input.parts && _.isEqual(storedWithoutUploadId, inputWithoutUploadId)) {
         if (artifact.details.uploadId !== details.uploadId) {
           await this.s3Controller.abortMultipartUpload({
             bucket: details.bucket,
@@ -409,19 +420,20 @@ api.declare({
 
   switch (artifact.storageType) {
     case 'blob':
+      var expiry = new Date(new Date().getTime() + 15 * 60 * 1000);
       let requests;
       let uploadId;
       // If we're supposed to do a multipart upload, we should generate an UploadId
       // if it doesn't already exist.  We should store that ID in the entity
-      if (artifact.details.parts) {
+      if (input.parts) {
         requests = await this.s3Controller.generateMultipartRequests({
           bucket: artifact.details.bucket,
           key: artifact.details.bucket,
           uploadId: uploadId,
-          parts: artifact.details.parts,
+          parts: input.parts,
         });
       } else {
-        let singlePartRequest = await this.s3Controller.generateSinglepartRequests({
+        let thingy = {
           bucket: artifact.details.bucket,
           key: artifact.details.key,
           sha256: artifact.details.sha256,
@@ -430,14 +442,18 @@ api.declare({
           tags: {taskId, runId, name},
           contentType: artifact.contentType,
           contentEncoding: artifact.details.encoding || undefined,
-        });
+        };
+        let singlePartRequest = await this.s3Controller.generateSinglepartRequest(thingy);
         requests = [singlePartRequest];
       }
+      console.dir({
+        storageType: 'blob',
+        expires: expiry.toJSON(),
+        requests: requests,
+      });
       res.reply({
         storageType: 'blob',
-        contentType: artifact.contentType,
-        contentLength: artifact.size,
-        contentSHA256: artifact.sha256,
+        expires: expiry.toJSON(),
         requests: requests,
       });
       break;
@@ -696,7 +712,7 @@ api.declare({
 
   if (artifact.storageType === 'blob') {
     let etag;
-    if (artifacts.details.parts) {
+    if (artifact.details.partsHash) {
       etag = await this.completeMultipartUpload({
         bucket: artifact.details.bucket,
         key: artifact.details.key,
