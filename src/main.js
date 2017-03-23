@@ -325,7 +325,6 @@ let load = loader({
             LocationConstraint: cfg.app.blobArtifactRegion
           };
         }
-
         x(publicConfig);
         x(privateConfig);
       }
@@ -385,6 +384,9 @@ let load = loader({
         monitor:          ctx.monitor.prefix('api-context'),
         workClaimer:      ctx.workClaimer,
         s3Controller:     ctx.s3Controller,
+        blobRegion:       ctx.cfg.app.blobArtifactRegion 
+        publicBlobBucket: ctx.cfg.app.publicBlobArtifactBucket,
+        privateBlobBucket:ctx.cfg.app.privateBlobArtifactBucket,
       },
       validator:        ctx.validator,
       authBaseUrl:      ctx.cfg.taskcluster.authBaseUrl,
