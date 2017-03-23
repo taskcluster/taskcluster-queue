@@ -145,7 +145,7 @@ suite('Artifacts', function() {
     });
 
     test('Uploading to S3 (multi-part)', async () => {
-      let name = `public/${slugid.v4()}.dat`;
+      let name = 'public/multipart.dat';
       let taskId = slugid.v4();
       
       debug('### Creating task');
