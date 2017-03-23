@@ -240,7 +240,7 @@ api.declare({
       }
       
       details.provider = 's3';
-      details.region = 
+      details.region = this.blobRegion;
       if (input.encoding) {
         details.encoding = input.encoding;
       }
@@ -262,7 +262,8 @@ api.declare({
           contentType: contentType,
           contentEncoding: details.encoding || undefined,
         });
-        debug(`Multipart Artifact init ${bucket}/${key} ${uploadId}`);
+        debug(`Multipart Artifact init ${details.bucket}/${details.key} ${uploadId}`);
+        assert(uploadId);
         details.uploadId = uploadId;
       }
       break;
@@ -361,7 +362,7 @@ api.declare({
           await this.s3Controller.abortMultipartUpload({
             bucket: details.bucket,
             key: details.key,
-            uploadId: details.uploadId,
+            uploadId: uploadId,
           });
         }
       } else {
