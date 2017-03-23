@@ -508,6 +508,8 @@ api.declare({
 /** Reply to an artifact request using taskId, runId, name and context */
 var replyWithArtifact = async function(taskId, runId, name, req, res) {
   // Load artifact meta-data from table storage
+  console.dir(name);
+  console.log(typeof name);
   let artifact = await this.Artifact.load({taskId, runId, name}, true);
 
   // Give a 404, if the artifact couldn't be loaded
@@ -522,15 +524,14 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
       key: artifact.details.key,
     };
 
-    // TODO: We should consider doing a HEAD on the resource and ensure that
-    // the etag we're going to reply with or redirect to matches the one we
-    // used at creation.  This will help us to ensure that we aren't
-    // overwriting blobs
+    // TODO: We should consider doing a HEAD on all resources and verifying that
+    // the ETag they have matches the one that we received when creating the artifact.
+    // This is a bit of extra overhead, but it's one more check of consistency
 
     if (artifact.details.bucket === this.privateBlobBucket) {
       // TODO: Make sure that we can set expiration of these signed urls
       getOpts.signed = true;
-      return res.redirect(303, this.s3Controller.generateGetUrl(getOpts));
+      return res.redirect(303, await this.s3Controller.generateGetUrl(getOpts));
     } else if (artifact.details.bucket === this.publicBlobBucket) {
       let region = this.regionResolver.getRegion(req);
 
@@ -542,7 +543,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
         skipCacheHeader = false;
       }
 
-      let canonicalUrl = this.s3Controller.generateGetUrl(getOpts);
+      let canonicalUrl = await this.s3Controller.generateGetUrl(getOpts);
 
       if (region === artifact.details.region || skipCacheHeader) {
         return res.redirect(303, canonicalUrl);
@@ -729,8 +730,11 @@ api.declare({
     // the expected value
     await artifact.modify((artifact) => {
       artifact.details.etag = etag;
+      // Now that we're finished, we don't want to store the uploadId any longer
+      artifact.details = _.omit(artifact.details, 'uploadId');
       artifact.present = 1;
     });
+
     await this.publisher.artifactCreated({
       status: task.status(),
       artifact: artifact.json(),
@@ -744,9 +748,6 @@ api.declare({
   } else {
     throw new Error('Only supported storageType artifacts may be marked completed');
   }
-
-
-
 });
 
 /** Get artifact from run */
