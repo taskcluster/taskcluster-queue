@@ -384,7 +384,7 @@ let load = loader({
         monitor:          ctx.monitor.prefix('api-context'),
         workClaimer:      ctx.workClaimer,
         s3Controller:     ctx.s3Controller,
-        blobRegion:       ctx.cfg.app.blobArtifactRegion 
+        blobRegion:       ctx.cfg.app.blobArtifactRegion, 
         publicBlobBucket: ctx.cfg.app.publicBlobArtifactBucket,
         privateBlobBucket:ctx.cfg.app.privateBlobArtifactBucket,
       },
