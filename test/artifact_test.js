@@ -20,6 +20,8 @@ suite('Artifacts', function() {
   var randbytes     = require('randbytes');
   var tmp           = require('tmp');
   var remoteS3      = require('remotely-signed-s3');
+  var qs            = require('querystring');
+  var urllib        = require('url');
 
   // Static URL from which ip-ranges from AWS services can be fetched
   const AWS_IP_RANGES_URL = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
@@ -75,7 +77,7 @@ suite('Artifacts', function() {
   };
   this.timeout(3 * 60 * 1000);
 
-  suite.only('Blob Storage Type', () => {
+  suite('Blob Storage Type', () => {
     let tmpobj = tmp.fileSync();
     let bigfilename = tmpobj.name;
     let bigfilehash;
@@ -190,7 +192,7 @@ suite('Artifacts', function() {
       });
     });
     
-    test('Uploading to S3 multipart idempotency', async () => {
+    test.only('Uploading to S3 multipart idempotency', async () => {
       let name = 'public/multipart.dat';
       let taskId = slugid.v4();
       
@@ -203,11 +205,13 @@ suite('Artifacts', function() {
         workerId:       'my-worker',
       });
 
+      debug('### Preparing upload');
       let uploadInfo = await client.prepareUpload({
         filename: bigfilename,
         forceMP: true,
       });
 
+      debug('### Calling createArtifact first time');
       let firstResponse = await helper.queue.createArtifact(taskId, 0, name, {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
@@ -217,6 +221,7 @@ suite('Artifacts', function() {
         parts: uploadInfo.parts,
       });
 
+      debug('### Calling createArtifact second time');
       let secondResponse = await helper.queue.createArtifact(taskId, 0, name, {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
@@ -225,6 +230,13 @@ suite('Artifacts', function() {
         sha256: uploadInfo.sha256,
         parts: uploadInfo.parts,
       });
+
+      console.dir(firstResponse);
+      console.dir(secondResponse);
+      
+      let firstUploadId = qs.parse(urllib.parse(firstReponse.requests[0].url).query).uploadId;
+      let secondUploadId = qs.parse(urllib.parse(secondReponse.requests[0].url).query).uploadId;
+      assume(firstUploadId).equals(secondUploadId);
 
       let uploadOutcome = await client.runUpload(secondResponse.requests, uploadInfo);
 
