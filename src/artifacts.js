@@ -419,14 +419,15 @@ api.declare({
       // If we're supposed to do a multipart upload, we should generate an UploadId
       // if it doesn't already exist.  We should store that ID in the entity
       if (input.parts) {
-        requests = await this.s3Controller.generateMultipartRequests({
+        console.dir(uploadId);
+        requests = await this.s3Controller.generateMultipartRequest({
           bucket: artifact.details.bucket,
-          key: artifact.details.bucket,
-          uploadId: uploadId,
+          key: artifact.details.key,
+          uploadId: artifact.details.uploadId,
           parts: input.parts,
         });
       } else {
-        let thingy = {
+        let singlePartRequest = await this.s3Controller.generateSinglepartRequest({
           bucket: artifact.details.bucket,
           key: artifact.details.key,
           sha256: artifact.details.sha256,
@@ -435,8 +436,7 @@ api.declare({
           tags: {taskId, runId, name},
           contentType: artifact.contentType,
           contentEncoding: artifact.details.encoding || undefined,
-        };
-        let singlePartRequest = await this.s3Controller.generateSinglepartRequest(thingy);
+        });
         requests = [singlePartRequest];
       }
       res.reply({
@@ -701,11 +701,11 @@ api.declare({
   if (artifact.storageType === 'blob') {
     let etag;
     if (artifact.details.partsHash) {
-      etag = await this.completeMultipartUpload({
+      etag = await this.s3Controller.completeMultipartUpload({
         bucket: artifact.details.bucket,
         key: artifact.details.key,
         etags: input.etags,
-        uploadId: artifacts.details.uploadId,
+        uploadId: artifact.details.uploadId,
         tags: {taskId, runId, name},
       })
     } else {
