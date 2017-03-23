@@ -238,17 +238,17 @@ api.declare({
         partsHash = partsHash.digest('hex');
         details.partsHash = partsHash;
       }
-      // TODO: These ought to be configurable
-      details.provider = 's3'; // MAKECONFIG
-      details.region = 'us-east-1'; // MAKECONFIG
+      
+      details.provider = 's3';
+      details.region = 
       if (input.encoding) {
         details.encoding = input.encoding;
       }
 
       if (isPublic) {
-        details.bucket = 'taskcluster-blobs'; // MAKECONFIG
+        details.bucket = this.publicBlobBucket;
       } else {
-        details.bucket = 'taskcluster-private-blobs'; // MAKECONFIG
+        details.bucket = this.privateBlobBucket;
       }
 
       details.key = encodeBlobKey(taskId, runId, name);
@@ -514,11 +514,11 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
     // used at creation.  This will help us to ensure that we aren't
     // overwriting blobs
 
-    if (artifact.details.bucket === 'taskcluster-private-blobs') { // MAKECONFIG
+    if (artifact.details.bucket === this.privateBlobBucket) {
       // TODO: Make sure that we can set expiration of these signed urls
       getOpts.signed = true;
       return res.redirect(303, this.s3Controller.generateGetUrl(getOpts));
-    } else if (artifact.details.bucket === 'taskcluster-blobs') { // MAKECONFIG
+    } else if (artifact.details.bucket === this.publicBlobBucket) {
       let region = this.regionResolver.getRegion(req);
 
       // Let's find and figure out whether to skip caches
