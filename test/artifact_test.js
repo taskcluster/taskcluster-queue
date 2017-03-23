@@ -17,6 +17,9 @@ suite('Artifacts', function() {
   var helper        = require('./helper');
   var fs            = require('fs');
   var crypto        = require('crypto');
+  var randbytes     = require('randbytes');
+  var tmp           = require('tmp');
+  var remoteS3      = require('remotely-signed-s3');
 
   // Static URL from which ip-ranges from AWS services can be fetched
   const AWS_IP_RANGES_URL = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
@@ -73,12 +76,35 @@ suite('Artifacts', function() {
   this.timeout(3 * 60 * 1000);
 
   suite.only('Blob Storage Type', () => {
+    let tmpobj = tmp.fileSync();
+    let bigfilename = tmpobj.name;
+    let bigfilehash;
+    let bigfilesize = 10 * 1024 * 1024 + 512 * 1024; // 10.5 MB so we get a partial last part
+
+    let client = new remoteS3.Client({
+      partsize: 5 * 1024 * 1024,
+      multisize: 10 * 1024 * 1024,
+    });
+
+    debug(`Temporary file ${bigfilename} of size ${bigfilesize} bytes`);
+
+    before(done => {
+      let rand = randbytes.urandom.getInstance();
+      rand.getRandomBytes(bigfilesize, buf => {
+        assert(buf.length === bigfilesize);
+        bigfilehash = crypto.createHash('sha256').update(buf).digest('hex');
+        fs.writeFileSync(bigfilename, buf);
+        done();
+      });
+    });
+
+    after(() => {
+      tmpobj.removeCallback();
+    });
+
+
     test('Uploading to S3 (single part)', async () => {
       let taskId = slugid.v4();
-      let filename = `${taskId}.json`;
-      fs.writeFileSync(filename, taskId);
-      let filesize = fs.statSync(filename).size;
-      let filehash = crypto.createHash('sha256').update(taskId).digest('hex');
       
       debug('### Creating task');
       await helper.queue.createTask(taskId, taskDef);
@@ -89,17 +115,79 @@ suite('Artifacts', function() {
         workerId:       'my-worker',
       });
 
+      let uploadInfo = await client.prepareUpload({
+        filename: bigfilename,
+        forceSP: true,
+      });
 
-      let response = await helper.queue.createArtifact(taskId, 0, `public/${filename}`, {
+      let response = await helper.queue.createArtifact(taskId, 0, `public/singlepart.dat`, {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
         contentType: 'application/json',
-        size: filesize,
-        sha256: filehash
+        size: uploadInfo.size,
+        sha256: uploadInfo.sha256,
       });
 
-      console.dir(response);
+      assume(response).has.property('storageType', 'blob');
+      assume(response).has.property('requests');
+      assume(response.requests).to.be.instanceof(Array);
+      assume(response.requests).to.have.lengthOf(1);
+      // Probably overkill because the schema should catch this but not the
+      // worst idea
+      assume(response.requests[0]).to.have.property('url');
+      assume(response.requests[0]).to.have.property('method');
+      assume(response.requests[0]).to.have.property('headers');
 
+      let uploadOutcome = await client.runUpload(response.requests, uploadInfo);
+
+      response = await helper.queue.completeArtifact(taskId, 0, `public/singlepart.dat`, {
+        etags: uploadOutcome.etags, 
+      });
+    });
+
+    test('Uploading to S3 (multi-part)', async () => {
+      let taskId = slugid.v4();
+      
+      debug('### Creating task');
+      await helper.queue.createTask(taskId, taskDef);
+
+      debug('### Claiming task');
+      await helper.queue.claimTask(taskId, 0, {
+        workerGroup:    'my-worker-group',
+        workerId:       'my-worker',
+      });
+
+      let uploadInfo = await client.prepareUpload({
+        filename: bigfilename,
+        forceMP: true,
+      });
+
+      let response = await helper.queue.createArtifact(taskId, 0, `public/multipart.dat`, {
+        storageType: 'blob',
+        expires: taskcluster.fromNowJSON('1 day'),
+        contentType: 'application/json',
+        size: uploadInfo.size,
+        sha256: uploadInfo.sha256,
+        parts: uploadInfo.parts,
+      });
+
+      assume(response).has.property('storageType', 'blob');
+      assume(response).has.property('requests');
+      assume(response.requests).to.be.instanceof(Array);
+      assume(response.requests).to.have.lengthOf(3);
+      // Probably overkill because the schema should catch this but not the
+      // worst idea
+      for (let i of [0,1,2]) {
+        assume(response.requests[0]).to.have.property('url');
+        assume(response.requests[1]).to.have.property('method');
+        assume(response.requests[2]).to.have.property('headers');
+      }
+
+      let uploadOutcome = await client.runUpload(response.requests, uploadInfo);
+
+      response = await helper.queue.completeArtifact(taskId, 0, `public/multipart.dat`, {
+        etags: uploadOutcome.etags, 
+      });
     });
   });
 
