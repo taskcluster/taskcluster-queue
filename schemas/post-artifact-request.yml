@@ -52,10 +52,54 @@ oneOf:
           The number of bytes of the entire artifact.  This must be the number
           of bytes in the file to be uploaded.  For single part uploads, the
           upload will fail if the number of bytes uploaded does not match this
-          value
+          value.  A single part upload (e.g. no parts list) may be at most 5GB.
+          This limit is enforced in the code because it is not possible to
+          represent all of the restrictions in a json-schema.  A multipart
+          upload may be at most 5TB, with each part other than the last being
+          between 5MB and 5GB in size.
         type: number
         multipleOf: 1.0
         minimum: 0
+      parts:
+        description: |
+          A list of parts for a multipart upload.  The presence of this list is
+          how a multipart upload is differentiated from a single part upload.
+          The items in this list represent individual parts for upload.  For a
+          multipart upload, the sha256 values provided here must match the
+          sha256 value that S3 internally computes for the upload to be
+          considered a success.  The overall sha256 value is not checked
+          explicitly because the S3 API does not allow for that, but the same
+          code that is responsible for generating the parts hashes would also
+          be generating the overall hash, which makes this less of a concern.
+          The worst case is that we have artifacts which incorrectly do not
+          validate, which is not as big of a security concern.
+        type: array
+        minLength: 1
+        items:
+          type: object
+          properties:
+            sha256:
+              description: |
+                The sha256 hash of the part.
+              type: string
+              pattern: "[a-fA-F0-9]{64}"
+              minLength: 64
+              maxLength: 64
+            size:
+              description: |
+                The number of bytes in this part.  Keep in mind for S3 that
+                all but the last part must be minimum 5MB and the maximum for
+                a single part is 5GB.  The overall size may not exceed 5TB
+              type: number
+              multipleOf: 1.0
+              minimum: 0
+            start:
+              description: |
+                The offset in number of bytes from the beginning of the file
+                that this chunk starts from.
+              type: number
+              multipleOf: 1.0
+              minimum: 0
     additionalProperties: false
     required:
       - storageType
