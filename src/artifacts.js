@@ -446,11 +446,6 @@ api.declare({
         let singlePartRequest = await this.s3Controller.generateSinglepartRequest(thingy);
         requests = [singlePartRequest];
       }
-      console.dir({
-        storageType: 'blob',
-        expires: expiry.toJSON(),
-        requests: requests,
-      });
       res.reply({
         storageType: 'blob',
         expires: expiry.toJSON(),
@@ -671,8 +666,8 @@ api.declare({
     ],
   ],
   deferAuth:  true,
-  //input:      'post-artifact-request.json#',
-  //output:     'post-artifact-response.json#',
+  input:      'put-artifact-request.json#',
+  output:     'put-artifact-response.json#',
   title:      'Complete Artifact',
   description: 'tbd',
 }, async function(req, res) {
