@@ -531,6 +531,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
     if (artifact.details.bucket === this.privateBlobBucket) {
       // TODO: Make sure that we can set expiration of these signed urls
       getOpts.signed = true;
+      // TODO: Figure out how to set the ETag as a header on this response
       return res.redirect(303, await this.s3Controller.generateGetUrl(getOpts));
     } else if (artifact.details.bucket === this.publicBlobBucket) {
       let region = this.regionResolver.getRegion(req);
