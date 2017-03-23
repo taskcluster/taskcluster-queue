@@ -22,6 +22,8 @@ suite('Artifacts', function() {
   var remoteS3      = require('remotely-signed-s3');
   var qs            = require('querystring');
   var urllib        = require('url');
+  var http          = require('http');
+  var https         = require('https');
 
   // Static URL from which ip-ranges from AWS services can be fetched
   const AWS_IP_RANGES_URL = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
@@ -39,6 +41,79 @@ suite('Artifacts', function() {
     assume(res.statusCode).equals(303);
     return request.get(res.headers.location).end();
   };
+
+  var getWithoutRedirecting = async (url) => {
+    var res;
+    try {
+      res = await request.get(url).redirects(0).end();
+    } catch (err) {
+      res = err.response;
+    }
+    assume(res.statusCode).equals(303);
+    return res;
+  }
+
+  let verifyDownload = async (url, hash, size) => {
+    debug(`verifying ${url} to have ${hash} and ${size} bytes`);
+    // Superagent complains about double callbacks... I don't
+    // really need it anyway
+    return new Promise((resolve, reject) => {
+      let urlparts = urllib.parse(url);
+
+      // TODO: Figure out why we get a Parse Error when using https...
+      debug('NOTE: not sure why, but https: is resulting in a parse error\n' +
+            'so for the test we are fetching over http');
+      urlparts.protocol = 'http:';
+
+      let request;
+      if (/^https/.test(urlparts.protocol)) {
+        request = https.request(urlparts);
+      } else {
+        request = http.request(urlparts);
+      }
+
+      request.on('error', err => {
+        debug('Request Error: ' + err.stack || err);
+        reject(err);
+      });
+
+      request.on('aborted', () => {
+        debug('Request aborted');
+        reject(new Error('Request Aborted'));
+      });
+
+      request.on('response', response => {
+        let bodySize = 0;
+        let bodyHash = crypto.createHash('sha256').update('');
+
+        response.on('error', err => {
+          debug('Response Error: ' + err.stack || err);
+          reject(err);
+        });
+
+        response.on('data', data => {
+          bodySize += data.length;
+          bodyHash.update(data);
+        });
+
+        response.on('end', () => {
+          bodyHash = bodyHash.digest('hex');
+          try {
+            assume(bodyHash).equals(hash);
+            assume(bodySize).equals(size);
+            assume(response.headers['x-amz-meta-content-sha256']).equals(hash);
+            assume(response.headers['x-amz-meta-content-length']).equals(size.toString(10));
+            assume(response.headers['content-length']).equals(size.toString(10));
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        });
+      });
+
+      request.end('');
+    });
+  }
 
   // Get something we expect to return 404, this is just easier than having
   // try/catch blocks all over the code
@@ -77,7 +152,7 @@ suite('Artifacts', function() {
   };
   this.timeout(3 * 60 * 1000);
 
-  suite('Blob Storage Type', () => {
+  suite.only('Blob Storage Type', () => {
     let tmpobj = tmp.fileSync();
     let bigfilename = tmpobj.name;
     let bigfilehash;
@@ -104,7 +179,7 @@ suite('Artifacts', function() {
       tmpobj.removeCallback();
     });
 
-    test('Uploading to S3 (single part)', async () => {
+    test('S3 single part complete flow', async () => {
       let taskId = slugid.v4();
       
       debug('### Creating task');
@@ -121,7 +196,7 @@ suite('Artifacts', function() {
         forceSP: true,
       });
 
-      let response = await helper.queue.createArtifact(taskId, 0, `public/singlepart.dat`, {
+      let response = await helper.queue.createArtifact(taskId, 0, 'public/singlepart.dat', {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
         contentType: 'application/json',
@@ -141,12 +216,25 @@ suite('Artifacts', function() {
 
       let uploadOutcome = await client.runUpload(response.requests, uploadInfo);
 
-      response = await helper.queue.completeArtifact(taskId, 0, `public/singlepart.dat`, {
+      response = await helper.queue.completeArtifact(taskId, 0, 'public/singlepart.dat', {
         etags: uploadOutcome.etags, 
       });
+
+      let artifactUrl = helper.queue.buildUrl(
+        helper.queue.getArtifact,
+        taskId, 0, 'public/singlepart.dat',
+      );
+      debug('Fetching artifact from: %s', artifactUrl);
+      let artifact = await getWithoutRedirecting(artifactUrl);
+
+      let expectedUrl = `https://test-public-blobs.s3.amazonaws.com/${taskId}/0/public/singlepart.dat`;
+      assume(artifact.headers).has.property('location', expectedUrl);
+
+      await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
+
     });
 
-    test('Uploading to S3 (multi-part)', async () => {
+    test('S3 multi part complete flow', async () => {
       let name = 'public/multipart.dat';
       let taskId = slugid.v4();
       
@@ -190,9 +278,22 @@ suite('Artifacts', function() {
       response = await helper.queue.completeArtifact(taskId, 0, name, {
         etags: uploadOutcome.etags, 
       });
+
+      let artifactUrl = helper.queue.buildUrl(
+        helper.queue.getArtifact,
+        taskId, 0, name,
+      );
+
+      debug('Fetching artifact from: %s', artifactUrl);
+      let artifact = await getWithoutRedirecting(artifactUrl);
+
+      let expectedUrl = `https://test-public-blobs.s3.amazonaws.com/${taskId}/0/${name}`;
+      assume(artifact.headers).has.property('location', expectedUrl);
+
+      await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
     });
     
-    test.only('Uploading to S3 multipart idempotency', async () => {
+    test('S3 multi part idempotency', async () => {
       let name = 'public/multipart.dat';
       let taskId = slugid.v4();
       
