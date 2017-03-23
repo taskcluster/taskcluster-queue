@@ -102,7 +102,6 @@ suite('Artifacts', function() {
       tmpobj.removeCallback();
     });
 
-
     test('Uploading to S3 (single part)', async () => {
       let taskId = slugid.v4();
       
@@ -146,6 +145,7 @@ suite('Artifacts', function() {
     });
 
     test('Uploading to S3 (multi-part)', async () => {
+      let name = `public/${slugid.v4()}.dat`;
       let taskId = slugid.v4();
       
       debug('### Creating task');
@@ -162,7 +162,7 @@ suite('Artifacts', function() {
         forceMP: true,
       });
 
-      let response = await helper.queue.createArtifact(taskId, 0, `public/multipart.dat`, {
+      let response = await helper.queue.createArtifact(taskId, 0, name, {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
         contentType: 'application/json',
@@ -185,7 +185,7 @@ suite('Artifacts', function() {
 
       let uploadOutcome = await client.runUpload(response.requests, uploadInfo);
 
-      response = await helper.queue.completeArtifact(taskId, 0, `public/multipart.dat`, {
+      response = await helper.queue.completeArtifact(taskId, 0, name, {
         etags: uploadOutcome.etags, 
       });
     });
