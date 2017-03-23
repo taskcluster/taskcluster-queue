@@ -230,14 +230,37 @@ suite('Artifacts', function() {
         sha256: uploadInfo.sha256,
         parts: uploadInfo.parts,
       });
-
-      console.dir(firstResponse);
-      console.dir(secondResponse);
       
-      let firstUploadId = qs.parse(urllib.parse(firstReponse.requests[0].url).query).uploadId;
-      let secondUploadId = qs.parse(urllib.parse(secondReponse.requests[0].url).query).uploadId;
+      let firstUploadId = qs.parse(urllib.parse(firstResponse.requests[0].url).query).uploadId;
+      let secondUploadId = qs.parse(urllib.parse(secondResponse.requests[0].url).query).uploadId;
       assume(firstUploadId).equals(secondUploadId);
 
+      // Now let's ensure that they are equivalent but with newer signatures
+      for (let r in [0,1,2]) {
+        let a = firstResponse.requests[r];
+        let b = secondResponse.requests[r];
+        assume(a.url).equals(b.url);
+        assume(a.method).equals(b.method);
+        assume(a.headers['content-length']).equals(b.headers['content-length']);
+        assume(a.headers['x-amz-content-sha256']).equals(b.headers['x-amz-content-sha256']);
+        assume(a.headers.host).equals(b.headers.host);
+        // We should have new times here
+        assume(a.headers['X-Amz-Date']).does.not.equal(b.headers['X-Amz-Date']);
+        let fixdate = (d) => {
+          let yr = d.slice(0,4);
+          let mt = d.slice(4,6);
+          let dy = d.slice(6,8);
+          let hr = d.slice(9,11);
+          let mn = d.slice(11,13);
+          let sc = d.slice(13,15);
+          return new Date(`${yr}-${mt}-${dy}T${hr}:${mn}:${sc}`);
+        }
+        let aDate = fixdate(a.headers['X-Amz-Date']);
+        let bDate = fixdate(b.headers['X-Amz-Date']);
+        assume(aDate.getTime()).lessThan(bDate.getTime());
+      }
+
+      // Just run the upload for posterity
       let uploadOutcome = await client.runUpload(secondResponse.requests, uploadInfo);
 
       let response = await helper.queue.completeArtifact(taskId, 0, name, {
