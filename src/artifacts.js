@@ -362,7 +362,7 @@ api.declare({
           await this.s3Controller.abortMultipartUpload({
             bucket: details.bucket,
             key: details.key,
-            uploadId: uploadId,
+            uploadId: details.uploadId,
           });
         }
       } else {
@@ -392,7 +392,19 @@ api.declare({
     // Update expiration and detail, which may have been modified
     await artifact.modify((artifact) => {
       artifact.expires = expires;
-      artifact.details = details;
+      // NOTE: the conditional here is only because I'm unsure of all the
+      // ramifications of not doing the details update for other storage types.
+      // If this is OK, feel free to remove the conditional
+      //
+      // The problem with this for blob storage type is that it ends up
+      // overwriting the UploadId that we already had stored with one that we
+      // don't want.  Since nothing in details should be mutable which would be
+      // stored in the createArtifact routine, we shouldn't overwrite here.  In
+      // fact, doing so overwrites the valid old UploadId with the just
+      // cancelled one when running an idempotent operation
+      if (storageType !== 'blob') {
+        artifact.details = details;
+      }
     });
   }
 
@@ -415,17 +427,17 @@ api.declare({
     case 'blob':
       var expiry = new Date(new Date().getTime() + 15 * 60 * 1000);
       let requests;
-      let uploadId;
       // If we're supposed to do a multipart upload, we should generate an UploadId
       // if it doesn't already exist.  We should store that ID in the entity
       if (input.parts) {
-        console.dir(uploadId);
         requests = await this.s3Controller.generateMultipartRequest({
           bucket: artifact.details.bucket,
           key: artifact.details.key,
           uploadId: artifact.details.uploadId,
           parts: input.parts,
         });
+        console.log('stored uploadid: ' + artifact.details.uploadId);
+        console.log('new uploadid:    ' + details.uploadId);
       } else {
         let singlePartRequest = await this.s3Controller.generateSinglepartRequest({
           bucket: artifact.details.bucket,

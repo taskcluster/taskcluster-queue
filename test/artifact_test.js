@@ -189,6 +189,49 @@ suite('Artifacts', function() {
         etags: uploadOutcome.etags, 
       });
     });
+    
+    test('Uploading to S3 multipart idempotency', async () => {
+      let name = 'public/multipart.dat';
+      let taskId = slugid.v4();
+      
+      debug('### Creating task');
+      await helper.queue.createTask(taskId, taskDef);
+
+      debug('### Claiming task');
+      await helper.queue.claimTask(taskId, 0, {
+        workerGroup:    'my-worker-group',
+        workerId:       'my-worker',
+      });
+
+      let uploadInfo = await client.prepareUpload({
+        filename: bigfilename,
+        forceMP: true,
+      });
+
+      let firstResponse = await helper.queue.createArtifact(taskId, 0, name, {
+        storageType: 'blob',
+        expires: taskcluster.fromNowJSON('1 day'),
+        contentType: 'application/json',
+        size: uploadInfo.size,
+        sha256: uploadInfo.sha256,
+        parts: uploadInfo.parts,
+      });
+
+      let secondResponse = await helper.queue.createArtifact(taskId, 0, name, {
+        storageType: 'blob',
+        expires: taskcluster.fromNowJSON('1 day'),
+        contentType: 'application/json',
+        size: uploadInfo.size,
+        sha256: uploadInfo.sha256,
+        parts: uploadInfo.parts,
+      });
+
+      let uploadOutcome = await client.runUpload(secondResponse.requests, uploadInfo);
+
+      let response = await helper.queue.completeArtifact(taskId, 0, name, {
+        etags: uploadOutcome.etags, 
+      });
+    });
   });
 
   test('Post S3 artifact', async () => {
