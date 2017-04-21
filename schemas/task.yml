@@ -176,6 +176,31 @@ properties:
         type:           string
         format:         uri
         maxLength:      4096
+      links:
+        title:          "Links"
+        description: |
+          List of arbitrary links associated with the task. You could use this
+          for any purpose, one example might be a pointer back to a ci visualization
+          tool.
+        type:           array
+        items:
+          type:       object
+          title:      "Link pairs"
+          description: List of title/value link pairs
+          properties:
+            name:
+              description: Human readable description of where link goes
+              type:        string
+              maxLength:   255
+            url:
+              description: URL of link
+              type:        string
+              format:      uri
+              maxLength:   4096
+          required:
+            - name
+            - url
+          additionalProperties: false
     additionalProperties: false
     required:
       - name

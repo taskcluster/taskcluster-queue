@@ -32,6 +32,8 @@ suite('Create task', function() {
       description:    'Task created during unit tests',
       owner:          'jonsafj@mozilla.com',
       source:         'https://github.com/taskcluster/taskcluster-queue',
+      links:          [{'link1': 'https://test.com/1/'},
+                       {'link2': 'https://test.com/2/'}],
     },
     tags: {
       purpose:        'taskcluster-testing',
