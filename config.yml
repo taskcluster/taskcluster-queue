@@ -166,8 +166,8 @@ test:
     publishMetaData:              false
     # For testing purposes we let claims expire very fast
     claimTimeout:                 1
-    publicBlobArtifactBucket:     'test-public-blobs'
-    privateBlobArtifactBucket:    'test-private-blobs'
+    publicBlobArtifactBucket:     'test-bucket-for-any-garbage'
+    privateBlobArtifactBucket:    'test-bucket-for-any-garbage2'
     blobArtifactRegion:           'us-east-1'
     publicArtifactBucket:         'test-bucket-for-any-garbage'
     privateArtifactBucket:        'test-bucket-for-any-garbage2'
