@@ -1,4 +1,5 @@
 suite('Artifacts', function() {
+  var os            = require('os');
   var debug         = require('debug')('test:artifacts');
   var assert        = require('assert');
   var slugid        = require('slugid');
@@ -18,7 +19,6 @@ suite('Artifacts', function() {
   var fs            = require('fs');
   var crypto        = require('crypto');
   var randbytes     = require('randbytes');
-  var tmp           = require('tmp');
   var remoteS3      = require('remotely-signed-s3');
   var qs            = require('querystring');
   var urllib        = require('url');
@@ -153,8 +153,7 @@ suite('Artifacts', function() {
   this.timeout(3 * 60 * 1000);
 
   suite.only('Blob Storage Type', () => {
-    let tmpobj = tmp.fileSync();
-    let bigfilename = tmpobj.name;
+    let bigfilename = path.join(os.tmpdir, slugid.v4());
     let bigfilehash;
     let bigfilesize = 10 * 1024 * 1024 + 512 * 1024; // 10.5 MB so we get a partial last part
 
@@ -176,7 +175,7 @@ suite('Artifacts', function() {
     });
 
     after(() => {
-      tmpobj.removeCallback();
+      fs.unlinkSync(bigfilename);
     });
 
     test('S3 single part complete flow', async () => {
