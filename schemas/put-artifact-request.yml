@@ -1,5 +1,5 @@
 $schema:            http://json-schema.org/draft-04/schema#
-title:              "Put Artifact Request"
+title:              "Complete Artifact Request"
 description: Complete an aritifact
 type:               object
 properties:
