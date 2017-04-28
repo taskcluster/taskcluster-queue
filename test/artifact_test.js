@@ -253,7 +253,7 @@ suite('Artifacts', function() {
         contentType: 'application/json',
         size: uploadInfo.size,
         sha256: uploadInfo.sha256,
-        parts: uploadInfo.parts,
+        parts: uploadInfo.parts.map(x => {sha256: x.sha256, size: x.size}),
       });
 
       assume(response).has.property('storageType', 'blob');
