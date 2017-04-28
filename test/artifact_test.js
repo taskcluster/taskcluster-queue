@@ -18,7 +18,6 @@ suite('Artifacts', function() {
   var helper        = require('./helper');
   var fs            = require('fs');
   var crypto        = require('crypto');
-  var randbytes     = require('randbytes');
   var remoteS3      = require('remotely-signed-s3');
   var qs            = require('querystring');
   var urllib        = require('url');
@@ -164,14 +163,11 @@ suite('Artifacts', function() {
 
     debug(`Temporary file ${bigfilename} of size ${bigfilesize} bytes`);
 
-    before(done => {
-      let rand = randbytes.urandom.getInstance();
-      rand.getRandomBytes(bigfilesize, buf => {
-        assert(buf.length === bigfilesize);
-        bigfilehash = crypto.createHash('sha256').update(buf).digest('hex');
-        fs.writeFileSync(bigfilename, buf);
-        done();
-      });
+    before(() => {
+      let buf = crypto.randomBytes(bigfilesize);
+      assert(buf.length === bigfilesize);
+      bigfilehash = crypto.createHash('sha256').update(buf).digest('hex');
+      fs.writeFileSync(bigfilename, buf);
     });
 
     after(() => {
