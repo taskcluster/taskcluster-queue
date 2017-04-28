@@ -2552,10 +2552,6 @@ querystringify@0.0.x:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/querystringify/-/querystringify-0.0.4.tgz#0cf7f84f9463ff0ae51c4c4b142d95be37724d9c"
 
-randbytes@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/randbytes/-/randbytes-0.0.1.tgz#f2cb38c586d6ac4c1ea9c32fbc80c207516ce303"
-
 range-parser@~1.0.0, range-parser@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.0.3.tgz#6872823535c692e2c2a0103826afd82c2e0ff175"
