@@ -93,13 +93,6 @@ oneOf:
               type: number
               multipleOf: 1.0
               minimum: 0
-            start:
-              description: |
-                The offset in number of bytes from the beginning of the file
-                that this chunk starts from.
-              type: number
-              multipleOf: 1.0
-              minimum: 0
     additionalProperties: false
     required:
       - storageType
