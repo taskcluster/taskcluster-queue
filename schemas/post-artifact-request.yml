@@ -44,7 +44,7 @@ oneOf:
           the upload will fail if the SHA256 value of what is uploaded does not
           match this value
         type: string
-        pattern: "[a-fA-F0-9]{64}"
+        pattern: "$[a-fA-F0-9]{64}$"
         minLength: 64
         maxLength: 64
       size:
@@ -82,7 +82,7 @@ oneOf:
               description: |
                 The sha256 hash of the part.
               type: string
-              pattern: "[a-fA-F0-9]{64}"
+              pattern: "^[a-fA-F0-9]{64}$"
               minLength: 64
               maxLength: 64
             size:
