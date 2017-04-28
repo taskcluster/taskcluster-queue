@@ -54,8 +54,7 @@
     "mocha": "^2.2.1",
     "mocha-eslint": "^3.0.1",
     "randbytes": "^0.0.1",
-    "taskcluster-lib-testing": "^1.0.0",
-    "tmp": "^0.0.31"
+    "taskcluster-lib-testing": "^1.0.0"
   },
   "engine-strict": true,
   "engines": {
