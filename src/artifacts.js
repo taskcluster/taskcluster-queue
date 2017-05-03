@@ -20,22 +20,6 @@ function encodeBlobKey(taskId, runId, name) {
   return `${taskId}/${runId}/${name}`;
 }
 
-/**
- * The reverse of encodeBlobKey.  This will take a key and return an object
- * with the taskId, runId and name of the artifact.  This method will throw if
- * the result would not encode into an identical key.
- */
-function decodeBlobKey(key) {
-  assert(typeof key === 'string');
-  let keyParts = key.split('/');
-  assert(keyParts.length >= 3);
-  let taskId = keyParts[0];
-  let runId = keyParts[1];
-  let name = keyParts.slice(2).join('/');
-  let expected = encodeBlobKey(taskId, runId, name);
-  assert(expected === key)
-  return {taskId, runId, name};
-}
 
 /** Post artifact */
 api.declare({
