@@ -367,7 +367,7 @@ let Artifact = Entity.configure({
      * fast scanning based on properties (we could use JSON), we're using a
      * number in place of a boolean.  0 means false, 1 means present
      */
-    present:        Entity.types.Number,
+    present:        Entity.types.Boolean,
   },
   context: [
     'blobStore',      // BlobStore instance wrapping Azure Blob Storage
@@ -376,7 +376,7 @@ let Artifact = Entity.configure({
     'monitor',        // base.monitor instance
   ],
   migrate(item) {
-    item.present = 1;
+    item.present = true;
     return item;
   },
 });
