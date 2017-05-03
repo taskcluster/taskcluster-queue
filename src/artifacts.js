@@ -201,7 +201,7 @@ api.declare({
   // Construct details for different storage types
   var isPublic = /^public\//.test(name);
   var details  = {};
-  let present = 0;
+  let present = false;
   let uploadId;
   switch (storageType) {
     case 'blob':
@@ -252,7 +252,7 @@ api.declare({
       }
       break;
     case 's3':
-      present = 1;
+      present = true;
       // TODO: Once we're deprecating this artifact type, we'll throw an error
       // here
       if (isPublic) {
@@ -264,7 +264,7 @@ api.declare({
       break;
 
     case 'azure':
-      present = 1;
+      present = true;
       // TODO: Once we're deprecating this artifact type, we'll throw an error
       // here
       details.container = this.blobStore.container;
@@ -272,12 +272,12 @@ api.declare({
       break;
 
     case 'reference':
-      present = 1;
+      present = true;
       details.url       = input.url;
       break;
 
     case 'error':
-      present = 1;
+      present = true;
       details.message   = input.message;
       details.reason    = input.reason;
       break;
@@ -717,7 +717,7 @@ api.declare({
       artifact.details.etag = etag;
       // Now that we're finished, we don't want to store the uploadId any longer
       artifact.details = _.omit(artifact.details, 'uploadId');
-      artifact.present = 1;
+      artifact.present = true;
     });
 
     await this.publisher.artifactCreated({
