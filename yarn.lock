@@ -197,7 +197,7 @@ aws-sign@~0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/aws-sign/-/aws-sign-0.3.0.tgz#3d81ca69b474b1e16518728b51c24ff0bbedc6e9"
 
-aws4@^1.2.1:
+aws4@^1.2.1, aws4@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.6.0.tgz#83ef5ca860b2b32e4a0deedee8c771b9db57471e"
 
@@ -1025,7 +1025,7 @@ dashdash@^1.12.0:
   dependencies:
     assert-plus "^1.0.0"
 
-debug@2, debug@^2.0.0, debug@^2.1.1, debug@^2.1.3, debug@^2.2.0:
+debug@2, debug@^2.0.0, debug@^2.1.1, debug@^2.1.3, debug@^2.2.0, debug@^2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.1.tgz#79855090ba2c4e3115cc7d8769491d58f0491351"
   dependencies:
@@ -1764,6 +1764,10 @@ hoek@2.x.x:
   version "2.16.3"
   resolved "https://registry.yarnpkg.com/hoek/-/hoek-2.16.3.tgz#20bb7403d3cea398e91dc4710a8ff1b8274a25ed"
 
+hoek@4.x.x:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/hoek/-/hoek-4.1.1.tgz#9cc573ffba2b7b408fb5e9c2a13796be94cddce9"
+
 home-or-tmp@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/home-or-tmp/-/home-or-tmp-2.0.0.tgz#e36c3f2d2cae7d746a857e38d18d5f32a7882db8"
@@ -1946,9 +1950,17 @@ isarray@^1.0.0, isarray@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
 
+isemail@2.x.x:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/isemail/-/isemail-2.2.1.tgz#0353d3d9a62951080c262c2aa0a42b8ea8e9e2a6"
+
 isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
+
+items@2.x.x:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/items/-/items-2.1.1.tgz#8bd16d9c83b19529de5aea321acaada78364a198"
 
 jade@0.26.3:
   version "0.26.3"
@@ -1966,6 +1978,15 @@ jodid25519@^1.0.0:
   resolved "https://registry.yarnpkg.com/jodid25519/-/jodid25519-1.0.2.tgz#06d4912255093419477d425633606e0e90782967"
   dependencies:
     jsbn "~0.1.0"
+
+joi@^10.2.2:
+  version "10.4.1"
+  resolved "https://registry.yarnpkg.com/joi/-/joi-10.4.1.tgz#a2fca1f0d603d1b843f2c1e086b52461f6be1f36"
+  dependencies:
+    hoek "4.x.x"
+    isemail "2.x.x"
+    items "2.x.x"
+    topo "2.x.x"
 
 js-tokens@^3.0.0:
   version "3.0.1"
@@ -2060,7 +2081,7 @@ levn@^0.3.0, levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-libxmljs@^0.18.0:
+libxmljs@^0.18.0, libxmljs@^0.18.4:
   version "0.18.4"
   resolved "https://registry.yarnpkg.com/libxmljs/-/libxmljs-0.18.4.tgz#253028925900e9f8d454418034a25b8af4e1507f"
   dependencies:
@@ -2251,7 +2272,7 @@ mute-stream@0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.5.tgz#8fbfabb0a98a253d3184331f9e8deb7372fac6c0"
 
-mz@^2.4.0:
+mz@^2.4.0, mz@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/mz/-/mz-2.6.0.tgz#c8b8521d958df0a4f2768025db69c719ee4ef1ce"
   dependencies:
@@ -2696,6 +2717,17 @@ regjsparser@^0.1.4:
   resolved "https://registry.yarnpkg.com/regjsparser/-/regjsparser-0.1.5.tgz#7ee8f84dc6fa792d3fd0ae228d24bd949ead205c"
   dependencies:
     jsesc "~0.5.0"
+
+remotely-signed-s3@~1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/remotely-signed-s3/-/remotely-signed-s3-1.0.1.tgz#c90f12d5106f151230a72ee640fd953a06ba38b1"
+  dependencies:
+    aws4 "^1.6.0"
+    babel-runtime "^6.23.0"
+    debug "^2.6.1"
+    joi "^10.2.2"
+    libxmljs "^0.18.4"
+    mz "^2.6.0"
 
 repeating@^2.0.0:
   version "2.0.1"
@@ -3390,6 +3422,12 @@ to-iso-string@0.0.2:
 topo-sort@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/topo-sort/-/topo-sort-1.0.0.tgz#0ca3371b0963a4c4f955b3033abb130146eaa489"
+
+topo@2.x.x:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/topo/-/topo-2.0.2.tgz#cd5615752539057c0dc0491a621c3bc6fbe1d182"
+  dependencies:
+    hoek "4.x.x"
 
 tough-cookie@>=0.12.0, tough-cookie@~2.3.0:
   version "2.3.2"
