@@ -42,7 +42,25 @@ oneOf:
           The complete SHA256 value of the entire artifact.  This must be the
           SHA256 of the file which is to be uploaded.  For single part uploads,
           the upload will fail if the SHA256 value of what is uploaded does not
-          match this value
+          match this value.  If content-encoding is to be used, this value must
+          be the overall value of the pre-encoding copy of the file.  In simple
+          terms, this is a SHA256 value of the actual thing you're wanting to
+          store.  This value must always be provided.
+        type: string
+        pattern: "$[a-fA-F0-9]{64}$"
+        minLength: 64
+        maxLength: 64
+      transferSha256:
+        description: |
+          The complete SHA256 value of the entire artifact after being encoded
+          with the content-encoding scheme.  For single part uploads, this
+          value will be the hash of the bytes transfered to S3 and for
+          multipart uploads, this value will be the hash of the overall encoded
+          file that is transfered in portions (e.g. the value of
+          X-Amz-Content-Sha256).  This value is optional when content-encoding
+          is the identity scheme (i.e. no encoding).  This value can be
+          provided with identity encoding if it's valid.  If non-identity
+          encoding is used then the value must be provided
         type: string
         pattern: "$[a-fA-F0-9]{64}$"
         minLength: 64

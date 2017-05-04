@@ -208,6 +208,7 @@ api.declare({
       // Generate the details that we'll be using.
       details.size = input.size;
       details.sha256 = input.sha256;
+      details.transferSha256 = input.transferSha256 || input.sha256;
       // We want to ensure, for idempotency reasons, that any following
       // requests to createArtifact() use the same set of part information.
       // Instead of storing the entire parts list in the entity, we'll instead
@@ -225,8 +226,12 @@ api.declare({
       
       details.provider = 's3';
       details.region = this.blobRegion;
-      if (input.encoding) {
-        details.encoding = input.encoding;
+      details.encoding = input.encoding || 'identity';
+
+      // We want to ensure that if provided when not strictly required,
+      // transferSha256 is valid
+      if (details.encoding === 'identity') {
+        assert(details.sha256 === details.transferSha256);
       }
 
       if (isPublic) {
@@ -241,10 +246,11 @@ api.declare({
           bucket: details.bucket,
           key: details.key,
           sha256: details.sha256,
+          transferSha256: details.transferSha256,
           size: details.size,
           metadata: {taskId, runId, name},
           contentType: contentType,
-          contentEncoding: details.encoding || undefined,
+          contentEncoding: details.encoding,
         });
         debug(`Multipart Artifact init ${details.bucket}/${details.key} ${uploadId}`);
         assert(uploadId);
@@ -427,11 +433,12 @@ api.declare({
           bucket: artifact.details.bucket,
           key: artifact.details.key,
           sha256: artifact.details.sha256,
+          transferSha256: artifact.details.transferSha256,
           size: artifact.details.size,
           metadata: {taskId, runId, name},
           tags: {taskId, runId, name},
           contentType: artifact.contentType,
-          contentEncoding: artifact.details.encoding || undefined,
+          contentEncoding: artifact.details.encoding,
         });
         requests = [singlePartRequest];
       }
