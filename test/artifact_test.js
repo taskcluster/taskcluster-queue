@@ -1,5 +1,6 @@
 suite('Artifacts', function() {
   var os            = require('os');
+  var path          = require('path');
   var debug         = require('debug')('test:artifacts');
   var assert        = require('assert');
   var slugid        = require('slugid');
@@ -152,7 +153,7 @@ suite('Artifacts', function() {
   this.timeout(3 * 60 * 1000);
 
   suite.only('Blob Storage Type', () => {
-    let bigfilename = path.join(os.tmpdir, slugid.v4());
+    let bigfilename = path.join(os.tmpdir(), slugid.v4());
     let bigfilehash;
     let bigfilesize = 10 * 1024 * 1024 + 512 * 1024; // 10.5 MB so we get a partial last part
 
@@ -253,7 +254,9 @@ suite('Artifacts', function() {
         contentType: 'application/json',
         size: uploadInfo.size,
         sha256: uploadInfo.sha256,
-        parts: uploadInfo.parts.map(x => {sha256: x.sha256, size: x.size}),
+        parts: uploadInfo.parts.map(x => {
+          return {sha256: x.sha256, size: x.size};
+        }),
       });
 
       assume(response).has.property('storageType', 'blob');
@@ -314,7 +317,9 @@ suite('Artifacts', function() {
         contentType: 'application/json',
         size: uploadInfo.size,
         sha256: uploadInfo.sha256,
-        parts: uploadInfo.parts,
+        parts: uploadInfo.parts.map(x => {
+          return {sha256: x.sha256, size: x.size};
+        })
       });
 
       debug('### Calling createArtifact second time');
@@ -324,7 +329,9 @@ suite('Artifacts', function() {
         contentType: 'application/json',
         size: uploadInfo.size,
         sha256: uploadInfo.sha256,
-        parts: uploadInfo.parts,
+        parts: uploadInfo.parts.map(x => {
+          return {sha256: x.sha256, size: x.size};
+        })
       });
       
       let firstUploadId = qs.parse(urllib.parse(firstResponse.requests[0].url).query).uploadId;
