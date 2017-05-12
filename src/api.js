@@ -800,6 +800,16 @@ api.declare({
     return;
   }
 
+  // Always require extra scopes
+  if (!req.satisfies([[
+    // task.scopes
+    ...taskDef.scopes,
+    // Find scopes required for task specific routes
+    ...taskDef.routes.map(route => 'queue:route:' + route),
+  ]])) {
+    return;
+  }
+
   // Ensure we have a self-dependency, this is how defineTask works now
   if (!_.includes(taskDef.dependencies, taskId)) {
     // Trick as taskDef.dependencies may be a default from schema validation
