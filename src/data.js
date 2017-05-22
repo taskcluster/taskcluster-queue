@@ -348,6 +348,37 @@ let Artifact = Entity.configure({
     'publicBucket',   // Public artifact bucket wrapping S3
     'monitor',        // base.monitor instance
   ],
+}).configure({
+  version: 2,
+  properties: {
+    taskId:         Entity.types.SlugId,
+    runId:          Entity.types.Number,
+    name:           Entity.types.String,
+    storageType:    Entity.types.String,
+    contentType:    Entity.types.String,
+    details:        Entity.types.JSON,
+    expires:        Entity.types.Date,
+    /** 
+     * Present is a number field which represents an artifact being present and
+     * the upload being completed.  The handling logic for the artifact's
+     * storage type will fully define what that means for a given storage type.
+     *
+     * Because there are no boolean fields in Azure-Entities which allow for
+     * fast scanning based on properties (we could use JSON), we're using a
+     * number in place of a boolean.  0 means false, 1 means present
+     */
+    present:        Entity.types.Boolean,
+  },
+  context: [
+    'blobStore',      // BlobStore instance wrapping Azure Blob Storage
+    'privateBucket',  // Private artifact bucket wrapping S3
+    'publicBucket',   // Public artifact bucket wrapping S3
+    'monitor',        // base.monitor instance
+  ],
+  migrate(item) {
+    item.present = true;
+    return item;
+  },
 });
 
 /** Return JSON representation of artifact meta-data */
@@ -371,6 +402,11 @@ Artifact.prototype.json = function() {
 Artifact.prototype.remove = function(ignoreError) {
   // Promise that deleted underlying artifact, and keep reference to context
   var deleted = Promise.resolve();
+
+  if (this.storageType === 'blob') {
+    // TODO: Implement this!
+    return;
+  }
 
   // Handle S3 artifacts
   if (this.storageType === 's3') {
@@ -434,10 +470,10 @@ Artifact.expire = async function(now) {
   assert(now instanceof Date, 'now must be given as option');
   var count = 0;
   await Entity.scan.call(this, {
-    expires:          Entity.op.lessThan(now),
+    expires: Entity.op.lessThan(now),
   }, {
-    limit:            250, // max number of concurrent delete operations
-    handler:          (item) => { count++; return item.remove(true); },
+    limit:   250, // max number of concurrent delete operations
+    handler: (item) => { count++; return item.remove(true); },
   });
   return count;
 };
