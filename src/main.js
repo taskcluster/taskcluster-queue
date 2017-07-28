@@ -236,6 +236,21 @@ let load = loader({
     },
   },
 
+  // Create Provisioner table
+  Provisioner: {
+    requires: ['cfg', 'monitor', 'process'],
+    setup: async ({cfg, monitor, process}) => {
+      let Provisioner = data.Provisioner.setup({
+        table:            cfg.app.taskDependencyTableName,
+        account:          cfg.azureTableAccount,
+        credentials:      cfg.taskcluster.credentials,
+        monitor:          monitor.prefix('table.taskdependencies'),
+      });
+      await Provisioner.ensureTable();
+      return Provisioner;
+    },
+  },
+
   // Create QueueService to manage azure queues
   queueService: {
     requires: ['cfg', 'monitor'],
@@ -290,7 +305,7 @@ let load = loader({
       'TaskGroup', 'TaskGroupMember', 'TaskGroupActiveSet', 'queueService',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
-      'workClaimer',
+      'workClaimer', 'Provisioner',
     ],
     setup: (ctx) => v1.setup({
       context: {
@@ -301,6 +316,7 @@ let load = loader({
         TaskGroupActiveSet: ctx.TaskGroupActiveSet,
         taskGroupExpiresExtension: ctx.cfg.app.taskGroupExpiresExtension,
         TaskDependency:   ctx.TaskDependency,
+        Provisioner:      ctx.Provisioner,
         dependencyTracker: ctx.dependencyTracker,
         publisher:        ctx.publisher,
         validator:        ctx.validator,
@@ -534,6 +550,24 @@ let load = loader({
       debug('Expired %s task-requirement', count);
 
       monitor.count('expire-task-requirement.done');
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
+    },
+  },
+
+  // Create the provisioner expiration process (periodic job)
+  'expire-provisioners': {
+    requires: ['cfg', 'Provisioner', 'monitor'],
+    setup: async ({cfg, Provisioner, monitor}) => {
+      var now = taskcluster.fromNow(cfg.app.taskExpirationDelay);
+      assert(!_.isNaN(now), 'Can\'t have NaN as now');
+
+      // Expire task-dependency using delay
+      debug('Expiring provisioners at: %s, from before %s', new Date(), now);
+      let count = await Provisioner.expire(now);
+      debug('Expired %s provisioners', count);
+
+      monitor.count('expire-provisioner.done');
       monitor.stopResourceMonitoring();
       await monitor.flush();
     },
