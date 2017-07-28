@@ -135,6 +135,7 @@ var api = new API({
     'dependencyTracker',  // Instance of DependencyTracker
     'monitor',            // base.monitor instance
     'workClaimer',        // Instance of WorkClaimer
+    'workerInfo',         // Instance of WorkerInfo
   ],
 });
 
@@ -1363,9 +1364,12 @@ api.declare({
     res.once('close', accept);
   });
 
-  let result = await this.workClaimer.claim(
-    provisionerId, workerType, workerGroup, workerId, count, aborted,
-  );
+  let [result] = await Promise.all([
+    this.workClaimer.claim(
+      provisionerId, workerType, workerGroup, workerId, count, aborted,
+    ),
+    this.workerInfo.provisionerSeen(provisionerId),
+  ]);
 
   return res.reply({
     tasks: result,
@@ -1439,9 +1443,12 @@ api.declare({
   }
 
   // Claim task
-  let result = await this.workClaimer.claimTask(
-    taskId, runId, workerGroup, workerId, task,
-  );
+  let [result] = await Promise.all([
+    this.workClaimer.claimTask(
+      taskId, runId, workerGroup, workerId, task,
+    ),
+    this.workerInfo.provisionerSeen(task.provisionerId),
+  ]);
 
   // If the run doesn't exist return ResourceNotFound
   if (result === 'run-not-found') {

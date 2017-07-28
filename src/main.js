@@ -17,6 +17,7 @@ let ClaimResolver       = require('./claimresolver');
 let DependencyTracker   = require('./dependencytracker');
 let DependencyResolver  = require('./dependencyresolver');
 let WorkClaimer         = require('./workclaimer');
+let WorkerInfo          = require('./workerinfo');
 let loader              = require('taskcluster-lib-loader');
 let config              = require('typed-env-config');
 let monitor             = require('taskcluster-lib-monitor');
@@ -278,6 +279,14 @@ let load = loader({
     }),
   },
 
+  // Create workerInfo
+  workerInfo: {
+    requires: ['Provisioner'],
+    setup: ({Provisioner}) => new WorkerInfo({
+      Provisioner,
+    }),
+  },
+
   // Create dependencyTracker
   dependencyTracker: {
     requires: [
@@ -305,7 +314,7 @@ let load = loader({
       'TaskGroup', 'TaskGroupMember', 'TaskGroupActiveSet', 'queueService',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
-      'workClaimer', 'Provisioner',
+      'workClaimer', 'Provisioner', 'workerInfo',
     ],
     setup: (ctx) => v1.setup({
       context: {
@@ -331,6 +340,7 @@ let load = loader({
         artifactRegion:   ctx.cfg.aws.region,
         monitor:          ctx.monitor.prefix('api-context'),
         workClaimer:      ctx.workClaimer,
+        workerInfo:       ctx.workerInfo,
       },
       validator:        ctx.validator,
       authBaseUrl:      ctx.cfg.taskcluster.authBaseUrl,
@@ -555,19 +565,17 @@ let load = loader({
     },
   },
 
-  // Create the provisioner expiration process (periodic job)
-  'expire-provisioners': {
-    requires: ['cfg', 'Provisioner', 'monitor'],
-    setup: async ({cfg, Provisioner, monitor}) => {
-      var now = taskcluster.fromNow(cfg.app.taskExpirationDelay);
+  // Create the worker-info expiration process (periodic job)
+  'expire-worker-info': {
+    requires: ['cfg', 'workerInfo', 'monitor'],
+    setup: async ({cfg, workerInfo, monitor}) => {
+      var now = taskcluster.fromNow(cfg.app.workerInfoExpirationDelay);
       assert(!_.isNaN(now), 'Can\'t have NaN as now');
 
       // Expire task-dependency using delay
-      debug('Expiring provisioners at: %s, from before %s', new Date(), now);
-      let count = await Provisioner.expire(now);
-      debug('Expired %s provisioners', count);
+      let count = await workerInfo.expire(now);
 
-      monitor.count('expire-provisioner.done');
+      monitor.count('expire-worker-info.done');
       monitor.stopResourceMonitoring();
       await monitor.flush();
     },
