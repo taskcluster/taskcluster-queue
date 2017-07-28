@@ -26,11 +26,22 @@ suite('provisioners', () => {
     assert(result.provisioners[0].provisionerId === 'prov1', 'expected prov1');
   });
 
+  test('provisionerSeen creates and updates a provisioner', async () => {
+    let workerInfo = await helper.load('workerInfo', helper.loadOptions);
+    await Promise.all([
+      workerInfo.provisionerSeen('prov2'),
+      workerInfo.provisionerSeen('prov2'),
+    ]);
+    await workerInfo.provisionerSeen('prov2');
+    let result = await helper.queue.listProvisioners();
+    assert(result.provisioners.length === 1, 'expected a provisioner');
+  });
+
   test('expiration works', async () => {
     let Provisioner = await helper.load('Provisioner', helper.loadOptions);
     await Provisioner.create({provisionerId: 'prov1', expires: new Date('1017-07-29')});
 
-    await helper.expireProvisioners();
+    await helper.expireWorkerInfo();
 
     let result = await helper.queue.listProvisioners();
     assert(result.provisioners.length === 0, 'expected no provisioners');
