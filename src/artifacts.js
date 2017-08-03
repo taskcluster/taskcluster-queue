@@ -214,8 +214,14 @@ api.declare({
   switch (storageType) {
     case 'blob':
       // Generate the details that we'll be using.
-      details.size = input.size;
-      details.sha256 = input.sha256;
+      details.contentLength = input.contentLength;
+      details.contentSha256 = input.contentSha256;
+      if (input.transferLength) {
+        details.transferLength = input.transferLength;
+      }
+      if (input.transferSha256) {
+        details.transferSha256 = input.transferSha256;
+      }
       // We want to ensure, for idempotency reasons, that any following
       // requests to createArtifact() use the same set of part information.
       // Instead of storing the entire parts list in the entity, we'll instead
@@ -248,11 +254,13 @@ api.declare({
         uploadId = await this.s3Controller.initiateMultipartUpload({
           bucket: details.bucket,
           key: details.key,
-          sha256: details.sha256,
-          size: details.size,
+          sha256: details.contentSha256,
+          size: details.contentLength,
+          transferSha256: details.transferSha256 ? details.transferSha256 : details.contentSha256,
+          transferSize: details.transferLength ? details.transferLength : details.contentLength,
           metadata: {taskId, runId, name},
           contentType: contentType,
-          contentEncoding: details.encoding || undefined,
+          contentEncoding: details.encoding || 'identity',
         });
         debug(`Multipart Artifact init ${details.bucket}/${details.key} ${uploadId}`);
         assert(uploadId);
@@ -432,12 +440,14 @@ api.declare({
         let singlePartRequest = await this.s3Controller.generateSinglepartRequest({
           bucket: artifact.details.bucket,
           key: artifact.details.key,
-          sha256: artifact.details.sha256,
-          size: artifact.details.size,
+          sha256: artifact.details.contentSha256,
+          size: artifact.details.contentLength,
+          transferSha256: artifact.details.transferSha256,
+          transferSize: artifact.details.transferLength,
           metadata: {taskId, runId, name},
           tags: {taskId, runId, name},
           contentType: artifact.contentType,
-          contentEncoding: artifact.details.encoding || undefined,
+          contentEncoding: artifact.details.encoding || 'identity',
         });
         requests = [singlePartRequest];
       }

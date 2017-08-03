@@ -63,7 +63,7 @@ suite('Artifacts', function() {
       // TODO: Figure out why we get a Parse Error when using https...
       debug('NOTE: not sure why, but https: is resulting in a parse error\n' +
             'so for the test we are fetching over http');
-      urlparts.protocol = 'http:';
+      //urlparts.protocol = 'http:';
 
       let request;
       if (/^https/.test(urlparts.protocol)) {
@@ -196,8 +196,8 @@ suite('Artifacts', function() {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
         contentType: 'application/json',
-        size: uploadInfo.size,
-        sha256: uploadInfo.sha256,
+        contentLength: uploadInfo.size,
+        contentSha256: uploadInfo.sha256,
       });
 
       assume(response).has.property('storageType', 'blob');
@@ -252,8 +252,8 @@ suite('Artifacts', function() {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
         contentType: 'application/json',
-        size: uploadInfo.size,
-        sha256: uploadInfo.sha256,
+        contentLength: uploadInfo.size,
+        contentSha256: uploadInfo.sha256,
         parts: uploadInfo.parts.map(x => {
           return {sha256: x.sha256, size: x.size};
         }),
@@ -291,7 +291,7 @@ suite('Artifacts', function() {
       await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
     });
     
-    test('S3 multi part idempotency', async () => {
+    test.only('S3 multi part idempotency', async () => {
       let name = 'public/multipart.dat';
       let taskId = slugid.v4();
       
@@ -315,8 +315,8 @@ suite('Artifacts', function() {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
         contentType: 'application/json',
-        size: uploadInfo.size,
-        sha256: uploadInfo.sha256,
+        contentLength: uploadInfo.size,
+        contentSha256: uploadInfo.sha256,
         parts: uploadInfo.parts.map(x => {
           return {sha256: x.sha256, size: x.size};
         })
@@ -327,8 +327,8 @@ suite('Artifacts', function() {
         storageType: 'blob',
         expires: taskcluster.fromNowJSON('1 day'),
         contentType: 'application/json',
-        size: uploadInfo.size,
-        sha256: uploadInfo.sha256,
+        contentLength: uploadInfo.size,
+        contentSha256: uploadInfo.sha256,
         parts: uploadInfo.parts.map(x => {
           return {sha256: x.sha256, size: x.size};
         })
