@@ -1029,7 +1029,7 @@ dashdash@^1.12.0:
   dependencies:
     assert-plus "^1.0.0"
 
-debug@2, debug@^2.0.0, debug@^2.1.1, debug@^2.1.3, debug@^2.2.0, debug@^2.6.1, debug@^2.6.6:
+debug@2, debug@^2.0.0, debug@^2.1.1, debug@^2.1.3, debug@^2.2.0, debug@^2.6.6, debug@^2.6.8:
   version "2.6.8"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.8.tgz#e731531ca2ede27d188222427da17821d68ff4fc"
   dependencies:
@@ -1997,7 +1997,7 @@ jodid25519@^1.0.0:
   dependencies:
     jsbn "~0.1.0"
 
-joi@^10.2.2:
+joi@^10.6.0:
   version "10.6.0"
   resolved "https://registry.yarnpkg.com/joi/-/joi-10.6.0.tgz#52587f02d52b8b75cdb0c74f0b164a191a0e1fc2"
   dependencies:
@@ -2108,7 +2108,7 @@ libxmljs@^0.18.0:
     nan "~2.5.0"
     node-pre-gyp "~0.6.32"
 
-libxmljs@^0.18.4:
+libxmljs@^0.18.7:
   version "0.18.7"
   resolved "https://registry.yarnpkg.com/libxmljs/-/libxmljs-0.18.7.tgz#3673eb17c74cbaffdef9f33cb83ddd82a25055b7"
   dependencies:
@@ -2442,7 +2442,7 @@ os-homedir@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/os-homedir/-/os-homedir-1.0.2.tgz#ffbc4988336e0e833de0c168c7ef152121aa7fb3"
 
-os-tmpdir@^1.0.0, os-tmpdir@^1.0.1:
+os-tmpdir@^1.0.0, os-tmpdir@^1.0.1, os-tmpdir@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
 
@@ -2741,16 +2741,17 @@ regjsparser@^0.1.4:
   dependencies:
     jsesc "~0.5.0"
 
-remotely-signed-s3@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/remotely-signed-s3/-/remotely-signed-s3-1.0.4.tgz#159b73453477178006cd84bc0db45d5b8725e1a9"
+remotely-signed-s3@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/remotely-signed-s3/-/remotely-signed-s3-2.0.0.tgz#37a202a55974299f5f77aab0d0430ceb755298a7"
   dependencies:
     aws4 "^1.6.0"
     babel-runtime "^6.23.0"
-    debug "^2.6.1"
-    joi "^10.2.2"
-    libxmljs "^0.18.4"
+    debug "^2.6.8"
+    joi "^10.6.0"
+    libxmljs "^0.18.7"
     mz "^2.6.0"
+    tmp "^0.0.31"
 
 repeating@^2.0.0:
   version "2.0.1"
@@ -3436,6 +3437,12 @@ through@^2.3.6:
 timed-out@^3.0.0:
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-3.1.3.tgz#95860bfcc5c76c277f8f8326fd0f5b2e20eba217"
+
+tmp@^0.0.31:
+  version "0.0.31"
+  resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.31.tgz#8f38ab9438e17315e5dbd8b3657e8bfb277ae4a7"
+  dependencies:
+    os-tmpdir "~1.0.1"
 
 to-fast-properties@^1.0.1:
   version "1.0.3"
