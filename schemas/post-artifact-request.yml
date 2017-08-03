@@ -31,13 +31,13 @@ oneOf:
            always using `application/json` for JSON artifacts.
         type: string
         maxLength: 255
-      encoding:
+      contentEncoding:
         description: |
           Optionally provide an encoding type which should be set as the HTTP
           Content-Encoding header for this artifact.
         type: string
         maxLength: 255
-      sha256:
+      contentSha256:
         description: |
           The complete SHA256 value of the entire artifact.  This must be the
           SHA256 of the file which is to be uploaded.  For single part uploads,
@@ -45,7 +45,7 @@ oneOf:
           match this value
         type: string
         pattern: "^[a-fA-F0-9]{64}$"
-      size:
+      contentLength:
         description: |
           The number of bytes of the entire artifact.  This must be the number
           of bytes in the file to be uploaded.  For single part uploads, the
@@ -55,6 +55,21 @@ oneOf:
           represent all of the restrictions in a json-schema.  A multipart
           upload may be at most 5TB, with each part other than the last being
           between 5MB and 5GB in size.
+        type: number
+        multipleOf: 1.0
+        minimum: 0
+      transferSha256:
+        description: |
+          This is the sha256 of the bytes transfered across the wire to the
+          backing datastore.  If specified, it represents the
+          post-content-encoding sha256 value
+        type: string
+        pattern: "^[a-fA-F0-9]{64}$"
+      transferLength:
+        description: |
+          The number of bytes transfered across the wire to the backing
+          datastore.  If specified, it represents the post-content-encoding
+          byte count
         type: number
         multipleOf: 1.0
         minimum: 0
@@ -96,8 +111,8 @@ oneOf:
       - storageType
       - expires
       - contentType
-      - sha256
-      - size
+      - contentSha256
+      - contentLength
   - title:          "S3 Artifact Request"
     description: |
       Request for a signed PUT URL that will allow you to upload an artifact
