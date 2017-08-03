@@ -223,7 +223,7 @@ suite('Artifacts', function() {
       debug('Fetching artifact from: %s', artifactUrl);
       let artifact = await getWithoutRedirecting(artifactUrl);
 
-      let expectedUrl = `https://test-public-blobs.s3.amazonaws.com/${taskId}/0/public/singlepart.dat`;
+      let expectedUrl = `https://test-bucket-for-any-garbage.s3-us-west-2.amazonaws.com/${taskId}/0/public/singlepart.dat`;
       assume(artifact.headers).has.property('location', expectedUrl);
 
       await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
@@ -285,7 +285,7 @@ suite('Artifacts', function() {
       debug('Fetching artifact from: %s', artifactUrl);
       let artifact = await getWithoutRedirecting(artifactUrl);
 
-      let expectedUrl = `https://test-public-blobs.s3.amazonaws.com/${taskId}/0/${name}`;
+      let expectedUrl = `https://test-bucket-for-any-garbage.s3-us-west-2.amazonaws.com/${taskId}/0/${name}`;
       assume(artifact.headers).has.property('location', expectedUrl);
 
       await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
