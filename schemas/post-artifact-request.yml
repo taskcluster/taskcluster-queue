@@ -45,8 +45,6 @@ oneOf:
           match this value
         type: string
         pattern: "^[a-fA-F0-9]{64}$"
-        minLength: 64
-        maxLength: 64
       size:
         description: |
           The number of bytes of the entire artifact.  This must be the number
