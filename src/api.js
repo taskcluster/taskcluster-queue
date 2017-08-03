@@ -2004,7 +2004,7 @@ api.declare({
 
   let provisioners = await this.Provisioner.scan({}, {continuation, limit});
   let result = {
-    provisioners: provisioners.entries.map(artifact => artifact.json()),
+    provisioners: provisioners.entries.map(provisioner => provisioner.json()),
   };
   if (provisioners.continuation) {
     result.continuationToken = provisioners.continuation;

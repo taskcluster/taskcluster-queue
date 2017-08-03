@@ -28,8 +28,8 @@ class WorkerInfo {
     let now = new Date();
     let nextUpdate = this.nextUpdateAt[key];
     if (!nextUpdate || nextUpdate < now) {
-      await updateExpires();
       this.nextUpdateAt[key] = taskcluster.fromNow(this.updateFrequency);
+      await updateExpires();
     }
   }
 
@@ -41,13 +41,15 @@ class WorkerInfo {
       let provisioner = await this.Provisioner.load({provisionerId}, true);
       if (provisioner) {
         await provisioner.modify(entity => {
-          entity.expires = expires;
+          if (Date.now() - new Date(entity.expires) > 24 * 60 * 60 * 1000) {
+            entity.expires = expires;
+          }
         });
         return;
       }
 
       try {
-        provisioner = await this.Provisioner.create({provisionerId, expires});
+        await this.Provisioner.create({provisionerId, expires});
       } catch (err) {
         // EntityAlreadyExists means we raced with another create, so just let it win
         if (!err || err.code !== 'EntityAlreadyExists') {
