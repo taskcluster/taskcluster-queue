@@ -152,7 +152,7 @@ suite('Artifacts', function() {
   };
   this.timeout(3 * 60 * 1000);
 
-  suite.only('Blob Storage Type', () => {
+  suite('Blob Storage Type', () => {
     let bigfilename = path.join(os.tmpdir(), slugid.v4());
     let bigfilehash;
     let bigfilesize = 10 * 1024 * 1024 + 512 * 1024; // 10.5 MB so we get a partial last part
@@ -291,7 +291,7 @@ suite('Artifacts', function() {
       await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
     });
     
-    test.only('S3 multi part idempotency', async () => {
+    test('S3 multi part idempotency', async () => {
       let name = 'public/multipart.dat';
       let taskId = slugid.v4();
       
