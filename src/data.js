@@ -374,6 +374,7 @@ let Artifact = Entity.configure({
     'privateBucket',  // Private artifact bucket wrapping S3
     'publicBucket',   // Public artifact bucket wrapping S3
     'monitor',        // base.monitor instance
+    's3Controller',   // For deleting objects
   ],
   migrate(item) {
     item.present = true;
@@ -404,8 +405,12 @@ Artifact.prototype.remove = function(ignoreError) {
   var deleted = Promise.resolve();
 
   if (this.storageType === 'blob') {
-    // TODO: Implement this!
-    return;
+    debug('Deleting expired s3 artifact from bucket: %s, key: %s',
+          this.details.bucket, this.details.key);
+    deleted = this.s3Controller.deleteObject({
+      bucket: this.details.bucket,
+      key: this.details.key,
+    });
   }
 
   // Handle S3 artifacts
