@@ -168,7 +168,7 @@ test:
     claimTimeout:                 1
     publicBlobArtifactBucket:     'test-bucket-for-any-garbage'
     privateBlobArtifactBucket:    'test-bucket-for-any-garbage2'
-    blobArtifactRegion:           'us-east-1'
+    blobArtifactRegion:           'us-west-2'
     publicArtifactBucket:         'test-bucket-for-any-garbage'
     privateArtifactBucket:        'test-bucket-for-any-garbage2'
     artifactContainer:            'artifacts'
