@@ -428,8 +428,6 @@ api.declare({
           uploadId: artifact.details.uploadId,
           parts: input.parts,
         });
-        console.log('stored uploadid: ' + artifact.details.uploadId);
-        console.log('new uploadid:    ' + details.uploadId);
       } else {
         let singlePartRequest = await this.s3Controller.generateSinglepartRequest({
           bucket: artifact.details.bucket,
@@ -500,8 +498,6 @@ api.declare({
 /** Reply to an artifact request using taskId, runId, name and context */
 var replyWithArtifact = async function(taskId, runId, name, req, res) {
   // Load artifact meta-data from table storage
-  console.dir(name);
-  console.log(typeof name);
   let artifact = await this.Artifact.load({taskId, runId, name}, true);
 
   // Give a 404, if the artifact couldn't be loaded
