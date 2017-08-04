@@ -269,6 +269,7 @@ api.declare({
     );
   }
 
+  /* eslint-disable no-extra-parens */
   // Load tasks
   let tasks = (await Promise.all(members.entries.map(member => {
     return this.Task.load({taskId: member.taskId}, true);
@@ -278,6 +279,7 @@ api.declare({
     // creation errors (probably something that involves dependency errors).
     return task && task.schedulerId === taskGroup.schedulerId;
   });
+  /* eslint-enable no-extra-parens */
 
   // Build result
   let result = {
@@ -352,10 +354,12 @@ api.declare({
     );
   }
 
+  /* eslint-disable no-extra-parens */
   // Load tasks
   let tasks = (await Promise.all(dependents.entries.map(dependent => {
     return this.Task.load({taskId: dependent.dependentTaskId}, true);
   }))).filter(task => !!task);
+  /* eslint-enable no-extra-parens */
 
   // Build result
   let result = {
