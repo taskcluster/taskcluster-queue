@@ -130,7 +130,7 @@ let load = loader({
     requires: [
       'cfg', 'monitor', 'process',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
-      's3Controller'
+      's3Controller',
     ],
     setup: async (ctx) => {
       let Artifact = data.Artifact.setup({
@@ -142,7 +142,7 @@ let load = loader({
           publicBucket:   ctx.publicArtifactBucket,
           privateBucket:  ctx.privateArtifactBucket,
           monitor:        ctx.monitor.prefix('data.Artifact'),
-          s3Controller:   ctx.s3Controller
+          s3Controller:   ctx.s3Controller,
         },
         monitor:          ctx.monitor.prefix('table.artifacts'),
       });
@@ -378,9 +378,9 @@ let load = loader({
       if (cfg.app.blobArtifactRegion !== 'us-east-1') {
         let x = (y) => {
           y.CreateBucketConfiguration = {
-            LocationConstraint: cfg.app.blobArtifactRegion
+            LocationConstraint: cfg.app.blobArtifactRegion,
           };
-        }
+        };
         x(publicConfig);
         x(privateConfig);
       }
@@ -399,13 +399,13 @@ let load = loader({
               Prefix: '',
               Status: 'Enabled',
               AbortIncompleteMultipartUpload: {
-                DaysAfterInitiation: 2
-              }
-            }]
+                DaysAfterInitiation: 2,
+              },
+            }],
           },
         }).promise();
       }
-    }
+    },
   },
 
   api: {
