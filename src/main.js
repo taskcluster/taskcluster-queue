@@ -24,6 +24,8 @@ let monitor             = require('taskcluster-lib-monitor');
 let validator           = require('taskcluster-lib-validate');
 let docs                = require('taskcluster-lib-docs');
 let App                 = require('taskcluster-lib-app');
+let remoteS3            = require('remotely-signed-s3');
+let aws                 = require('aws-sdk');
 
 // Create component loader
 let load = loader({
@@ -128,6 +130,7 @@ let load = loader({
     requires: [
       'cfg', 'monitor', 'process',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
+      's3Controller',
     ],
     setup: async (ctx) => {
       let Artifact = data.Artifact.setup({
@@ -139,6 +142,7 @@ let load = loader({
           publicBucket:   ctx.publicArtifactBucket,
           privateBucket:  ctx.privateArtifactBucket,
           monitor:        ctx.monitor.prefix('data.Artifact'),
+          s3Controller:   ctx.s3Controller,
         },
         monitor:          ctx.monitor.prefix('table.artifacts'),
       });
@@ -308,13 +312,79 @@ let load = loader({
     },
   },
 
+  s3Controller: {
+    requires: ['cfg'],
+    setup: async ({cfg}) => {
+      return new remoteS3.Controller({
+        region: cfg.app.blobArtifactRegion,
+        accessKeyId: cfg.aws.accessKeyId,
+        secretAccessKey: cfg.aws.secretAccessKey,
+      });
+    },
+  },
+
+  // This is a dependency to ease the creation of buckets for, e.g. testing
+  createBuckets: {
+    requires: ['cfg'],
+    setup: async ({cfg}) => {
+      let s3 = new aws.S3({
+        region: cfg.app.blobArtifactRegion,
+        accessKeyId: cfg.aws.accessKeyId,
+        secretAccessKey: cfg.aws.secretAccessKey,
+      });
+
+      // First, we'll create a public bucket
+      let publicConfig = {
+        Bucket: cfg.app.publicBlobArtifactBucket,
+        ACL: 'public-read',
+      };
+      
+      // Next, the private one
+      let privateConfig = {
+        Bucket: cfg.app.privateBlobArtifactBucket,
+        ACL: 'private',
+      };
+
+      if (cfg.app.blobArtifactRegion !== 'us-east-1') {
+        let x = (y) => {
+          y.CreateBucketConfiguration = {
+            LocationConstraint: cfg.app.blobArtifactRegion,
+          };
+        };
+        x(publicConfig);
+        x(privateConfig);
+      }
+
+      await Promise.all([
+        s3.createBucket(publicConfig).promise(),
+        s3.createBucket(privateConfig).promise(),
+      ]);
+
+      // Now for both, we want to set up the lifecycle rules
+      for (let bucket of [cfg.app.privateBlobArtifactBucket, cfg.app.publicBlobArtifactBucket]) {
+        await s3.putBucketLifecycle({
+          Bucket: bucket,
+          LifecycleConfiguration: {
+            Rules: [{
+              Prefix: '',
+              Status: 'Enabled',
+              AbortIncompleteMultipartUpload: {
+                DaysAfterInitiation: 2,
+              },
+            }],
+          },
+        }).promise();
+      }
+    },
+  },
+
   api: {
     requires: [
       'cfg', 'publisher', 'validator', 'Task', 'Artifact',
       'TaskGroup', 'TaskGroupMember', 'TaskGroupActiveSet', 'queueService',
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
-      'workClaimer', 'Provisioner', 'workerInfo',
+      'workClaimer', 's3Controller', 'Provisioner', 'workerInfo',
     ],
     setup: (ctx) => v1.setup({
       context: {
@@ -340,6 +410,10 @@ let load = loader({
         artifactRegion:   ctx.cfg.aws.region,
         monitor:          ctx.monitor.prefix('api-context'),
         workClaimer:      ctx.workClaimer,
+        s3Controller:     ctx.s3Controller,
+        blobRegion:       ctx.cfg.app.blobArtifactRegion, 
+        publicBlobBucket: ctx.cfg.app.publicBlobArtifactBucket,
+        privateBlobBucket:ctx.cfg.app.privateBlobArtifactBucket,
         workerInfo:       ctx.workerInfo,
       },
       validator:        ctx.validator,
