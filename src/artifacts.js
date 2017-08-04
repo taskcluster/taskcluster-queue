@@ -20,7 +20,6 @@ function encodeBlobKey(taskId, runId, name) {
   return `${taskId}/${runId}/${name}`;
 }
 
-
 /** Post artifact */
 api.declare({
   method:     'post',
@@ -408,7 +407,6 @@ api.declare({
     });
   }
 
-
   // This event is *invalid* for s3/azure storage types so we'll stop sending it.
   // It's only valid for error, reference and blob, but we should only send it
   // here for error and reference storageTypes
@@ -719,7 +717,7 @@ api.declare({
         etags: input.etags,
         uploadId: artifact.details.uploadId,
         tags: {taskId, runId, name},
-      })
+      });
     } else {
       etag = input.etag;
     }

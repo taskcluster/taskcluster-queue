@@ -51,7 +51,7 @@ suite('Artifacts', function() {
     }
     assume(res.statusCode).equals(303);
     return res;
-  }
+  };
 
   let verifyDownload = async (url, hash, size) => {
     debug(`verifying ${url} to have ${hash} and ${size} bytes`);
@@ -113,7 +113,7 @@ suite('Artifacts', function() {
 
       request.end('');
     });
-  }
+  };
 
   // Get something we expect to return 404, this is just easier than having
   // try/catch blocks all over the code
@@ -223,7 +223,8 @@ suite('Artifacts', function() {
       debug('Fetching artifact from: %s', artifactUrl);
       let artifact = await getWithoutRedirecting(artifactUrl);
 
-      let expectedUrl = `https://test-bucket-for-any-garbage.s3-us-west-2.amazonaws.com/${taskId}/0/public/singlepart.dat`;
+      let expectedUrl = 
+        `https://test-bucket-for-any-garbage.s3-us-west-2.amazonaws.com/${taskId}/0/public/singlepart.dat`;
       assume(artifact.headers).has.property('location', expectedUrl);
 
       await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
@@ -265,7 +266,7 @@ suite('Artifacts', function() {
       assume(response.requests).to.have.lengthOf(3);
       // Probably overkill because the schema should catch this but not the
       // worst idea
-      for (let i of [0,1,2]) {
+      for (let i of [0, 1, 2]) {
         assume(response.requests[0]).to.have.property('url');
         assume(response.requests[1]).to.have.property('method');
         assume(response.requests[2]).to.have.property('headers');
@@ -319,7 +320,7 @@ suite('Artifacts', function() {
         contentSha256: uploadInfo.sha256,
         parts: uploadInfo.parts.map(x => {
           return {sha256: x.sha256, size: x.size};
-        })
+        }),
       });
 
       debug('### Calling createArtifact second time');
@@ -331,7 +332,7 @@ suite('Artifacts', function() {
         contentSha256: uploadInfo.sha256,
         parts: uploadInfo.parts.map(x => {
           return {sha256: x.sha256, size: x.size};
-        })
+        }),
       });
       
       let firstUploadId = qs.parse(urllib.parse(firstResponse.requests[0].url).query).uploadId;
@@ -339,7 +340,7 @@ suite('Artifacts', function() {
       assume(firstUploadId).equals(secondUploadId);
 
       // Now let's ensure that they are equivalent but with newer signatures
-      for (let r in [0,1,2]) {
+      for (let r of [0, 1, 2]) {
         let a = firstResponse.requests[r];
         let b = secondResponse.requests[r];
         assume(a.url).equals(b.url);
@@ -350,14 +351,14 @@ suite('Artifacts', function() {
         // We should have new times here
         assume(a.headers['X-Amz-Date']).does.not.equal(b.headers['X-Amz-Date']);
         let fixdate = (d) => {
-          let yr = d.slice(0,4);
-          let mt = d.slice(4,6);
-          let dy = d.slice(6,8);
-          let hr = d.slice(9,11);
-          let mn = d.slice(11,13);
-          let sc = d.slice(13,15);
+          let yr = d.slice(0, 4);
+          let mt = d.slice(4, 6);
+          let dy = d.slice(6, 8);
+          let hr = d.slice(9, 11);
+          let mn = d.slice(11, 13);
+          let sc = d.slice(13, 15);
           return new Date(`${yr}-${mt}-${dy}T${hr}:${mn}:${sc}`);
-        }
+        };
         let aDate = fixdate(a.headers['X-Amz-Date']);
         let bDate = fixdate(b.headers['X-Amz-Date']);
         assume(aDate.getTime()).lessThan(bDate.getTime());
