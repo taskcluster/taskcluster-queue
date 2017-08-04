@@ -123,6 +123,7 @@ var api = new API({
     'TaskGroupActiveSet', // data.TaskGroupMember instance (but in a different table)
     'TaskDependency',     // data.TaskDependency instance
     'Provisioner',        // data.Provisioner instance
+    'WorkerType',         // data.WorkerType instance
     'publicBucket',       // bucket instance for public artifacts
     'privateBucket',      // bucket instance for private artifacts
     'blobStore',          // BlobStore for azure artifacts
@@ -1369,6 +1370,7 @@ api.declare({
       provisionerId, workerType, workerGroup, workerId, count, aborted,
     ),
     this.workerInfo.provisionerSeen(provisionerId),
+    this.WorkerType.create({provisionerId, workerType}, true),
   ]);
 
   return res.reply({
@@ -2045,4 +2047,51 @@ api.declare({
     workerType:     workerType,
     pendingTasks:   count,
   });
+});
+
+/** List worker-types for a given provisioner */
+api.declare({
+  method:     'get',
+  route:      '/provisioners/:provisionerId/worker-types',
+  query: {
+    continuationToken: /./,
+    limit: /^[0-9]+$/,
+  },
+  name:       'listWorkerTypes',
+  stability:  API.stability.experimental,
+  output:     'list-workertypes-response.json#',
+  title:      'Get a list of all active worker-types',
+  description: [
+    'Get all active worker-types.',
+    '',
+    'The response is paged. If this end-point returns a `continuationToken`, you',
+    'should call the end-point again with the `continuationToken` as a query-string',
+    'option. By default this end-point will list up to 1000 worker-types in a single',
+    'page. You may limit this with the query-string parameter `limit`.',
+  ].join('\n'),
+}, async function(req, res) {
+  let continuation = req.query.continuationToken || null;
+  let limit = parseInt(req.query.limit || 1000, 10);
+
+  const provisionerId = req.params.provisionerId;
+  let workerTypes = await this.WorkerType.scan({provisionerId}, {continuation, limit});
+
+  let result = {
+    workerTypes: workerTypes.entries.map(workerType => workerType.workerType),
+  };
+
+  // If no taskGroup was found
+  if (!result.workerTypes.length) {
+    return res.reportError('ResourceNotFound',
+      'No worker-types with provisionerId: {{provisionerId}}', {
+        provisionerId,
+      },
+    );
+  }
+
+  if (workerTypes.continuation) {
+    result.continuationToken = workerTypes.continuation;
+  }
+
+  return res.reply(result);
 });
