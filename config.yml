@@ -22,6 +22,7 @@ defaults:
     taskRequirementTableName:     TaskRequirement
     taskDependencyTableName:      TaskDependency
     workerTypeTableName:          WorkerType
+    provisionerTableName:         Provisioner
 
     # Time delay before expiring artifacts, in readable format, see:
     # taskcluster.fromNow, notice this should be negative!
@@ -141,6 +142,7 @@ production:
     taskRequirementTableName:     'QueueTaskRequirement'
     taskDependencyTableName:      'QueueTaskDependency'
     workerTypeTableName:          'QueueWorkerType'
+    provisionerTableName:         'QueueProvisioner'
     cloudMirrorRegions:
       - us-east-1
       - us-east-2
@@ -213,6 +215,7 @@ load-test:
     taskRequirementTableName:     'LoadTestTaskRequirement2'
     taskDependencyTableName:      'LoadTestTaskDependency2'
     workerTypeTableName:          'LoadTestWorkerType'
+    provisionerTableName:         'LoadTestProvisioner'
     claimQueue:                   'load-test-claim-queue'
     deadlineQueue:                'load-test-deadline-queue'
     publicArtifactBucketProxies:
