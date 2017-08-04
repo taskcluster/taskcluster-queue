@@ -656,3 +656,19 @@ Provisioner.prototype.json = function() {
 
 // Export Provisioner
 exports.Provisioner = Provisioner;
+
+/**
+ * Entity for tracking worker-types.
+ */
+let WorkerType = Entity.configure({
+  version:            1,
+  partitionKey:       Entity.keys.StringKey('workerType'),
+  rowKey:             Entity.keys.ConstantKey('provisionerId'),
+  properties: {
+    provisionerId:    Entity.types.String,
+    workerType:       Entity.types.String,
+  },
+});
+
+// Export WorkerType
+exports.WorkerType = WorkerType;
