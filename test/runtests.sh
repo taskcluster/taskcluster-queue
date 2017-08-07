@@ -27,5 +27,4 @@ mocha                             \
   .test/expirequeues_test.js      \
   .test/dependency_test.js        \
   .test/workerinfo_test.js        \
-  .test/workertype_test.js        \
   ;

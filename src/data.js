@@ -637,13 +637,15 @@ let Provisioner = Entity.configure({
  */
 Provisioner.expire = async function(now) {
   assert(now instanceof Date, 'now must be given as option');
-  var count = 0;
+  let count = 0;
+
   await Entity.scan.call(this, {
     expires:          Entity.op.lessThan(now),
   }, {
     limit:            250, // max number of concurrent delete operations
     handler:          entry => { count++; return entry.remove(true); },
   });
+
   return count;
 };
 
@@ -662,13 +664,34 @@ exports.Provisioner = Provisioner;
  */
 let WorkerType = Entity.configure({
   version:            1,
-  partitionKey:       Entity.keys.StringKey('workerType'),
-  rowKey:             Entity.keys.ConstantKey('provisionerId'),
+  partitionKey:       Entity.keys.StringKey('provisionerId'),
+  rowKey:             Entity.keys.StringKey('workerType'),
   properties: {
     provisionerId:    Entity.types.String,
     workerType:       Entity.types.String,
+    // the time at which this worker-type should no longer be displayed
+    expires:          Entity.types.Date,
   },
 });
+
+/**
+ * Expire WorkerType entries.
+ *
+ * Returns a promise that all expired WorkerType entries have been deleted
+ */
+WorkerType.expire = async function(now) {
+  assert(now instanceof Date, 'now must be given as option');
+  let count = 0;
+
+  await Entity.scan.call(this, {
+    expires:          Entity.op.lessThan(now),
+  }, {
+    limit:            250, // max number of concurrent delete operations
+    handler:          entry => { count++; return entry.remove(true); },
+  });
+
+  return count;
+};
 
 // Export WorkerType
 exports.WorkerType = WorkerType;
