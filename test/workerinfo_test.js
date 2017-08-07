@@ -64,7 +64,7 @@ suite('provisioners and worker-types', () => {
 
   test('queue.listWorkerTypes returns workerTypes', async () => {
     const WorkerType = await helper.load('WorkerType', helper.loadOptions);
-    const workerType = slugid.v4();
+    const workerType = 'gecko-b-2-linux';
 
     await WorkerType.create({provisionerId: 'prov-A', workerType, expires: new Date('3017-07-29')});
 
@@ -97,11 +97,11 @@ suite('provisioners and worker-types', () => {
 
   test('workerTypeSeen creates and updates a worker-type', async () => {
     let workerInfo = await helper.load('workerInfo', helper.loadOptions);
-    let workerTypeA = slugid.v4();
+    let workerType = 'gecko-b-2-linux';
 
     await Promise.all([
-      workerInfo.workerTypeSeen('prov2', workerTypeA),
-      workerInfo.workerTypeSeen('prov2', workerTypeA),
+      workerInfo.workerTypeSeen('prov2', workerType),
+      workerInfo.workerTypeSeen('prov2', workerType),
     ]);
 
     const result = await helper.queue.listWorkerTypes('prov2');
