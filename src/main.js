@@ -260,7 +260,7 @@ let load = loader({
         table:            cfg.app.workerTypeTableName,
         account:          cfg.azureTableAccount,
         credentials:      cfg.taskcluster.credentials,
-        monitor:          monitor.prefix('table.taskdependencies'),
+        monitor:          monitor.prefix('table.workerType'),
       });
       await WorkerType.ensureTable();
       return WorkerType;
@@ -296,9 +296,9 @@ let load = loader({
 
   // Create workerInfo
   workerInfo: {
-    requires: ['Provisioner'],
-    setup: ({Provisioner}) => new WorkerInfo({
-      Provisioner,
+    requires: ['Provisioner', 'WorkerType'],
+    setup: ({Provisioner, WorkerType}) => new WorkerInfo({
+      Provisioner, WorkerType,
     }),
   },
 
@@ -585,11 +585,13 @@ let load = loader({
   'expire-worker-info': {
     requires: ['cfg', 'workerInfo', 'monitor'],
     setup: async ({cfg, workerInfo, monitor}) => {
-      var now = taskcluster.fromNow(cfg.app.workerInfoExpirationDelay);
+      const now = taskcluster.fromNow(cfg.app.workerInfoExpirationDelay);
       assert(!_.isNaN(now), 'Can\'t have NaN as now');
 
-      // Expire task-dependency using delay
-      let count = await workerInfo.expire(now);
+      // Expire worker-info using delay
+      debug('Expiring worker-info at: %s, from before %s', new Date(), now);
+      const count = await workerInfo.expire(now);
+      debug('Expired %s worker-info', count);
 
       monitor.count('expire-worker-info.done');
       monitor.stopResourceMonitoring();

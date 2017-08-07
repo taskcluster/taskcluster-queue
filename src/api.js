@@ -1370,7 +1370,7 @@ api.declare({
       provisionerId, workerType, workerGroup, workerId, count, aborted,
     ),
     this.workerInfo.provisionerSeen(provisionerId),
-    this.WorkerType.create({provisionerId, workerType}, true),
+    this.workerInfo.workerTypeSeen(provisionerId, workerType),
   ]);
 
   return res.reply({
@@ -2062,7 +2062,7 @@ api.declare({
   output:     'list-workertypes-response.json#',
   title:      'Get a list of all active worker-types',
   description: [
-    'Get all active worker-types.',
+    'Get all active worker-types for the given provisioner.',
     '',
     'The response is paged. If this end-point returns a `continuationToken`, you',
     'should call the end-point again with the `continuationToken` as a query-string',
@@ -2079,15 +2079,6 @@ api.declare({
   let result = {
     workerTypes: workerTypes.entries.map(workerType => workerType.workerType),
   };
-
-  // If no taskGroup was found
-  if (!result.workerTypes.length) {
-    return res.reportError('ResourceNotFound',
-      'No worker-types with provisionerId: {{provisionerId}}', {
-        provisionerId,
-      },
-    );
-  }
 
   if (workerTypes.continuation) {
     result.continuationToken = workerTypes.continuation;
