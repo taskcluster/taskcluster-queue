@@ -1369,8 +1369,7 @@ api.declare({
     this.workClaimer.claim(
       provisionerId, workerType, workerGroup, workerId, count, aborted,
     ),
-    this.workerInfo.provisionerSeen(provisionerId),
-    this.workerInfo.workerTypeSeen(provisionerId, workerType),
+    this.workerInfo.seen(provisionerId, workerType),
   ]);
 
   return res.reply({
@@ -2001,11 +2000,12 @@ api.declare({
     'page. You may limit this with the query-string parameter `limit`.',
   ].join('\n'),
 }, async function(req, res) {
-  let continuation = req.query.continuationToken || null;
-  let limit = parseInt(req.query.limit || 1000, 10);
+  const continuation = req.query.continuationToken || null;
+  const isLimitValid = req.query.limit && req.query.limit < 1000;
+  const limit = parseInt(isLimitValid ? req.query.limit : 1000, 10);
 
-  let provisioners = await this.Provisioner.scan({}, {continuation, limit});
-  let result = {
+  const provisioners = await this.Provisioner.scan({}, {continuation, limit});
+  const result = {
     provisioners: provisioners.entries.map(provisioner => provisioner.json()),
   };
   if (provisioners.continuation) {
@@ -2070,14 +2070,14 @@ api.declare({
     'page. You may limit this with the query-string parameter `limit`.',
   ].join('\n'),
 }, async function(req, res) {
-  let continuation = req.query.continuationToken || null;
-  let limit = parseInt(req.query.limit || 1000, 10);
-
+  const continuation = req.query.continuationToken || null;
   const provisionerId = req.params.provisionerId;
-  let workerTypes = await this.WorkerType.scan({provisionerId}, {continuation, limit});
+  const isLimitValid = req.query.limit && req.query.limit < 1000;
+  const limit = parseInt(isLimitValid ? req.query.limit : 1000, 10);
 
-  let result = {
-    workerTypes: workerTypes.entries.map(workerType => workerType.workerType),
+  const workerTypes = await this.WorkerType.scan({provisionerId}, {continuation, limit});
+  const result = {
+    workerTypes: workerTypes.entries.map(workerType => ({workerType: workerType.workerType})),
   };
 
   if (workerTypes.continuation) {

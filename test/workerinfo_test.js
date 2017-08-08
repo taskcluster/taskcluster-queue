@@ -31,14 +31,14 @@ suite('provisioners and worker-types', () => {
     assert(result.provisioners[0].provisionerId === 'prov1', 'expected prov1');
   });
 
-  test('provisionerSeen creates and updates a provisioner', async () => {
+  test('provisioner seen creates and updates a provisioner', async () => {
     const workerInfo = await helper.load('workerInfo', helper.loadOptions);
 
     await Promise.all([
-      workerInfo.provisionerSeen('prov2'),
-      workerInfo.provisionerSeen('prov2'),
+      workerInfo.seen('prov2'),
+      workerInfo.seen('prov2'),
     ]);
-    await workerInfo.provisionerSeen('prov2');
+    await workerInfo.seen('prov2');
 
     const result = await helper.queue.listProvisioners();
     assert(result.provisioners.length === 1, 'expected a provisioner');
@@ -70,7 +70,7 @@ suite('provisioners and worker-types', () => {
     const result = await helper.queue.listWorkerTypes('prov-A');
 
     assert(result.workerTypes.length === 1, 'expected workerTypes');
-    assert(result.workerTypes[0] === workerType, `expected ${workerType}`);
+    assert(result.workerTypes[0].workerType === workerType, `expected ${workerType}`);
   });
 
   test('list worker-types (limit and continuationToken)', async () => {
@@ -94,13 +94,13 @@ suite('provisioners and worker-types', () => {
     assert(result.workerTypes.length === 1);
   });
 
-  test('workerTypeSeen creates and updates a worker-type', async () => {
+  test('worker-type seen creates and updates a worker-type', async () => {
     const workerInfo = await helper.load('workerInfo', helper.loadOptions);
     const workerType = 'gecko-b-2-linux';
 
     await Promise.all([
-      workerInfo.workerTypeSeen('prov2', workerType),
-      workerInfo.workerTypeSeen('prov2', workerType),
+      workerInfo.seen('prov2', workerType),
+      workerInfo.seen('prov2', workerType),
     ]);
 
     const result = await helper.queue.listWorkerTypes('prov2');
