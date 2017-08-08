@@ -1448,7 +1448,7 @@ api.declare({
     this.workClaimer.claimTask(
       taskId, runId, workerGroup, workerId, task,
     ),
-    this.workerInfo.provisionerSeen(task.provisionerId),
+    this.workerInfo.seen(task.provisionerId),
   ]);
 
   // If the run doesn't exist return ResourceNotFound
@@ -2001,8 +2001,7 @@ api.declare({
   ].join('\n'),
 }, async function(req, res) {
   const continuation = req.query.continuationToken || null;
-  const isLimitValid = req.query.limit && req.query.limit < 1000;
-  const limit = parseInt(isLimitValid ? req.query.limit : 1000, 10);
+  const limit = Math.min(1000, parseInt(req.query.limit || 1000, 10));
 
   const provisioners = await this.Provisioner.scan({}, {continuation, limit});
   const result = {
@@ -2072,8 +2071,7 @@ api.declare({
 }, async function(req, res) {
   const continuation = req.query.continuationToken || null;
   const provisionerId = req.params.provisionerId;
-  const isLimitValid = req.query.limit && req.query.limit < 1000;
-  const limit = parseInt(isLimitValid ? req.query.limit : 1000, 10);
+  const limit = Math.min(1000, parseInt(req.query.limit || 1000, 10));
 
   const workerTypes = await this.WorkerType.scan({provisionerId}, {continuation, limit});
   const result = {
