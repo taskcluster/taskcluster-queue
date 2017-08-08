@@ -10,10 +10,16 @@ properties:
     description: |
       List of worker-types in this provisioner.
     items:
-      type:         string
-      title:        "WorkerType name"
-      description: |
-        WorkerType name.
+      type:         object
+      properties:
+        workerType:
+          type:           string
+          title:          "WorkerType name"
+          description: |
+            WorkerType name.
+          minLength:    {$const: identifier-min-length}
+          maxLength:    {$const: identifier-max-length}
+          pattern:      {$const: identifier-pattern}
       additionalProperties: false
   continuationToken:
     type:             string
