@@ -8,6 +8,7 @@ class WorkerInfo {
     assert(options.Provisioner);
     this.Provisioner = options.Provisioner;
     this.WorkerType = options.WorkerType;
+    this.Worker = options.Worker;
 
     // update `expires` values in Azure at this frequency; larger values give less accurate
     // expires times, but reduce Azure traffic.
@@ -34,32 +35,39 @@ class WorkerInfo {
     }
   }
 
-  async seen(provisionerId, workerType) {
+  async seen(provisionerId, workerType, workerGroup, workerId) {
     const expired = entity => Date.now() - new Date(entity.expires) > 24 * 60 * 60 * 1000;
     const expires = taskcluster.fromNow('5 days');  // temporary hard coded expiration
+
+    const updateExpiration = (entry) => {
+      entry.modify(entity => {
+        if (expired(entity)) {
+          entity.expires = expires;
+        }
+      });
+    };
+
+    const createEntry = async (entity, entry) => {
+      try {
+        await entity.create(entry);
+      } catch (err) {
+        // EntityAlreadyExists means we raced with another create, so just let it win
+        if (!err || err.code !== 'EntityAlreadyExists') {
+          throw err;
+        }
+      }
+    };
 
     const provisionerSeen = async (provisionerId) => {
       await this.valueSeen(provisionerId, async () => {
         // perform an Azure upsert, trying the update first as it is more common
         const provisioner = await this.Provisioner.load({provisionerId}, true);
+
         if (provisioner) {
-          await provisioner.modify(entity => {
-            if (expired(entity)) {
-              entity.expires = expires;
-            }
-          });
-
-          return;
+          return updateExpiration(provisioner);
         }
 
-        try {
-          await this.Provisioner.create({provisionerId, expires});
-        } catch (err) {
-          // EntityAlreadyExists means we raced with another create, so just let it win
-          if (!err || err.code !== 'EntityAlreadyExists') {
-            throw err;
-          }
-        }
+        createEntry(this.Provisioner, {provisionerId, expires});
       });
     };
 
@@ -67,24 +75,25 @@ class WorkerInfo {
       await this.valueSeen(`${provisionerId}/${workerType}`, async () => {
         // perform an Azure upsert, trying the update first as it is more common
         const wType = await this.WorkerType.load({provisionerId, workerType}, true);
+
         if (wType) {
-          await wType.modify(entity => {
-            if (expired(entity)) {
-              entity.expires = expires;
-            }
-          });
-
-          return;
+          return updateExpiration(wType);
         }
 
-        try {
-          await this.WorkerType.create({provisionerId, workerType, expires});
-        } catch (err) {
-          // EntityAlreadyExists means we raced with another create, so just let it win
-          if (!err || err.code !== 'EntityAlreadyExists') {
-            throw err;
-          }
+        createEntry(this.WorkerType, {provisionerId, workerType, expires});
+      });
+    };
+
+    const workerSeen = async (provisionerId, workerType, workerGroup, workerId) => {
+      await this.valueSeen(`${workerGroup}/${workerId}`, async () => {
+        // perform an Azure upsert, trying the update first as it is more common
+        const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
+
+        if (worker) {
+          return updateExpiration(worker);
         }
+
+        createEntry(this.Worker, {provisionerId, workerType, workerGroup, workerId, expires});
       });
     };
 
@@ -94,6 +103,10 @@ class WorkerInfo {
 
     if (provisionerId && workerType) {
       workerTypeSeen(provisionerId, workerType);
+    }
+
+    if (provisionerId && workerType && workerGroup && workerId) {
+      workerSeen(provisionerId, workerType, workerGroup, workerId);
     }
   }
 
@@ -107,6 +120,10 @@ class WorkerInfo {
     debug('Expiring worker-types at: %s, from before %s', new Date(), now);
     count = await this.WorkerType.expire(now);
     debug('Expired %s worker-types', count);
+
+    debug('Expiring workers at: %s, from before %s', new Date(), now);
+    count = await this.Worker.expire(now);
+    debug('Expired %s workers', count);
   }
 }
 
