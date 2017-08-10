@@ -719,7 +719,7 @@ api.declare({
         tags: {taskId, runId, name},
       });
     } else {
-      etag = input.etag;
+      etag = input.etags[0];
     }
     // TODO: Do a quick HEAD of the resource (maybe) to double check that the
     // expected x-amz-meta-content-sha256 value matches and that the etag we
