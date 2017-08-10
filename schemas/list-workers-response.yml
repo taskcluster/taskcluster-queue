@@ -14,14 +14,14 @@ properties:
       properties:
           workerGroup:
                     description: |
-                      Identifier for the worker-group within which this run started.
+                      Identifier for the worker group containing this worker.
                     type:         string
                     minLength:    {$const: identifier-min-length}
                     maxLength:    {$const: identifier-max-length}
                     pattern:      {$const: identifier-pattern}
           workerId:
                     description: |
-                      Identifier for the worker executing this run.
+                      Identifier for this worker (unique within this worker group).
                     type:         string
                     minLength:    {$const: identifier-min-length}
                     maxLength:    {$const: identifier-max-length}
