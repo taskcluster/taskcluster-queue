@@ -238,8 +238,8 @@ api.declare({
       
       details.provider = 's3';
       details.region = this.blobRegion;
-      if (input.encoding) {
-        details.encoding = input.encoding;
+      if (input.contentEncoding) {
+        details.contentEncoding = input.contentEncoding;
       }
 
       if (isPublic) {
@@ -259,7 +259,7 @@ api.declare({
           transferSize: details.transferLength ? details.transferLength : details.contentLength,
           metadata: {taskId, runId, name},
           contentType: contentType,
-          contentEncoding: details.encoding || 'identity',
+          contentEncoding: details.contentEncoding || 'identity',
         });
         debug(`Multipart Artifact init ${details.bucket}/${details.key} ${uploadId}`);
         assert(uploadId);
@@ -445,7 +445,7 @@ api.declare({
           metadata: {taskId, runId, name},
           tags: {taskId, runId, name},
           contentType: artifact.contentType,
-          contentEncoding: artifact.details.encoding || 'identity',
+          contentEncoding: artifact.details.contentEncoding || 'identity',
         });
         requests = [singlePartRequest];
       }
