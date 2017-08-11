@@ -7,19 +7,6 @@ let urllib  = require('url');
 let crypto  = require('crypto');
 let api     = require('./api');
 
-/**
- * Encode a storage key for storing in the blob storage type backends We do
- * this to get better partitioning in S3 which gives us better performance.
- *
- * Basically `${md5hash(taskId + runId + name).slice(0,7)}/${taskId}/${runId}/${name}`
- */
-function encodeBlobKey(taskId, runId, name) {
-  assert(typeof taskId === 'string');
-  assert(typeof runId === 'number');
-  assert(typeof name === 'string');
-  return `${taskId}/${runId}/${name}`;
-}
-
 /** Post artifact */
 api.declare({
   method:     'post',
@@ -248,7 +235,7 @@ api.declare({
         details.bucket = this.privateBlobBucket;
       }
 
-      details.key = encodeBlobKey(taskId, runId, name);
+      details.key = `${taskId}/${runId}/${name}`;
       if (input.parts) {
         uploadId = await this.s3Controller.initiateMultipartUpload({
           bucket: details.bucket,
