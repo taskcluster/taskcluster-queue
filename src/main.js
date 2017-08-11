@@ -323,61 +323,6 @@ let load = loader({
     },
   },
 
-  // This is a dependency to ease the creation of buckets for, e.g. testing
-  createBuckets: {
-    requires: ['cfg'],
-    setup: async ({cfg}) => {
-      let s3 = new aws.S3({
-        region: cfg.app.blobArtifactRegion,
-        accessKeyId: cfg.aws.accessKeyId,
-        secretAccessKey: cfg.aws.secretAccessKey,
-      });
-
-      // First, we'll create a public bucket
-      let publicConfig = {
-        Bucket: cfg.app.publicBlobArtifactBucket,
-        ACL: 'public-read',
-      };
-      
-      // Next, the private one
-      let privateConfig = {
-        Bucket: cfg.app.privateBlobArtifactBucket,
-        ACL: 'private',
-      };
-
-      if (cfg.app.blobArtifactRegion !== 'us-east-1') {
-        let x = (y) => {
-          y.CreateBucketConfiguration = {
-            LocationConstraint: cfg.app.blobArtifactRegion,
-          };
-        };
-        x(publicConfig);
-        x(privateConfig);
-      }
-
-      await Promise.all([
-        s3.createBucket(publicConfig).promise(),
-        s3.createBucket(privateConfig).promise(),
-      ]);
-
-      // Now for both, we want to set up the lifecycle rules
-      for (let bucket of [cfg.app.privateBlobArtifactBucket, cfg.app.publicBlobArtifactBucket]) {
-        await s3.putBucketLifecycle({
-          Bucket: bucket,
-          LifecycleConfiguration: {
-            Rules: [{
-              Prefix: '',
-              Status: 'Enabled',
-              AbortIncompleteMultipartUpload: {
-                DaysAfterInitiation: 2,
-              },
-            }],
-          },
-        }).promise();
-      }
-    },
-  },
-
   api: {
     requires: [
       'cfg', 'publisher', 'validator', 'Task', 'Artifact',
