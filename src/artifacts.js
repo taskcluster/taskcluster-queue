@@ -218,7 +218,9 @@ api.declare({
       // instead of the details.parts list
       if (input.parts) {
         let partsHash = crypto.createHash('sha256');
-        partsHash.update(JSON.stringify(input.parts));
+        for (let part of input.parts) {
+          partsHash.update(`${part.sha256}_${part.size});
+        }
         partsHash = partsHash.digest('hex');
         details.partsHash = partsHash;
       }
