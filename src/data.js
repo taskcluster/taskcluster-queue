@@ -356,16 +356,41 @@ let Artifact = Entity.configure({
     name:           Entity.types.String,
     storageType:    Entity.types.String,
     contentType:    Entity.types.String,
+    /**
+     * Location details storageType,
+     *
+     * storageType: s3
+     *   bucket:        S3 bucket that contains the object
+     *   prefix:        Prefix (path) for the object within the bucket
+     *
+     * storageType: azure
+     *   container:     Azure container that holds the blob
+     *   path:          Path to blob within container
+     *
+     * storageType: reference
+     *   url:           URL that artifact should redirect to
+     *
+     * storageType: error
+     *   reason:        Formalized reason for error artifact, see JSON schema.
+     *   message:       Human readable error message to return
+     * storageType: blob
+     *   contentType
+     *   contentEncoding
+     *   contentSha256: SHA256 hash of the un-encoded artifact
+     *   contentLength: Number of bytes of the un-encoded artifact
+     *   transferSha256: SHA256 hash of the content-encoding encoded artifact
+     *   transferLength: Number of bytes of the content-encoding encoded artifact
+     *   partsHash: Rather than storing the potentially large list of sha256/size
+     *              pairings for each part, we just need to store enough information
+     *              to determine if the operation would result in an idempotency
+     *              error
+     */
     details:        Entity.types.JSON,
     expires:        Entity.types.Date,
     /** 
      * Present is a number field which represents an artifact being present and
      * the upload being completed.  The handling logic for the artifact's
      * storage type will fully define what that means for a given storage type.
-     *
-     * Because there are no boolean fields in Azure-Entities which allow for
-     * fast scanning based on properties (we could use JSON), we're using a
-     * number in place of a boolean.  0 means false, 1 means present
      */
     present:        Entity.types.Boolean,
   },
