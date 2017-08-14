@@ -1,6 +1,20 @@
-let taskcluster = require('taskcluster-client');
-let assert      = require('assert');
-let debug       = require('debug')('workerinfo');
+const taskcluster = require('taskcluster-client');
+const assert      = require('assert');
+const debug       = require('debug')('workerinfo');
+
+const ignoreEntityAlreadyExists = (err) => {
+  if (!err || err.code !== 'EntityAlreadyExists') {
+    throw err;
+  }
+};
+
+const expired = entity => new Date(entity.expires) - Date.now() < 24 * 60 * 60 * 1000;
+
+const updateExpiration = (entity, expires) => {
+  if (expired(entity)) {
+    entity.expires = expires;
+  }
+};
 
 class WorkerInfo {
   constructor(options) {
@@ -31,83 +45,67 @@ class WorkerInfo {
     let nextUpdate = this.nextUpdateAt[key];
     if (!nextUpdate || nextUpdate < now) {
       this.nextUpdateAt[key] = taskcluster.fromNow(this.updateFrequency);
+
       await updateExpires();
     }
   }
 
   async seen(provisionerId, workerType, workerGroup, workerId) {
-    const expired = entity => Date.now() - new Date(entity.expires) > 24 * 60 * 60 * 1000;
-    const expires = taskcluster.fromNow('5 days');  // temporary hard coded expiration
-
-    const updateExpiration = (entry) => {
-      entry.modify(entity => {
-        if (expired(entity)) {
-          entity.expires = expires;
-        }
-      });
-    };
+    const expires = workerId ? taskcluster.fromNow('1 day') : taskcluster.fromNow('5 days');
 
     const createEntry = async (entity, entry) => {
       try {
         await entity.create(entry);
       } catch (err) {
-        // EntityAlreadyExists means we raced with another create, so just let it win
-        if (!err || err.code !== 'EntityAlreadyExists') {
-          throw err;
-        }
+        ignoreEntityAlreadyExists(err);
       }
     };
 
-    const provisionerSeen = async (provisionerId) => {
-      await this.valueSeen(provisionerId, async () => {
+    const promises = [];
+
+    // provisioner seen
+    if (provisionerId) {
+      promises.push(this.valueSeen(provisionerId, async () => {
         // perform an Azure upsert, trying the update first as it is more common
         const provisioner = await this.Provisioner.load({provisionerId}, true);
 
         if (provisioner) {
-          return updateExpiration(provisioner);
+          return provisioner.modify(entity => updateExpiration(entity, expires));
         }
 
         createEntry(this.Provisioner, {provisionerId, expires});
-      });
-    };
+      }));
+    }
 
-    const workerTypeSeen = async (provisionerId, workerType) => {
-      await this.valueSeen(`${provisionerId}/${workerType}`, async () => {
+    // worker-type seen
+    if (provisionerId && workerType) {
+      promises.push(this.valueSeen(`${provisionerId}/${workerType}`, async () => {
         // perform an Azure upsert, trying the update first as it is more common
         const wType = await this.WorkerType.load({provisionerId, workerType}, true);
 
         if (wType) {
-          return updateExpiration(wType);
+          return wType.modify(entity => updateExpiration(entity, expires));
         }
 
         createEntry(this.WorkerType, {provisionerId, workerType, expires});
-      });
-    };
+      }));
+    }
 
-    const workerSeen = async (provisionerId, workerType, workerGroup, workerId) => {
-      await this.valueSeen(`${workerGroup}/${workerId}`, async () => {
+    // worker  seen
+    if (provisionerId && workerType && workerGroup && workerId) {
+      promises.push(this.valueSeen(`${provisionerId}/${workerType}/${workerGroup}/${workerId}`, async () => {
         // perform an Azure upsert, trying the update first as it is more common
         const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
 
         if (worker) {
-          return updateExpiration(worker);
+          return worker.modify(entity => updateExpiration(entity, expires));
         }
 
         createEntry(this.Worker, {provisionerId, workerType, workerGroup, workerId, expires});
-      });
-    };
-
-    if (provisionerId) {
-      provisionerSeen(provisionerId);
+      }));
     }
 
-    if (provisionerId && workerType) {
-      workerTypeSeen(provisionerId, workerType);
-    }
-
-    if (provisionerId && workerType && workerGroup && workerId) {
-      workerSeen(provisionerId, workerType, workerGroup, workerId);
-    }
+    await Promise.all(promises);
   }
 
   async expire(now) {
