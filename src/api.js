@@ -2112,7 +2112,12 @@ api.declare({
   const workerType = req.params.workerType;
   const limit = Math.min(1000, parseInt(req.query.limit || 1000, 10));
 
-  const workers = await this.Worker.scan({provisionerId, workerType}, {continuation, limit});
+  const workers = await this.Worker.scan({
+    provisionerId,
+    workerType,
+    expires: Entity.op.greaterThan(new Date()),
+  }, {continuation, limit});
+
   const result = {
     workers: workers.entries.map(worker => {
       return {
