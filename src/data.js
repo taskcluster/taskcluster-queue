@@ -627,6 +627,8 @@ let Provisioner = Entity.configure({
     provisionerId:    Entity.types.String,
     // the time at which this provisioner should no longer be displayed
     expires:          Entity.types.Date,
+    description:      Entity.types.String,
+    stability:        Entity.types.String,
   },
 });
 
@@ -653,6 +655,9 @@ Provisioner.expire = async function(now) {
 Provisioner.prototype.json = function() {
   return {
     provisionerId:    this.provisionerId,
+    expires:          this.expires.toJSON(),
+    description:      this.description,
+    stability:        this.stability,
   };
 };
 
