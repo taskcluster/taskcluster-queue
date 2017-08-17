@@ -671,6 +671,10 @@ let WorkerType = Entity.configure({
     workerType:       Entity.types.String,
     // the time at which this worker-type should no longer be displayed
     expires:          Entity.types.Date,
+    description:      Entity.types.String,
+    stability:        Entity.types.String,
+    documentation:    Entity.types.String,
+    payloadSchema:    Entity.types.JSON,
   },
 });
 
@@ -691,6 +695,18 @@ WorkerType.expire = async function(now) {
   });
 
   return count;
+};
+
+WorkerType.prototype.json = function() {
+  return {
+    workerType:       this.workerType,
+    provisionerId:    this.provisionerId,
+    expires:          this.expires.toJSON(),
+    description:      this.description,
+    stability:        this.stability,
+    documentation:    this.documentation,
+    payloadSchema:    this.payloadSchema,
+  };
 };
 
 // Export WorkerType

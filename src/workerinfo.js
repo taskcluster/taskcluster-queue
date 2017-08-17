@@ -87,7 +87,15 @@ class WorkerInfo {
           return wType.modify(entity => updateExpiration(entity, expires));
         }
 
-        createEntry(this.WorkerType, {provisionerId, workerType, expires});
+        createEntry(this.WorkerType, {
+          provisionerId,
+          workerType,
+          expires,
+          description: '',
+          stability: 'experimental',
+          documentation: '',
+          payloadSchema: {},
+        });
       }));
     }
 
