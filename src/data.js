@@ -671,10 +671,26 @@ let WorkerType = Entity.configure({
     workerType:       Entity.types.String,
     // the time at which this worker-type should no longer be displayed
     expires:          Entity.types.Date,
+  },
+}).configure({
+  version:            2,
+  properties: {
+    provisionerId:    Entity.types.String,
+    workerType:       Entity.types.String,
+    // the time at which this worker-type should no longer be displayed
+    expires:          Entity.types.Date,
     description:      Entity.types.String,
     stability:        Entity.types.String,
     documentation:    Entity.types.String,
     payloadSchema:    Entity.types.JSON,
+  },
+  migrate(item) {
+    item.description = '';
+    item.stability = 'experimental';
+    item.documentation = '';
+    item.payloadSchema = null;
+
+    return item;
   },
 });
 

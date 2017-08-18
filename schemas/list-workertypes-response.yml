@@ -51,7 +51,7 @@ properties:
           type:         string
           format:       date-time
         payloadSchema:
-          type:         object
+          type:         ["object", "null"]
           title:        "Payload Schema"
           description: |
             Payload schema of the worker-type

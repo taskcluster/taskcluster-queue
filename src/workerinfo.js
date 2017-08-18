@@ -94,7 +94,7 @@ class WorkerInfo {
           description: '',
           stability: 'experimental',
           documentation: '',
-          payloadSchema: {},
+          payloadSchema: null,
         });
       }));
     }
