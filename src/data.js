@@ -679,7 +679,7 @@ let WorkerType = Entity.configure({
     workerType:       Entity.types.String,
     // the time at which this worker-type should no longer be displayed
     expires:          Entity.types.Date,
-    description:      Entity.types.String,
+    description:      Entity.types.Text,
     stability:        Entity.types.String,
     documentation:    Entity.types.String,
     payloadSchema:    Entity.types.JSON,
