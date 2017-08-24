@@ -29,8 +29,10 @@ properties:
         stability:
           title:        "Stability"
           description: |
-            The stability of the worker-type. Accepted values:
-            'experimental|stable|deprecated'
+            This is the stability of the worker-type. Accepted values:
+             * `experimental`
+             * `stable`
+             * `deprecated`
           type:         string
           enum:         ["experimental", "stable", "deprecated"]
         description:
