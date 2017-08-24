@@ -38,23 +38,13 @@ properties:
           description: |
             Description of the worker-type.
           type:         string
-        documentation:
-          title:        "Documentation"
-          description: |
-            Documentation for the worker-type.
-          type:         string
         expires:
           title:        "Worker-type Expiration"
           description: |
-            Date and time after which the worker-type created will be automatically
+            Date and time after which the worker-type will be automatically
             deleted by the queue.
           type:         string
           format:       date-time
-        payloadSchema:
-          type:         ["object", "null"]
-          title:        "Payload Schema"
-          description: |
-            Payload schema of the worker-type
       additionalProperties: false
   continuationToken:
     type:               string
