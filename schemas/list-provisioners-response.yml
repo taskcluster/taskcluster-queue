@@ -18,7 +18,9 @@ properties:
           title:        "Stability"
           description: |
             This is the stability of the provisioner. Accepted values:
-            'experimental|stable|deprecated'
+             * `experimental`
+             * `stable`
+             * `deprecated`
           type:         string
           enum:         ["experimental", "stable", "deprecated"]
         description:
