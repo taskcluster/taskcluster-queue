@@ -681,14 +681,10 @@ let WorkerType = Entity.configure({
     expires:          Entity.types.Date,
     description:      Entity.types.Text,
     stability:        Entity.types.String,
-    documentation:    Entity.types.String,
-    payloadSchema:    Entity.types.JSON,
   },
   migrate(item) {
     item.description = '';
     item.stability = 'experimental';
-    item.documentation = '';
-    item.payloadSchema = null;
 
     return item;
   },
@@ -720,8 +716,6 @@ WorkerType.prototype.json = function() {
     expires:          this.expires.toJSON(),
     description:      this.description,
     stability:        this.stability,
-    documentation:    this.documentation,
-    payloadSchema:    this.payloadSchema,
   };
 };
 

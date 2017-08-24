@@ -71,8 +71,6 @@ suite('provisioners and worker-types', () => {
       expires: new Date('3017-07-29'),
       description: 'test-worker-type',
       stability: 'experimental',
-      documentation: '',
-      payloadSchema: {},
     };
 
     await WorkerType.create(wType);
@@ -91,8 +89,6 @@ suite('provisioners and worker-types', () => {
       expires,
       description: 'test-worker-type',
       stability: 'experimental',
-      documentation: '',
-      payloadSchema: {},
     };
 
     await WorkerType.create(Object.assign({}, {workerType: 'gecko-b-2-linux'}, wType));
@@ -134,8 +130,6 @@ suite('provisioners and worker-types', () => {
       expires: new Date('1017-07-29'),
       description: 'test-worker-type',
       stability: 'experimental',
-      documentation: '',
-      payloadSchema: {},
     });
     await helper.expireWorkerInfo();
 

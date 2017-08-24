@@ -93,8 +93,6 @@ class WorkerInfo {
           expires,
           description: '',
           stability: 'experimental',
-          documentation: '',
-          payloadSchema: null,
         });
       }));
     }
