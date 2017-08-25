@@ -2,17 +2,26 @@ const taskcluster = require('taskcluster-client');
 const assert      = require('assert');
 const debug       = require('debug')('workerinfo');
 
+const DAY = 24 * 60 * 60 * 1000;
+
 const ignoreEntityAlreadyExists = (err) => {
   if (!err || err.code !== 'EntityAlreadyExists') {
     throw err;
   }
 };
 
-const expired = entity => new Date(entity.expires) - Date.now() < 24 * 60 * 60 * 1000;
+const expired = entity => new Date(entity.expires) - Date.now() < DAY;
+const shouldUpdateLastDateActive = entity => Date.now() - new Date(entity.lastDateActive) > DAY;
 
 const updateExpiration = (entity, expires) => {
   if (expired(entity)) {
     entity.expires = expires;
+  }
+};
+
+const updateLastDateActive = (entity) => {
+  if (shouldUpdateLastDateActive(entity)) {
+    entity.lastDateActive = new Date();
   }
 };
 
@@ -84,13 +93,17 @@ class WorkerInfo {
         const wType = await this.WorkerType.load({provisionerId, workerType}, true);
 
         if (wType) {
-          return wType.modify(entity => updateExpiration(entity, expires));
+          return wType.modify(entity => {
+            updateExpiration(entity, expires);
+            updateLastDateActive(entity);
+          });
         }
 
         createEntry(this.WorkerType, {
           provisionerId,
           workerType,
           expires,
+          lastDateActive: new Date(),
           description: '',
           stability: 'experimental',
         });
