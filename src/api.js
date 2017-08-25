@@ -2087,6 +2087,79 @@ api.declare({
   return res.reply(result);
 });
 
+/** Get a worker-type from a provisioner */
+api.declare({
+  method:     'get',
+  route:      '/provisioners/:provisionerId/worker-types/:workerType',
+  name:       'getWorkerType',
+  stability:  API.stability.experimental,
+  output:     'workertype-response.json#',
+  title:      'Get a worker-type',
+  description: [
+    'Get a worker-type from a provisioner.',
+  ].join('\n'),
+}, async function(req, res) {
+  const {provisionerId, workerType} = req.params;
+
+  const wType = await this.WorkerType.scan({
+    provisionerId,
+    workerType,
+    expires: Entity.op.greaterThan(new Date()),
+  });
+
+  const result = wType.entries.length ? wType.entries[0].json() : {};
+
+  return wType.entries.length ?
+    res.reply(result) :
+    res.reportError('ResourceNotFound',
+      'Worker-type {{workerType}} with  Provisioner {{provisionerId}} not found. Are you sure it was created?', {
+        workerType,
+        provisionerId,
+      },
+    );
+});
+
+/** Update a worker-type */
+api.declare({
+  method:     'put',
+  route:      '/provisioners/:provisionerId/worker-types/:workerType',
+  name:       'updateWorkerType',
+  stability:  API.stability.experimental,
+  scopes:     [
+    [
+      'queue:declare-worker-type:<provisionerId>/<workerType>#<property>',
+    ],
+  ],
+  output:     'workertype-response.json#',
+  input:      'update-workertype-request.json#',
+  title:      'Update a worker-type',
+  description: [
+    'Update a worker-type from a provisioner.',
+  ].join('\n'),
+}, async function(req, res) {
+  const {provisionerId, workerType} = req.params;
+  const {stability, description, expires} = req.body;
+
+  const wType = await this.WorkerType.load({provisionerId, workerType}, true);
+
+  if (!wType) {
+    res.reportError('ResourceNotFound',
+      'Worker-type {{workerType}} with  Provisioner {{provisionerId}} not found. Are you sure it was created?', {
+        workerType,
+        provisionerId,
+      },
+    );
+  }
+
+  const result = await wType.modify((entity) => {
+    entity.stability = stability;
+    entity.description = description;
+    entity.expires = new Date(expires ? expires : wType.expires);
+  });
+
+  return res.reply(result.json());
+});
+
 /** List all active workerGroup/workerId of a workerType */
 api.declare({
   method:     'get',
