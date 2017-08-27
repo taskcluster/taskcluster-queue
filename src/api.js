@@ -2109,14 +2109,16 @@ api.declare({
 
   const result = wType.entries.length ? wType.entries[0].json() : {};
 
-  return wType.entries.length ?
-    res.reply(result) :
-    res.reportError('ResourceNotFound',
-      'Worker-type {{workerType}} with  Provisioner {{provisionerId}} not found. Are you sure it was created?', {
+  if (!wType.entries.length) {
+    return res.reportError('ResourceNotFound',
+      'Worker-type {{workerType}} with Provisioner {{provisionerId}} not found. Are you sure it was created?', {
         workerType,
         provisionerId,
       },
     );
+  }
+
+  return res.reply(result);
 });
 
 /** Update a worker-type */
@@ -2130,6 +2132,7 @@ api.declare({
       'queue:declare-worker-type:<provisionerId>/<workerType>#<property>',
     ],
   ],
+  deferAuth:  true,
   output:     'workertype-response.json#',
   input:      'update-workertype-request.json#',
   title:      'Update a worker-type',
@@ -2142,20 +2145,29 @@ api.declare({
 
   const wType = await this.WorkerType.load({provisionerId, workerType}, true);
 
-  if (!wType) {
-    res.reportError('ResourceNotFound',
-      'Worker-type {{workerType}} with  Provisioner {{provisionerId}} not found. Are you sure it was created?', {
-        workerType,
-        provisionerId,
-      },
-    );
+  // Authenticate request by providing parameters
+  const requestAllowed = req.satisfies({provisionerId, workerType, property: stability}) &&
+    req.satisfies({provisionerId, workerType, property: description}) &&
+    req.satisfies({provisionerId, workerType, property: expires});
+
+  if (!requestAllowed) {
+    return;
   }
 
-  const result = await wType.modify((entity) => {
-    entity.stability = stability;
-    entity.description = description;
-    entity.expires = new Date(expires ? expires : wType.expires);
-  });
+  const result = wType ?
+    await wType.modify((entity) => {
+      entity.stability = stability;
+      entity.description = description;
+      entity.expires = new Date(expires ? expires : wType.expires);
+    }) :
+    await this.WorkerType.create({
+      provisionerId,
+      workerType,
+      expires,
+      lastDateActive: new Date(),
+      description,
+      stability,
+    });
 
   return res.reply(result.json());
 });
