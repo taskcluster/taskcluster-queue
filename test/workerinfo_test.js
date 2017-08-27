@@ -277,6 +277,7 @@ suite('provisioners and worker-types', () => {
   });
 
   test('worker-type lastDateActive updates', async () => {
+    let result;
     const WorkerType = await helper.load('WorkerType', helper.loadOptions);
     const workerInfo = await helper.load('workerInfo', helper.loadOptions);
 
@@ -292,16 +293,19 @@ suite('provisioners and worker-types', () => {
     await WorkerType.create(wType);
     await workerInfo.seen(wType.provisionerId, wType.workerType);
 
-    const result = await helper.queue.getWorkerType(wType.provisionerId, wType.workerType);
+    result = await helper.queue.getWorkerType(wType.provisionerId, wType.workerType);
 
     assert(
       new Date(result.lastDateActive).getTime() === wType.lastDateActive.getTime(), `expected ${wType.lastDateActive}`
     );
 
     wType.workerType = 'gecko-b-2-android';
-    wType.lastDateActive = taskcluster.fromNow('- 2 days');
+    wType.lastDateActive = taskcluster.fromNow('- 7h');
 
+    await WorkerType.create(wType);
     await workerInfo.seen(wType.provisionerId, wType.workerType);
+
+    result = await helper.queue.getWorkerType(wType.provisionerId, wType.workerType);
 
     assert(
       new Date(result.lastDateActive).getTime() !== wType.lastDateActive.getTime(), 'expected different lastDateActive'
