@@ -2101,15 +2101,13 @@ api.declare({
 }, async function(req, res) {
   const {provisionerId, workerType} = req.params;
 
-  const wType = await this.WorkerType.scan({
+  const wType = await this.WorkerType.load({
     provisionerId,
     workerType,
     expires: Entity.op.greaterThan(new Date()),
   });
 
-  const result = wType.entries.length ? wType.entries[0].json() : {};
-
-  if (!wType.entries.length) {
+  if (!wType) {
     return res.reportError('ResourceNotFound',
       'Worker-type {{workerType}} with Provisioner {{provisionerId}} not found. Are you sure it was created?', {
         workerType,
@@ -2118,7 +2116,7 @@ api.declare({
     );
   }
 
-  return res.reply(result);
+  return res.reply(wType.json());
 });
 
 /** Update a worker-type */
@@ -2138,6 +2136,11 @@ api.declare({
   title:      'Update a worker-type',
   description: [
     'Update a worker-type from a provisioner.',
+    '',
+    '`updateWorkerType` allows updating one or more properties of a worker-type as long as the required scopes are',
+    'possessed. For example, a request to update the `gecko-b-1-w2008` worker-type within the `aws-provisioner-v1`',
+    'provisioner with a body `{description: \'This worker type is great\'}` would require you to have the scope',
+    '`queue:declare-worker-type:aws-provisioner-v1/gecko-b-1-w2008#description`.',
   ].join('\n'),
 }, async function(req, res) {
   const {provisionerId, workerType} = req.params;
@@ -2146,9 +2149,8 @@ api.declare({
   const wType = await this.WorkerType.load({provisionerId, workerType}, true);
 
   // Authenticate request by providing parameters
-  const requestAllowed = req.satisfies({provisionerId, workerType, property: stability}) &&
-    req.satisfies({provisionerId, workerType, property: description}) &&
-    req.satisfies({provisionerId, workerType, property: expires});
+  const requestAllowed = Object.keys(req.body)
+    .every(property => req.satisfies({provisionerId, workerType, property}));
 
   if (!requestAllowed) {
     return;
@@ -2156,9 +2158,9 @@ api.declare({
 
   const result = wType ?
     await wType.modify((entity) => {
-      entity.stability = stability;
-      entity.description = description;
-      entity.expires = new Date(expires ? expires : wType.expires);
+      entity.stability = stability || entity.stability;
+      entity.description = description || entity.description;
+      entity.expires = new Date(expires || entity.expires);
     }) :
     await this.WorkerType.create({
       provisionerId,

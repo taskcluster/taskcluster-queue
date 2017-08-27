@@ -26,7 +26,3 @@ properties:
     type:         string
     format:       date-time
 additionalProperties: false
-required:
-  - description
-  - stability
-  - expires

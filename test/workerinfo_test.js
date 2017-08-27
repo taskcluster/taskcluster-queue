@@ -261,8 +261,6 @@ suite('provisioners and worker-types', () => {
 
     const updateProps = {
       description: 'desc-wType',
-      stability: 'stable',
-      expires: new Date('3017-08-30'),
     };
 
     await helper.queue.updateWorkerType(wType.provisionerId, wType.workerType, updateProps);
@@ -272,8 +270,8 @@ suite('provisioners and worker-types', () => {
     assert(result.provisionerId === wType.provisionerId, `expected ${wType.provisionerId}`);
     assert(result.workerType === wType.workerType, `expected ${wType.provisionerId}`);
     assert(result.description === updateProps.description, `expected ${updateProps.description}`);
-    assert(result.stability === updateProps.stability, `expected ${updateProps.stability}`);
-    assert(new Date(result.expires).getTime() === updateProps.expires.getTime(), `expected ${updateProps.expires}`);
+    assert(result.stability === wType.stability, `expected ${wType.stability}`);
+    assert(new Date(result.expires).getTime() === wType.expires.getTime(), `expected ${wType.expires}`);
   });
 
   test('worker-type lastDateActive updates', async () => {
