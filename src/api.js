@@ -137,6 +137,8 @@ var api = new API({
     'monitor',            // base.monitor instance
     'workClaimer',        // Instance of WorkClaimer
     'workerInfo',         // Instance of WorkerInfo
+    's3Controller',       // Instance of remotely-signed-s3.Controller
+    's3Runner',           // Instance of remotely-signed-s3.Runner
   ],
 });
 
