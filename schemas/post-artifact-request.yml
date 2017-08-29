@@ -55,8 +55,7 @@ oneOf:
           represent all of the restrictions in a json-schema.  A multipart
           upload may be at most 5TB, with each part other than the last being
           between 5MB and 5GB in size.
-        type: number
-        multipleOf: 1.0
+        type: integer
         minimum: 0
       transferSha256:
         description: |
@@ -70,8 +69,7 @@ oneOf:
           The number of bytes transfered across the wire to the backing
           datastore.  If specified, it represents the post-content-encoding
           byte count
-        type: number
-        multipleOf: 1.0
+        type: integer
         minimum: 0
       parts:
         description: |
@@ -103,8 +101,7 @@ oneOf:
                 The number of bytes in this part.  Keep in mind for S3 that
                 all but the last part must be minimum 5MB and the maximum for
                 a single part is 5GB.  The overall size may not exceed 5TB
-              type: number
-              multipleOf: 1.0
+              type: integer
               minimum: 0
     additionalProperties: false
     required:
