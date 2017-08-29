@@ -247,7 +247,7 @@ suite('provisioners and worker-types', () => {
     assert(new Date(result.expires).getTime() === wType.expires.getTime(), `expected ${wType.expires}`);
   });
 
-  test('queue.updateWorkerType updates a worker-type', async () => {
+  test('queue.declareWorkerType updates a worker-type', async () => {
     const WorkerType = await helper.load('WorkerType', helper.loadOptions);
 
     const wType = await WorkerType.create({
@@ -263,7 +263,7 @@ suite('provisioners and worker-types', () => {
       description: 'desc-wType',
     };
 
-    await helper.queue.updateWorkerType(wType.provisionerId, wType.workerType, updateProps);
+    await helper.queue.declareWorkerType(wType.provisionerId, wType.workerType, updateProps);
 
     const result = await helper.queue.getWorkerType(wType.provisionerId, wType.workerType);
 
