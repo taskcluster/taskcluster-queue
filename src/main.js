@@ -353,6 +353,17 @@ let load = loader({
     },
   },
 
+  s3Runner: {
+    requires: ['cfg'],
+    setup: async ({cfg}) => {
+      return new remoteS3.Runner({
+        region: cfg.app.blobArtifactRegion,
+        accessKeyId: cfg.aws.accessKeyId,
+        secretAccessKey: cfg.aws.secretAccessKey,
+      });
+    },
+  },
+
   api: {
     requires: [
       'cfg', 'publisher', 'validator', 'Task', 'Artifact',
@@ -360,7 +371,7 @@ let load = loader({
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
       'workClaimer', 'Provisioner', 'workerInfo', 'WorkerType', 'Worker',
-      's3Controller',
+      's3Controller', 's3Runner'
     ],
     setup: (ctx) => v1.setup({
       context: {
@@ -390,6 +401,7 @@ let load = loader({
         workClaimer:      ctx.workClaimer,
         workerInfo:       ctx.workerInfo,
         s3Controller:     ctx.s3Controller,
+        s3Runner:         ctx.s3Runner,
         blobRegion:       ctx.cfg.app.blobArtifactRegion, 
         publicBlobBucket: ctx.cfg.app.publicBlobArtifactBucket,
         privateBlobBucket:ctx.cfg.app.privateBlobArtifactBucket,
