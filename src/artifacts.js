@@ -708,6 +708,28 @@ api.declare({
         tags: {taskId, runId, name},
       });
     } else {
+      let url = await this.s3Controller.generateGetUrl({
+        bucket: artifact.details.bucket,
+        key: artifact.details.key,
+        signed: true,
+      });
+
+      if (url.protocol !== 'https:') {
+        throw new Error('Only HTTPS is allowed for artifacts');
+      }
+
+      let headRes = await this.s3Runner.run({
+        req:{
+          url,
+          method: 'HEAD',
+          headers: {}
+        }
+      });
+      
+      if (headRes.headers['x-amz-meta-content-sha256'] !== artifact.details.contentSha256) {
+        throw new Error('S3 object does not have correct Content-Sha256 metadata');
+      }
+      
       etag = input.etags[0];
     }
     // TODO: Do a quick HEAD of the resource (maybe) to double check that the
