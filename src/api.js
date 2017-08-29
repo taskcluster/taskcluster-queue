@@ -2123,7 +2123,7 @@ api.declare({
 api.declare({
   method:     'put',
   route:      '/provisioners/:provisionerId/worker-types/:workerType',
-  name:       'updateWorkerType',
+  name:       'declareWorkerType',
   stability:  API.stability.experimental,
   scopes:     [
     [
@@ -2137,7 +2137,7 @@ api.declare({
   description: [
     'Update a worker-type from a provisioner.',
     '',
-    '`updateWorkerType` allows updating one or more properties of a worker-type as long as the required scopes are',
+    '`declareWorkerType` allows updating one or more properties of a worker-type as long as the required scopes are',
     'possessed. For example, a request to update the `gecko-b-1-w2008` worker-type within the `aws-provisioner-v1`',
     'provisioner with a body `{description: \'This worker type is great\'}` would require you to have the scope',
     '`queue:declare-worker-type:aws-provisioner-v1/gecko-b-1-w2008#description`.',
