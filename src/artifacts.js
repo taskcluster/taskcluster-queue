@@ -219,7 +219,7 @@ api.declare({
       if (input.parts) {
         let partsHash = crypto.createHash('sha256');
         for (let part of input.parts) {
-          partsHash.update(`${part.sha256}_${part.size});
+          partsHash.update(`${part.sha256}_${part.size}`);
         }
         partsHash = partsHash.digest('hex');
         details.partsHash = partsHash;
@@ -667,6 +667,7 @@ api.declare({
   let runId       = parseInt(req.params.runId, 10);
   let name        = req.params.name;
   let input       = req.body;
+  let isPublic    = /^public\//.test(name);
 
   // Hmm, list destructuring is probably better here
   let [artifact, task] = await Promise.all([
@@ -711,10 +712,10 @@ api.declare({
       let url = await this.s3Controller.generateGetUrl({
         bucket: artifact.details.bucket,
         key: artifact.details.key,
-        signed: true,
+        signed: !isPublic,
       });
 
-      if (url.protocol !== 'https:') {
+      if (urllib.parse(url).protocol !== 'https:') {
         throw new Error('Only HTTPS is allowed for artifacts');
       }
 
@@ -722,8 +723,8 @@ api.declare({
         req:{
           url,
           method: 'HEAD',
-          headers: {}
-        }
+          headers: {},
+        },
       });
       
       if (headRes.headers['x-amz-meta-content-sha256'] !== artifact.details.contentSha256) {

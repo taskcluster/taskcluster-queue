@@ -356,11 +356,7 @@ let load = loader({
   s3Runner: {
     requires: ['cfg'],
     setup: async ({cfg}) => {
-      return new remoteS3.Runner({
-        region: cfg.app.blobArtifactRegion,
-        accessKeyId: cfg.aws.accessKeyId,
-        secretAccessKey: cfg.aws.secretAccessKey,
-      });
+      return new remoteS3.Runner();
     },
   },
 
@@ -371,7 +367,7 @@ let load = loader({
       'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
       'workClaimer', 'Provisioner', 'workerInfo', 'WorkerType', 'Worker',
-      's3Controller', 's3Runner'
+      's3Controller', 's3Runner',
     ],
     setup: (ctx) => v1.setup({
       context: {
