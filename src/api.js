@@ -2135,7 +2135,7 @@ api.declare({
   input:      'update-workertype-request.json#',
   title:      'Update a worker-type',
   description: [
-    'Update a worker-type from a provisioner.',
+    'Declare a workerType, supplying some details about it.',
     '',
     '`declareWorkerType` allows updating one or more properties of a worker-type as long as the required scopes are',
     'possessed. For example, a request to update the `gecko-b-1-w2008` worker-type within the `aws-provisioner-v1`',
@@ -2165,10 +2165,10 @@ api.declare({
     await this.WorkerType.create({
       provisionerId,
       workerType,
-      expires,
+      expires: expires || taskcluster.fromNow('5 days'),
       lastDateActive: new Date(),
-      description,
-      stability,
+      description: description || '',
+      stability: stability || 'experimental',
     });
 
   return res.reply(result.json());

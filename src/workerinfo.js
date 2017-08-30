@@ -10,7 +10,7 @@ const ignoreEntityAlreadyExists = (err) => {
   }
 };
 
-const expired = entity => new Date(entity.expires) - Date.now() < DAY;
+const expired = entity => Date.now() > new Date(entity.expires) - DAY;
 const shouldUpdateLastDateActive = entity => Date.now() - new Date(entity.lastDateActive) > DAY / 4;
 
 const updateExpiration = (entity, expires) => {
