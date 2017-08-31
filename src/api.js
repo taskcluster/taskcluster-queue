@@ -2099,7 +2099,7 @@ api.declare({
     }) :
     await this.Provisioner.create({
       provisionerId,
-      expires: expires || taskcluster.from('5 days'),
+      expires: expires || taskcluster.fromNow('5 days'),
       lastDateActive: new Date(),
       description: description || '',
       stability: stability || 'experimental',
