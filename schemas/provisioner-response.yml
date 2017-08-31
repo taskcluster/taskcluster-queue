@@ -1,7 +1,7 @@
 $schema:  http://json-schema.org/draft-04/schema#
 title:          "Provisioner Response"
 description: |
-  Response to an attempt to request data from a provisioner.
+  Response containing information about a provisioner.
 type:           object
 properties:
   provisionerId:

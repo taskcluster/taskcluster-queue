@@ -2061,6 +2061,7 @@ api.declare({
       'queue:declare-provisioner:<provisionerId>#<property>',
     ],
   ],
+  deferAuth:  true,
   output:     'provisioner-response.json#',
   input:      'update-provisioner-request.json#',
   title:      'Update a provisioner',
