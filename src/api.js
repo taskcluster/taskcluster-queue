@@ -9,7 +9,6 @@ let Promise     = require('promise');
 
 // Maximum number runs allowed
 const MAX_RUNS_ALLOWED = 50;
-const SLUGID_SIZE = 128 / 8;
 // Priority levels in order from high to low
 const PRIORITY_LEVELS = [
   'highest',
