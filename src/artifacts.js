@@ -659,7 +659,6 @@ api.declare({
   ],
   deferAuth:  true,
   input:      'put-artifact-request.json#',
-  output:     'put-artifact-response.json#',
   title:      'Complete Artifact',
   description: 'tbd',
 }, async function(req, res) {
@@ -726,11 +725,11 @@ api.declare({
           headers: {},
         },
       });
-      
+
       if (headRes.headers['x-amz-meta-content-sha256'] !== artifact.details.contentSha256) {
         throw new Error('S3 object does not have correct Content-Sha256 metadata');
       }
-      
+
       etag = input.etags[0];
     }
 
@@ -748,9 +747,7 @@ api.declare({
       workerId,
       runId,
     }, task.routes);
-    return res.reply({
-      outcome: 'success',
-    });
+    return res.status(204).send();
   } else {
     throw new Error('Only supported storageType artifacts may be marked completed');
   }
