@@ -216,6 +216,11 @@ suite('Artifacts', function() {
         etags: uploadOutcome.etags, 
       });
 
+      let secondResponse = await helper.queue.completeArtifact(taskId, 0, 'public/singlepart.dat', {
+        etags: uploadOutcome.etags, 
+      });
+      assume(response).deeply.equals(secondResponse);
+
       let artifactUrl = helper.queue.buildUrl(
         helper.queue.getArtifact,
         taskId, 0, 'public/singlepart.dat',
@@ -277,6 +282,12 @@ suite('Artifacts', function() {
       response = await helper.queue.completeArtifact(taskId, 0, name, {
         etags: uploadOutcome.etags, 
       });
+
+      // Ensure idempotency for completion of artifacts
+      let secondResponse = await helper.queue.completeArtifact(taskId, 0, name, {
+        etags: uploadOutcome.etags, 
+      });
+      assume(response).deeply.equals(secondResponse);
 
       let artifactUrl = helper.queue.buildUrl(
         helper.queue.getArtifact,

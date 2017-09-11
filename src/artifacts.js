@@ -668,7 +668,6 @@ api.declare({
   let input       = req.body;
   let isPublic    = /^public\//.test(name);
 
-  // Hmm, list destructuring is probably better here
   let [artifact, task] = await Promise.all([
     this.Artifact.load({taskId, runId, name}, true),
     this.Task.load({taskId}, true),
@@ -695,6 +694,10 @@ api.declare({
   }
 
   if (artifact.storageType === 'blob') {
+    // If the artifact is present, we've already done what's required here
+    if (artifact.present) {
+      return res.status(204).send();
+    }
     let etag;
     if (artifact.details.partsHash) {
       etag = await this.s3Controller.completeMultipartUpload({
@@ -746,7 +749,8 @@ api.declare({
     }, task.routes);
     return res.status(204).send();
   } else {
-    throw new Error('Only supported storageType artifacts may be marked completed');
+    return res.reportError('InputError',
+      'Cannot mark this artifact type as completed');
   }
 });
 
