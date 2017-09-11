@@ -219,7 +219,7 @@ api.declare({
       if (input.parts) {
         let partsHash = crypto.createHash('sha256');
         for (let part of input.parts) {
-          partsHash.update(`${part.sha256}${part.size}`);
+          partsHash.update(`${part.sha256}:${part.size}_`);
         }
         partsHash = partsHash.digest('hex');
         details.partsHash = partsHash;
