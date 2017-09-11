@@ -1700,7 +1700,7 @@ var resolveTask = async function(req, res, taskId, runId, target) {
     });
 
     if (!haveAllBlobs) {
-      return res.reportError('InputError',
+      return res.reportError('RequestConflict',
         'All blob artifacts must be present to resolve taskas completed');
     }
   }
