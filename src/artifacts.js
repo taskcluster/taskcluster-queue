@@ -224,7 +224,7 @@ api.declare({
         partsHash = partsHash.digest('hex');
         details.partsHash = partsHash;
       }
-      
+
       details.provider = 's3';
       details.region = this.blobRegion;
       if (input.contentEncoding) {
@@ -673,9 +673,6 @@ api.declare({
     this.Artifact.load({taskId, runId, name}, true),
     this.Task.load({taskId}, true),
   ]);
-
-  // TODO: Have a shortcut here where things which are already
-  // marked as present short circuit
 
   let run = task.runs[runId];
   if (!run) {
