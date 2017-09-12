@@ -2081,6 +2081,7 @@ api.declare({
 }, async function(req, res) {
   const provisionerId = req.params.provisionerId;
   const {stability, description, expires} = req.body;
+  let result;
 
   const prov = await this.Provisioner.load({provisionerId}, true);
 
@@ -2092,19 +2093,21 @@ api.declare({
     return;
   }
 
-  const result = prov ?
-    await prov.modify((entity) => {
+  if (prov) {
+    result =  await prov.modify((entity) => {
       entity.stability = stability || entity.stability;
       entity.description = description || entity.description;
       entity.expires = new Date(expires || entity.expires);
-    }) :
-    await this.Provisioner.create({
+    });
+  } else {
+    result = await this.Provisioner.create({
       provisionerId,
       expires: expires || taskcluster.fromNow('5 days'),
       lastDateActive: new Date(),
       description: description || '',
       stability: stability || 'experimental',
     });
+  }
 
   return res.reply(result.json());
 });
@@ -2238,6 +2241,7 @@ api.declare({
 }, async function(req, res) {
   const {provisionerId, workerType} = req.params;
   const {stability, description, expires} = req.body;
+  let result;
 
   const wType = await this.WorkerType.load({provisionerId, workerType}, true);
 
@@ -2249,13 +2253,14 @@ api.declare({
     return;
   }
 
-  const result = wType ?
-    await wType.modify((entity) => {
+  if (wType) {
+    result = await wType.modify((entity) => {
       entity.stability = stability || entity.stability;
       entity.description = description || entity.description;
       entity.expires = new Date(expires || entity.expires);
-    }) :
-    await this.WorkerType.create({
+    });
+  } else {
+    result = await this.WorkerType.create({
       provisionerId,
       workerType,
       expires: expires || taskcluster.fromNow('5 days'),
@@ -2263,6 +2268,7 @@ api.declare({
       description: description || '',
       stability: stability || 'experimental',
     });
+  }
 
   return res.reply(result.json());
 });
@@ -2377,6 +2383,7 @@ api.declare({
 }, async function(req, res) {
   const {provisionerId, workerType, workerGroup, workerId} = req.params;
   const {expires, disabled} = req.body;
+  let result;
 
   const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
 
@@ -2388,12 +2395,17 @@ api.declare({
     return;
   }
 
-  const result = worker ?
-    await worker.modify((entity) => {
-      entity.expires = new Date(expires || entity.expires);
-      entity.disabled = typeof disabled === 'boolean' ? disabled : entity.disabled;
-    }) :
-    await this.Worker.create({
+  if (worker) {
+    try {
+      result = await worker.modify((entity) => {
+        entity.expires = new Date(expires || entity.expires);
+        entity.disabled = typeof disabled === 'boolean' ? disabled : entity.disabled;
+      });
+    } catch (err) {
+      throw err;
+    }
+  } else {
+    result = await this.Worker.create({
       provisionerId,
       workerType,
       workerGroup,
@@ -2403,6 +2415,7 @@ api.declare({
       disabled: false,
       firstClaim: new Date(),
     });
+  }
 
   return res.reply(result.json());
 });
