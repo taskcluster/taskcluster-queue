@@ -141,6 +141,7 @@ class WorkerInfo {
           workerId,
           expires,
           recentTasks,
+          disabled: false,
           firstClaim: new Date(),
         });
       }));
@@ -174,7 +175,7 @@ class WorkerInfo {
       workerId,
     }, true);
 
-    if (!tasks.length || !worker) {
+    if (!tasks.length || !worker || worker.disabled) {
       return;
     }
 

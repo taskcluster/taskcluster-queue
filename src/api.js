@@ -2376,7 +2376,7 @@ api.declare({
   ].join('\n'),
 }, async function(req, res) {
   const {provisionerId, workerType, workerGroup, workerId} = req.params;
-  const {expires} = req.body;
+  const {expires, disabled} = req.body;
 
   const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
 
@@ -2391,6 +2391,7 @@ api.declare({
   const result = worker ?
     await worker.modify((entity) => {
       entity.expires = new Date(expires || entity.expires);
+      entity.disabled = typeof disabled === 'boolean' ? disabled : entity.disabled;
     }) :
     await this.Worker.create({
       provisionerId,
@@ -2399,6 +2400,7 @@ api.declare({
       workerId,
       recentTasks: Entity.types.SlugIdArray.create(),
       expires: expires || taskcluster.fromNow('1 day'),
+      disabled: false,
       firstClaim: new Date(),
     });
 
