@@ -129,7 +129,11 @@ class WorkerInfo {
         const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
 
         if (worker) {
-          return worker.modify(entity => updateExpiration(entity, expires));
+          try {
+            return worker.modify(entity => updateExpiration(entity, expires));
+          } catch (err) {
+            throw err;
+          }
         }
 
         const recentTasks = Entity.types.SlugIdArray.create();
