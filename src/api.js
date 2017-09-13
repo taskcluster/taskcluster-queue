@@ -1359,6 +1359,20 @@ api.declare({
     return;
   }
 
+  const worker = await this.Worker.load({
+    provisionerId,
+    workerType,
+    workerGroup,
+    workerId,
+  }, true);
+
+  // Don't record tasks when worker is disabled
+  if (worker && worker.disabled) {
+    return res.reply({
+      tasks: [],
+    });
+  }
+
   // Allow request to abort their claim request, if the connection closes
   let aborted = new Promise(accept => {
     sleep20Seconds().then(accept);
@@ -1445,6 +1459,18 @@ api.declare({
     );
   }
 
+  const worker = await this.Worker.load({
+    provisionerId: task.provisionerId,
+    workerType: task.workerType,
+    workerGroup,
+    workerId,
+  }, true);
+
+  // Don't record task when worker is disabled
+  if (worker && worker.disabled) {
+    return res.reply({});
+  }
+
   // Claim task
   let [result] = await Promise.all([
     this.workClaimer.claimTask(
@@ -1452,6 +1478,8 @@ api.declare({
     ),
     this.workerInfo.seen(task.provisionerId),
   ]);
+
+  await this.workerInfo.taskSeen(task.provisionerId, task.workerType, workerGroup, workerId, result);
 
   // If the run doesn't exist return ResourceNotFound
   if (result === 'run-not-found') {
