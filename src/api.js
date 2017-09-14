@@ -1479,7 +1479,9 @@ api.declare({
     this.workerInfo.seen(task.provisionerId),
   ]);
 
-  await this.workerInfo.taskSeen(task.provisionerId, task.workerType, workerGroup, workerId, [result]);
+  await this.workerInfo.taskSeen(
+    task.provisionerId, task.workerType, workerGroup, workerId, typeof result === 'string' ? [] : [result]
+  );
 
   // If the run doesn't exist return ResourceNotFound
   if (result === 'run-not-found') {
