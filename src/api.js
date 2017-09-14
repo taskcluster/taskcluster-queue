@@ -1479,10 +1479,6 @@ api.declare({
     this.workerInfo.seen(task.provisionerId),
   ]);
 
-  await this.workerInfo.taskSeen(
-    task.provisionerId, task.workerType, workerGroup, workerId, typeof result === 'string' ? [] : [result]
-  );
-
   // If the run doesn't exist return ResourceNotFound
   if (result === 'run-not-found') {
     return res.reportError(
@@ -1503,6 +1499,10 @@ api.declare({
       },
     );
   }
+
+  await this.workerInfo.taskSeen(
+    task.provisionerId, task.workerType, workerGroup, workerId, typeof result === 'string' ? [] : [result]
+  );
 
   // Reply to caller
   return res.reply(result);
