@@ -1500,9 +1500,7 @@ api.declare({
     );
   }
 
-  await this.workerInfo.taskSeen(
-    task.provisionerId, task.workerType, workerGroup, workerId, typeof result === 'string' ? [] : [result]
-  );
+  await this.workerInfo.taskSeen(task.provisionerId, task.workerType, workerGroup, workerId, [result]);
 
   // Reply to caller
   return res.reply(result);
