@@ -716,7 +716,10 @@ api.declare({
     } 
   } 
 
-  if (artifact.storageType === 'blob') {
+  if (artifact.storageType !== 'blob') {
+    return res.reportError('InputError',
+      'Cannot mark this artifact type as completed');
+  } else if (artifact.storageType === 'blob') {
     // If the artifact is present, we've already done what's required here
     if (artifact.present) {
       await this.publisher.artifactCreated({
@@ -778,9 +781,6 @@ api.declare({
       runId,
     }, task.routes);
     return res.status(204).send();
-  } else {
-    return res.reportError('InputError',
-      'Cannot mark this artifact type as completed');
   }
 });
 
