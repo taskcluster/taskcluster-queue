@@ -2364,6 +2364,9 @@ api.declare({
       return {
         workerGroup: worker.workerGroup,
         workerId: worker.workerId,
+        firstClaim: worker.firstClaim.toJSON(),
+        latestTask: worker.recentTasks.pop(),
+        disabled: worker.disabled,
       };
     }),
   };
