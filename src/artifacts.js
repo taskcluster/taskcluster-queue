@@ -719,6 +719,13 @@ api.declare({
   if (artifact.storageType === 'blob') {
     // If the artifact is present, we've already done what's required here
     if (artifact.present) {
+      await this.publisher.artifactCreated({
+        status: task.status(),
+        artifact: artifact.json(),
+        workerGroup,
+        workerId,
+        runId,
+      }, task.routes);
       return res.status(204).send();
     }
     let etag;
