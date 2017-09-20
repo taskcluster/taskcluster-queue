@@ -197,13 +197,9 @@ class WorkerInfo {
       }
     });
 
-    try {
-      await worker.modify(entity => {
-        entity.recentTasks = recentTasks;
-      });
-    } catch (err) {
-      throw err;
-    }
+    await worker.modify(entity => {
+      entity.recentTasks = recentTasks;
+    });
   }
 }
 
