@@ -2308,6 +2308,7 @@ api.declare({
   query: {
     continuationToken: /./,
     limit: /^[0-9]+$/,
+    disabled: /^(true|false)$/,
   },
   name:       'listWorkers',
   stability:  API.stability.experimental,
@@ -2323,15 +2324,22 @@ api.declare({
   ].join('\n'),
 }, async function(req, res) {
   const continuation = req.query.continuationToken || null;
+  const disabled = req.query.disabled || null;
   const provisionerId = req.params.provisionerId;
   const workerType = req.params.workerType;
   const limit = Math.min(1000, parseInt(req.query.limit || 1000, 10));
 
-  const workers = await this.Worker.scan({
+  const worker = {
     provisionerId,
     workerType,
     expires: Entity.op.greaterThan(new Date()),
-  }, {continuation, limit});
+  };
+
+  if (disabled) {
+    worker.disabled = JSON.parse(disabled);
+  }
+
+  const workers = await this.Worker.scan(worker, {continuation, limit});
 
   const result = {
     workers: workers.entries.map(worker => {
