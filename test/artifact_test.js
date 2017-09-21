@@ -334,6 +334,10 @@ suite('Artifacts', function() {
         }),
       });
 
+      await new Promise((resolve, reject) => {
+        setTimeout(resolve, 2000);
+      });
+
       debug('### Calling createArtifact second time');
       let secondResponse = await helper.queue.createArtifact(taskId, 0, name, {
         storageType: 'blob',
