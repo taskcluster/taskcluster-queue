@@ -2,6 +2,7 @@ const taskcluster = require('taskcluster-client');
 const Entity      = require('azure-entities');
 const assert      = require('assert');
 const slugid      = require('slugid');
+const _           = require('lodash');
 const debug       = require('debug')('workerinfo');
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -136,15 +137,13 @@ class WorkerInfo {
           }
         }
 
-        const recentTasks = Entity.types.SlugIdArray.create();
-
         createEntry(this.Worker, {
           provisionerId,
           workerType,
           workerGroup,
           workerId,
           expires,
-          recentTasks,
+          recentTasks: [],
           disabled: false,
           firstClaim: new Date(),
         });
@@ -183,13 +182,14 @@ class WorkerInfo {
       return;
     }
 
-    const recentTasks = worker.recentTasks.clone();
+    const recentTasks = [...worker.recentTasks];
 
-    tasks.forEach((task, index) => {
-      const taskId = tasks[index].status.taskId;
+    tasks.forEach((task) => {
+      const {taskId, runs} = task.status;
+      const runId = runs.length;
 
-      if (recentTasks.indexOf(taskId) === -1) {
-        recentTasks.push(taskId);
+      if (!_.some(recentTasks, {taskId, runId})) {
+        recentTasks.push({taskId, runId});
       }
 
       if (recentTasks.length > RECENT_TASKS_LIMIT) {
