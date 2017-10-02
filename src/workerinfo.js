@@ -186,7 +186,7 @@ class WorkerInfo {
 
     tasks.forEach((task) => {
       const {taskId, runs} = task.status;
-      const runId = runs.length;
+      const runId = runs.length - 1;
 
       if (!_.some(recentTasks, {taskId, runId})) {
         recentTasks.push({taskId, runId});

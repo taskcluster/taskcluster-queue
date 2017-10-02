@@ -912,9 +912,7 @@ let Worker = Entity.configure({
     firstClaim:       Entity.types.Date,
   },
   migrate(item) {
-    item.firstClaim = new Date(2000, 0, 1);
     item.recentTasks = [];
-    item.disabled = false;
 
     return item;
   },
