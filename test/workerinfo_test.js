@@ -183,8 +183,8 @@ suite('provisioners and worker-types', () => {
       firstClaim: new Date(),
     };
 
-    worker.recentTasks.push({taskId, runId: 1});
-    worker.recentTasks.push({taskId: taskId2, runId: 1});
+    worker.recentTasks.push({taskId, runId: 0});
+    worker.recentTasks.push({taskId: taskId2, runId: 0});
 
     await Worker.create(worker);
 
@@ -474,9 +474,9 @@ suite('provisioners and worker-types', () => {
     const taskId2 = slugid.v4();
     const recentTasks = [];
 
+    recentTasks.push({taskId, runId: 0});
     recentTasks.push({taskId, runId: 1});
-    recentTasks.push({taskId, runId: 2});
-    recentTasks.push({taskId: taskId2, runId: 1});
+    recentTasks.push({taskId: taskId2, runId: 0});
 
     const worker = {
       provisionerId,
@@ -499,11 +499,11 @@ suite('provisioners and worker-types', () => {
     assert(new Date(result.expires).getTime() === worker.expires.getTime(), `expected ${worker.expires}`);
     assert(new Date(result.firstClaim).getTime() === worker.firstClaim.getTime(), `expected ${worker.firstClaim}`);
     assert(result.recentTasks[0].taskId === taskId, `expected ${taskId}`);
-    assert(result.recentTasks[0].runId === 1, 'expected 1');
+    assert(result.recentTasks[0].runId === 0, 'expected 0');
     assert(result.recentTasks[1].taskId === taskId, `expected ${taskId}`);
-    assert(result.recentTasks[1].runId === 2, 'expected 2');
+    assert(result.recentTasks[1].runId === 1, 'expected 1');
     assert(result.recentTasks[2].taskId === taskId2, `expected ${taskId2}`);
-    assert(result.recentTasks[2].runId === 1, 'expected 1');
+    assert(result.recentTasks[2].runId === 0, 'expected 0');
 
   });
 
@@ -516,7 +516,7 @@ suite('provisioners and worker-types', () => {
       workerType: 'gecko-b-2-linux',
       workerGroup: 'my-worker-group',
       workerId: 'my-worker',
-      recentTasks: [{taskId, runId: 1}],
+      recentTasks: [{taskId, runId: 0}],
       expires: new Date('3017-07-29'),
       disabled: false,
       firstClaim: new Date(),
@@ -539,7 +539,7 @@ suite('provisioners and worker-types', () => {
     assert(result.workerGroup === worker.workerGroup, `expected ${worker.workerGroup}`);
     assert(result.workerId === worker.workerId, `expected ${worker.workerId}`);
     assert(result.recentTasks[0].taskId === taskId, `expected ${taskId}`);
-    assert(result.recentTasks[0].runId === 1, 'expected 1');
+    assert(result.recentTasks[0].runId === 0, 'expected 1');
     assert(new Date(result.expires).getTime() === updateProps.expires.getTime(), `expected ${updateProps.expires}`);
   });
 
@@ -575,7 +575,7 @@ suite('provisioners and worker-types', () => {
     const result = await Worker.load({provisionerId, workerType, workerGroup, workerId});
 
     assert(result.recentTasks[0].taskId === taskId, `expected taskId ${taskId}`);
-    assert(result.recentTasks[0].runId === 1, 'expected runId 1');
+    assert(result.recentTasks[0].runId === 0, 'expected runId 0');
   });
 
   test('queue.getWorker returns 20 most recent taskIds', async () => {
