@@ -182,23 +182,11 @@ class WorkerInfo {
       return;
     }
 
-    const recentTasks = [...worker.recentTasks];
-
-    tasks.forEach((task) => {
-      const {taskId, runs} = task.status;
-      const runId = runs.length - 1;
-
-      if (!_.some(recentTasks, {taskId, runId})) {
-        recentTasks.push({taskId, runId});
-      }
-
-      if (recentTasks.length > RECENT_TASKS_LIMIT) {
-        recentTasks.shift();
-      }
-    });
-
-    await worker.modify(entity => {
-      entity.recentTasks = recentTasks;
+    await worker.modify(worker => {
+      worker.recentTasks = [
+        ...worker.recentTasks,
+        ...tasks.map(({status}) => ({taskId: status.taskId, runId: status.runs.length - 1})),
+      ].slice(-RECENT_TASKS_LIMIT);
     });
   }
 }

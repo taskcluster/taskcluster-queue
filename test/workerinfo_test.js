@@ -539,7 +539,7 @@ suite('provisioners and worker-types', () => {
     assert(result.workerGroup === worker.workerGroup, `expected ${worker.workerGroup}`);
     assert(result.workerId === worker.workerId, `expected ${worker.workerId}`);
     assert(result.recentTasks[0].taskId === taskId, `expected ${taskId}`);
-    assert(result.recentTasks[0].runId === 0, 'expected 1');
+    assert(result.recentTasks[0].runId === 0, 'expected 0');
     assert(new Date(result.expires).getTime() === updateProps.expires.getTime(), `expected ${updateProps.expires}`);
   });
 
