@@ -39,10 +39,69 @@ properties:
       of when the provisioner was last seen active.
     type:         string
     format:       date-time
-additionalProperties: true
+  actions:
+    type:         array
+    items:
+      type:       object
+      title:      Actions
+      description: |
+        Actions can be defined at any context higher than or at the
+        action's level -- so a worker type or provisioner can have
+        actions with level=worker. This should avoid unnecessary
+        duplication of actions.
+      properties:
+        label:
+          title:        "Label"
+          description: |
+            Short names for things like logging/error messages.
+          type: string
+        title:
+          title:        "Title"
+          description: |
+            Appropriate title for any sort of Modal prompt.
+        context:
+          title:        "Context"
+          description: |
+            Actions have a "context" that is one of provisioner, worker-type,
+            or worker, indicating which it applies to (so this action would
+            appear in a menu for a specific worker). Actions can be defined
+            at any context higher than or at the action's level -- so a
+            worker type or provisioner can have actions with level=worker.
+            This should avoid unnecessary duplication of actions.
+          type:         string
+          enum:         ["provisioner", "worker-type", "worker"]
+        url:
+          title:        "URL"
+          description: |
+            When the action is triggered, it will make a POST request to this URL.
+            The request will be signed with the user's Taskcluster credentials.
+          type:         string
+          format:       uri
+        description:
+          title:        "Description"
+          description: |
+            Description of the provisioner.
+          type:         string
+        severity:
+          title:        "Severity"
+          description: |
+            The severity of an action is used by the user-interface to notify users
+            which actions should cause concern for the user v.s. which ones have no major effect.
+          type:         string
+          enum:         ["safe", "warning", "danger"]
+      additionalProperties: false
+      required:
+        - label
+        - title
+        - context
+        - url
+        - description
+        - severity
+additionalProperties: false
 required:
   - provisionerId
   - description
+  - actions
   - stability
   - expires
   - lastDateActive
