@@ -119,6 +119,7 @@ class WorkerInfo {
           lastDateActive: new Date(),
           description: '',
           stability: 'experimental',
+          actions: [],
         });
       }));
     }

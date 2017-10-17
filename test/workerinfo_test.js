@@ -90,6 +90,7 @@ suite('provisioners and worker-types', () => {
       lastDateActive: new Date(),
       description: 'test-worker-type',
       stability: 'experimental',
+      actions: [],
     };
 
     await WorkerType.create(wType);
@@ -109,6 +110,7 @@ suite('provisioners and worker-types', () => {
       lastDateActive: new Date(),
       description: 'test-worker-type',
       stability: 'experimental',
+      actions: [],
     };
 
     await WorkerType.create(Object.assign({}, {workerType: 'gecko-b-2-linux'}, wType));
@@ -151,6 +153,7 @@ suite('provisioners and worker-types', () => {
       lastDateActive: new Date(),
       description: 'test-worker-type',
       stability: 'experimental',
+      actions: [],
     });
     await helper.expireWorkerInfo();
 
@@ -308,6 +311,7 @@ suite('provisioners and worker-types', () => {
       lastDateActive: new Date(),
       description: 'test-worker-type',
       stability: 'experimental',
+      actions: [],
     };
 
     await WorkerType.create(wType);
@@ -331,10 +335,19 @@ suite('provisioners and worker-types', () => {
       lastDateActive: new Date(),
       description: 'test-wType',
       stability: 'experimental',
+      actions: [],
     });
 
     const updateProps = {
       description: 'desc-wType',
+      actions: [{
+        label: 'kill',
+        title: 'Kill Worker Type',
+        context: 'worker-type',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/' +
+          ':provisionerId:/:workerType/:workerGroup/:workerId',
+        description: 'Remove worker-type gecko-b-2-linux',
+      }],
     };
 
     await helper.queue.declareWorkerType(wType.provisionerId, wType.workerType, updateProps);
@@ -345,7 +358,80 @@ suite('provisioners and worker-types', () => {
     assert(result.workerType === wType.workerType, `expected ${wType.provisionerId}`);
     assert(result.description === updateProps.description, `expected ${updateProps.description}`);
     assert(result.stability === wType.stability, `expected ${wType.stability}`);
+    assert(result.actions[0].url === updateProps.actions[0].url, `expected action url ${updateProps.actions[0].url}`);
     assert(new Date(result.expires).getTime() === wType.expires.getTime(), `expected ${wType.expires}`);
+  });
+
+  test('queue.declareWorkerType adds two actions to a worker-type', async () => {
+    const WorkerType = await helper.load('WorkerType', helper.loadOptions);
+
+    const wType = await WorkerType.create({
+      provisionerId: 'prov1',
+      workerType: 'gecko-b-2-linux',
+      expires: new Date('3017-07-29'),
+      lastDateActive: new Date(),
+      description: 'test-wType',
+      stability: 'experimental',
+      actions: [],
+    });
+
+    const actionOne = {
+      label: 'kill',
+      title: 'Kill Worker Type',
+      context: 'worker-type',
+      url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/' +
+      ':provisionerId:/:workerType/:workerGroup/:workerId',
+      description: 'Remove worker-type gecko-b-2-linux',
+    };
+
+    const actionTwo = {
+      label: 'reboot',
+      title: 'Reboot Worker Type',
+      context: 'worker-type',
+      url: 'https://hardware-provisioner.mozilla-releng.net/v1/reboot/' +
+      ':provisionerId:/:workerType/:workerGroup/:workerId',
+      description: 'Reboot worker-type gecko-b-2-linux',
+    };
+
+    await helper.queue.declareWorkerType(wType.provisionerId, wType.workerType, {actions: [actionOne, actionTwo]});
+
+    const result = await helper.queue.getWorkerType(wType.provisionerId, wType.workerType);
+
+    assert(result.actions.length === 2, 'expected 2 actions');
+    assert(result.actions[0].url === actionOne.url, `expected url to be ${actionOne.url}`);
+    assert(result.actions[1].url === actionTwo.url, `expected url to be ${actionTwo.url}`);
+  });
+
+  test('queue.declareWorkerType throws when an action is of context "provisioner"', async () => {
+    const WorkerType = await helper.load('WorkerType', helper.loadOptions);
+
+    const wType = await WorkerType.create({
+      provisionerId: 'prov1',
+      workerType: 'gecko-b-2-linux',
+      expires: new Date('3017-07-29'),
+      lastDateActive: new Date(),
+      description: 'test-wType',
+      stability: 'experimental',
+      actions: [],
+    });
+
+    const action = {
+      label: 'kill',
+      title: 'Kill Worker Type',
+      context: 'provisioner',
+      url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/' +
+      ':provisionerId:/:workerType/:workerGroup/:workerId',
+      description: 'Remove worker-type',
+    };
+
+    try {
+      await helper.queue.declareWorkerType(wType.provisionerId, wType.workerType, {actions: [action]});
+      assert(false, 'expected declareWorkerType to throw an error');
+    } catch (e) {
+      const result = await helper.queue.getWorkerType(wType.provisionerId, wType.workerType);
+
+      assert(result.actions.length === 0, 'expected 0 actions');
+    }
   });
 
   test('queue.getProvisioner returns a provisioner', async () => {
@@ -405,6 +491,7 @@ suite('provisioners and worker-types', () => {
       lastDateActive: new Date(),
       description: 'test-wType',
       stability: 'experimental',
+      actions: [],
     };
 
     await WorkerType.create(wType);
