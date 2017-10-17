@@ -394,7 +394,6 @@ suite('provisioners and worker-types', () => {
         url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/' +
           ':provisionerId:/:workerType/:workerGroup/:workerId',
         description: 'Remove provisioner desc-provisioner',
-        severity: 'danger',
       }],
     };
 
@@ -428,7 +427,6 @@ suite('provisioners and worker-types', () => {
       url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/' +
       ':provisionerId:/:workerType/:workerGroup/:workerId',
       description: 'Remove provisioner desc-provisioner',
-      severity: 'danger',
     };
 
     const actionTwo = {
@@ -438,7 +436,6 @@ suite('provisioners and worker-types', () => {
       url: 'https://hardware-provisioner.mozilla-releng.net/v1/reboot/' +
       ':provisionerId:/:workerType/:workerGroup/:workerId',
       description: 'Reboot provisioner desc-provisioner',
-      severity: 'warning',
     };
 
     await helper.queue.declareProvisioner(provisioner.provisionerId, {actions: [actionOne, actionTwo]});
