@@ -388,7 +388,7 @@ suite('provisioners and worker-types', () => {
     const updateProps = {
       description: 'desc-provisioner',
       actions: [{
-        label: 'kill',
+        name: 'kill',
         title: 'Kill Provisioner',
         context: 'provisioner',
         url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
@@ -420,7 +420,7 @@ suite('provisioners and worker-types', () => {
     });
 
     const actionOne = {
-      label: 'kill',
+      name: 'kill',
       title: 'Kill Provisioner',
       context: 'provisioner',
       url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
@@ -428,7 +428,7 @@ suite('provisioners and worker-types', () => {
     };
 
     const actionTwo = {
-      label: 'reboot',
+      name: 'reboot',
       title: 'Reboot Provisioner',
       context: 'provisioner',
       url: 'https://hardware-provisioner.mozilla-releng.net/v1/reboot',

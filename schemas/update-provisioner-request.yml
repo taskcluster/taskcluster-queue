@@ -40,8 +40,8 @@ properties:
         `'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle?provisionerId=${PROVISIONER_ID}&workerType=${WORKER_TYPE}`.
         In other words, `url` handles the path name and `context` constructs the query string.
       properties:
-        label:
-          title:  "Label"
+        name:
+          title:  "Name"
           description: |
             Short names for things like logging/error messages.
           type: string
@@ -51,24 +51,12 @@ properties:
             Appropriate title for any sort of Modal prompt.
         context:
           title:  "Context"
-          description: |
-            Actions have a "context" that is one of provisioner, worker-type,
-            or worker, indicating which it applies to. `context` is used to construct
-            the query string of the `POST` request.
-            If `context='worker'`, the query string will be
-            `?provisionerId=${PROVISIONER_ID}&workerType=${WORKER_TYPE}&workerGroup=${WORKER_GROUP}&workerId=${WORKER_ID}`.
-            If `context='worker-type'`, the query string will be
-            `?provisionerId=${PROVISIONER_ID}&workerType=${WORKER_TYPE}`.
-            If `context='provisioner'`, the query string will be
-            `?provisionerId=${PROVISIONER_ID}`.
+          description: {$const: action-context-description}
           type:   string
           enum:   ["provisioner", "worker-type", "worker"]
         url:
           title:  "URL"
-          description: |
-            When an action is triggered, the `url`
-            and `context` property are used to make the `POST` request.
-            The request will be signed with the user's Taskcluster credentials.
+          description: {$const: action-url-description}
           type:   string
           format: uri
         description:
@@ -78,7 +66,7 @@ properties:
           type:   string
       additionalProperties: false
       required:
-        - label
+        - name
         - title
         - context
         - url
