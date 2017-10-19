@@ -2296,7 +2296,7 @@ api.declare({
   ].join('\n'),
 }, async function(req, res) {
   const {provisionerId, workerType} = req.params;
-  const {stability, description, expires} = req.body;
+  const {stability, description, expires, actions} = req.body;
   let result;
 
   const wType = await this.WorkerType.load({provisionerId, workerType}, true);
@@ -2313,6 +2313,7 @@ api.declare({
     result = await wType.modify((entity) => {
       entity.stability = stability || entity.stability;
       entity.description = description || entity.description;
+      entity.actions = actions || entity.actions;
       entity.expires = new Date(expires || entity.expires);
     });
   } else {
@@ -2322,6 +2323,7 @@ api.declare({
       expires: expires || taskcluster.fromNow('5 days'),
       lastDateActive: new Date(),
       description: description || '',
+      actions: actions || [],
       stability: stability || 'experimental',
     });
   }

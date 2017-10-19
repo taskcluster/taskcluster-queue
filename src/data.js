@@ -821,6 +821,23 @@ let WorkerType = Entity.configure({
 
     return item;
   },
+}).configure({
+  version:            4,
+  properties: {
+    provisionerId:    Entity.types.String,
+    workerType:       Entity.types.String,
+    // the time at which this worker-type should no longer be displayed
+    expires:          Entity.types.Date,
+    lastDateActive:   Entity.types.Date,
+    description:      Entity.types.Text,
+    stability:        Entity.types.String,
+    actions:          Entity.types.JSON,
+  },
+  migrate(item) {
+    item.actions = [];
+
+    return item;
+  },
 });
 
 /**
@@ -850,6 +867,7 @@ WorkerType.prototype.json = function() {
     lastDateActive:   this.lastDateActive.toJSON(),
     description:      this.description,
     stability:        this.stability,
+    actions:          this.actions,
   };
 };
 
