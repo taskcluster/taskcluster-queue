@@ -1372,8 +1372,8 @@ api.declare({
     workerId,
   }, true);
 
-  // Don't record tasks when worker is disabled
-  if (worker && worker.disabled) {
+  // Don't record tasks when worker is quarantined
+  if (worker && worker.quarantineUntil.getTime() > new Date().getTime()) {
     return res.reply({
       tasks: [],
     });
@@ -1472,8 +1472,8 @@ api.declare({
     workerId,
   }, true);
 
-  // Don't record task when worker is disabled
-  if (worker && worker.disabled) {
+  // Don't record task when worker is quarantined
+  if (worker && worker.quarantineUntil.getTime() > new Date().getTime()) {
     return res.reply({});
   }
 
@@ -2351,7 +2351,7 @@ api.declare({
   query: {
     continuationToken: /./,
     limit: /^[0-9]+$/,
-    disabled: /^(true|false)$/,
+    quarantineUntil: /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/,
   },
   name:       'listWorkers',
   stability:  API.stability.experimental,
@@ -2360,8 +2360,8 @@ api.declare({
   description: [
     'Get a list of all active workers of a workerType.',
     '',
-    '`listWorkers` allows a response to be filtered by the `disabled` property.',
-    'To filter the query, you should call the end-point with `disabled` as a query-string option.',
+    '`listWorkers` allows a response to be filtered by the `quarantineUntil` property.',
+    'To filter the query, you should call the end-point with `quarantineUntil` as a query-string option.',
     '',
     'The response is paged. If this end-point returns a `continuationToken`, you',
     'should call the end-point again with the `continuationToken` as a query-string',
@@ -2370,7 +2370,7 @@ api.declare({
   ].join('\n'),
 }, async function(req, res) {
   const continuation = req.query.continuationToken || null;
-  const disabled = req.query.disabled || null;
+  const quarantineUntil = req.query.quarantineUntil || null;
   const provisionerId = req.params.provisionerId;
   const workerType = req.params.workerType;
   const limit = Math.min(1000, parseInt(req.query.limit || 1000, 10));
@@ -2379,11 +2379,8 @@ api.declare({
     provisionerId,
     workerType,
     expires: Entity.op.greaterThan(new Date()),
+    quarantineUntil: Entity.op.greaterThan(new Date(quarantineUntil || -8640000000000000)),
   };
-
-  if (disabled) {
-    workerQuery.disabled = JSON.parse(disabled);
-  }
 
   const [workers, provisioner] = await Promise.all([
     await this.Worker.scan(workerQuery, {continuation, limit}),
@@ -2399,7 +2396,7 @@ api.declare({
         workerId: worker.workerId,
         firstClaim: worker.firstClaim.toJSON(),
         latestTask: worker.recentTasks.pop(),
-        disabled: worker.disabled,
+        quarantineUntil: worker.quarantineUntil.toJSON(),
       };
     }),
     actions: actions || [],
@@ -2455,7 +2452,52 @@ api.declare({
   return res.reply(Object.assign({}, worker.json(), {actions}));
 });
 
-// /** Update a worker */
+/** Quarantine a Worker */
+api.declare({
+  method: 'put',
+  route:  '/provisioners/:provisionerId/worker-types/:workerType/workers/:workerGroup/:workerId',
+  name:   'quarantineWorker',
+  stability: API.stability.experimental,
+  scopes: [
+    [
+      'queue:quarantine-worker:<provisionerId>/<workerType>/<workerGroup>/<workerId>',
+    ],
+  ],
+  deferAuth: true,
+  input: 'quarantine-worker-request.json#',
+  output: 'worker-response.json#',
+  title: 'Quarantine a worker',
+  description: [
+    'Quarantine a worker',
+  ].join('\n'),
+}, async function(req, res) {
+  let result;
+  const {provisionerId, workerType, workerGroup, workerId} = req.params;
+  const {quarantineUntil} = req.body;
+  const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
+  const requestAllowed = req.satisfies({provisionerId, workerType, workerGroup, workerId});
+
+  if (!requestAllowed) {
+    return;
+  }
+
+  if (worker) {
+    try {
+      result = await worker.modify((entity) => {
+        entity.quarantineUntil = new Date(quarantineUntil);
+      });
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  const prov = await this.Provisioner.load({provisionerId}, true);
+  const actions = prov ? prov.actions.filter(action => action.context === 'worker') : [];
+
+  return res.reply(Object.assign({}, result.json(), {actions}));
+});
+
+/** Update a worker */
 api.declare({
   method:     'put',
   route:      '/provisioners/:provisionerId/worker-types/:workerType/:workerGroup/:workerId',
@@ -2478,7 +2520,7 @@ api.declare({
   ].join('\n'),
 }, async function(req, res) {
   const {provisionerId, workerType, workerGroup, workerId} = req.params;
-  const {expires, disabled} = req.body;
+  const {expires} = req.body;
   let result;
 
   const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
@@ -2495,7 +2537,6 @@ api.declare({
     try {
       result = await worker.modify((entity) => {
         entity.expires = new Date(expires || entity.expires);
-        entity.disabled = typeof disabled === 'boolean' ? disabled : entity.disabled;
       });
     } catch (err) {
       throw err;
@@ -2508,7 +2549,7 @@ api.declare({
       workerId,
       recentTasks: [],
       expires: new Date(expires || taskcluster.fromNow('1 day')),
-      disabled: false,
+      quarantineUntil: new Date(),
       firstClaim: new Date(),
     });
   }

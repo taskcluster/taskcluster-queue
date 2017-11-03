@@ -933,6 +933,30 @@ let Worker = Entity.configure({
 
     return item;
   },
+}).configure({
+  version:            5,
+  properties: {
+    provisionerId:    Entity.types.String,
+    workerType:       Entity.types.String,
+    workerGroup:      Entity.types.String,
+    workerId:         Entity.types.String,
+    /**
+     * List of objects with properties:
+     * - taskId
+     * - runId
+     * See JSON schema for documentation.
+     */
+    recentTasks:      Entity.types.JSON,
+    quarantineUntil:  Entity.types.Date,
+    // the time at which this worker should no longer be displayed
+    expires:          Entity.types.Date,
+    firstClaim:       Entity.types.Date,
+  },
+  migrate(item) {
+    item.quarantineUntil = new Date();
+
+    return item;
+  },
 });
 
 /**
@@ -960,7 +984,7 @@ Worker.prototype.json = function() {
     provisionerId:    this.provisionerId,
     workerId:         this.workerId,
     workerGroup:      this.workerGroup,
-    disabled:         this.disabled,
+    quarantineUntil:  this.quarantineUntil.toJSON(),
     recentTasks:      this.recentTasks,
     expires:          this.expires.toJSON(),
     firstClaim:       this.firstClaim.toJSON(),
