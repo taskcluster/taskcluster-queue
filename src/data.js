@@ -953,7 +953,7 @@ let Worker = Entity.configure({
     firstClaim:       Entity.types.Date,
   },
   migrate(item) {
-    item.quarantineUntil = new Date();
+    item.quarantineUntil = new Date(0);
 
     return item;
   },
@@ -979,16 +979,20 @@ Worker.expire = async function(now) {
 };
 
 Worker.prototype.json = function() {
-  return {
-    workerType:       this.workerType,
-    provisionerId:    this.provisionerId,
-    workerId:         this.workerId,
-    workerGroup:      this.workerGroup,
-    quarantineUntil:  this.quarantineUntil.toJSON(),
-    recentTasks:      this.recentTasks,
-    expires:          this.expires.toJSON(),
-    firstClaim:       this.firstClaim.toJSON(),
-  };
+  return Object.assign(
+    {
+      workerType:       this.workerType,
+      provisionerId:    this.provisionerId,
+      workerId:         this.workerId,
+      workerGroup:      this.workerGroup,
+      recentTasks:      this.recentTasks,
+      expires:          this.expires.toJSON(),
+      firstClaim:       this.firstClaim.toJSON(),
+    },
+    this.quarantineUntil.getTime() > new Date().getTime() ?
+      {quarantineUntil:  this.quarantineUntil.toJSON()} :
+      null
+  );
 };
 
 exports.Worker = Worker;

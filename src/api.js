@@ -2362,6 +2362,7 @@ api.declare({
     '',
     '`listWorkers` allows a response to be filtered by the `quarantineUntil` property.',
     'To filter the query, you should call the end-point with `quarantineUntil` as a query-string option.',
+    'The return value will contain quarantined workers after the `quarantineUntil` date.',
     '',
     'The response is paged. If this end-point returns a `continuationToken`, you',
     'should call the end-point again with the `continuationToken` as a query-string',
@@ -2379,8 +2380,11 @@ api.declare({
     provisionerId,
     workerType,
     expires: Entity.op.greaterThan(new Date()),
-    quarantineUntil: Entity.op.greaterThan(new Date(quarantineUntil || -8640000000000000)),
   };
+
+  if (quarantineUntil) {
+    workerQuery.quarantineUntil = Entity.op.greaterThan(new Date(quarantineUntil));
+  }
 
   const [workers, provisioner] = await Promise.all([
     await this.Worker.scan(workerQuery, {continuation, limit}),
@@ -2463,7 +2467,6 @@ api.declare({
       'queue:quarantine-worker:<provisionerId>/<workerType>/<workerGroup>/<workerId>',
     ],
   ],
-  deferAuth: true,
   input: 'quarantine-worker-request.json#',
   output: 'worker-response.json#',
   title: 'Quarantine a worker',
@@ -2475,11 +2478,6 @@ api.declare({
   const {provisionerId, workerType, workerGroup, workerId} = req.params;
   const {quarantineUntil} = req.body;
   const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
-  const requestAllowed = req.satisfies({provisionerId, workerType, workerGroup, workerId});
-
-  if (!requestAllowed) {
-    return;
-  }
 
   if (worker) {
     try {
