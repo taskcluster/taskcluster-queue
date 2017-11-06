@@ -2395,13 +2395,17 @@ api.declare({
 
   const result = {
     workers: workers.entries.map(worker => {
-      return {
-        workerGroup: worker.workerGroup,
-        workerId: worker.workerId,
-        firstClaim: worker.firstClaim.toJSON(),
-        latestTask: worker.recentTasks.pop(),
-        quarantineUntil: worker.quarantineUntil.toJSON(),
-      };
+      return Object.assign(
+        {
+          workerGroup: worker.workerGroup,
+          workerId: worker.workerId,
+          firstClaim: worker.firstClaim.toJSON(),
+          latestTask: worker.recentTasks.pop(),
+        },
+        worker.quarantineUntil.getTime() > new Date().getTime() ?
+          {quarantineUntil:  worker.quarantineUntil.toJSON()} :
+          null
+      );
     }),
     actions: actions || [],
   };

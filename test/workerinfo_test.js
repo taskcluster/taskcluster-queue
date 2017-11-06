@@ -241,10 +241,7 @@ suite('provisioners and worker-types', () => {
     assert(result.workers.length === 1, 'expected workers');
     assert(result.workers[0].workerGroup === worker.workerGroup, `expected ${worker.workerGroup}`);
     assert(result.workers[0].workerId === worker.workerId, `expected ${worker.workerId}`);
-    assert(
-      new Date(result.workers[0].quarantineUntil).getTime() === worker.quarantineUntil.getTime(),
-      `expected ${worker.quarantineUntil}`
-    );
+    assert(!result.workers[0].quarantineUntil, 'expected no quarantineUntil property');
     assert(result.workers[0].latestTask.taskId === taskId2, `expected ${taskId2}`);
     assert(
       new Date(result.workers[0].firstClaim).getTime() === worker.firstClaim.getTime(), `expected ${worker.firstClaim}`
