@@ -33,6 +33,8 @@ properties:
             Once the quarantineUntil time has elapsed, the worker resumes accepting jobs.
             Note that a quarantine can be lifted by setting `quarantineUntil` to the present time (or
             somewhere in the past).
+          type:         ["string", "null"]
+          format:       date-time
         firstClaim:
           title:        "First task claimed"
           description: |

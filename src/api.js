@@ -2351,6 +2351,7 @@ api.declare({
   query: {
     continuationToken: /./,
     limit: /^[0-9]+$/,
+    // Matches with the ISO 8601 string format
     quarantineUntil: /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/,
   },
   name:       'listWorkers',
@@ -2394,19 +2395,15 @@ api.declare({
   const actions = provisioner ? provisioner.actions.filter(action => action.context === 'worker') : [];
 
   const result = {
-    workers: workers.entries.map(worker => {
-      return Object.assign(
-        {
-          workerGroup: worker.workerGroup,
-          workerId: worker.workerId,
-          firstClaim: worker.firstClaim.toJSON(),
-          latestTask: worker.recentTasks.pop(),
-        },
-        worker.quarantineUntil.getTime() > new Date().getTime() ?
-          {quarantineUntil:  worker.quarantineUntil.toJSON()} :
-          null
-      );
-    }),
+    workers: workers.entries.map(worker => ({
+      workerGroup: worker.workerGroup,
+      workerId: worker.workerId,
+      firstClaim: worker.firstClaim.toJSON(),
+      latestTask: worker.recentTasks.pop(),
+      quarantineUntil: worker.quarantineUntil.getTime() > new Date().getTime() ?
+        worker.quarantineUntil.toJSON() :
+        null,
+    })),
     actions: actions || [],
   };
 

@@ -979,20 +979,18 @@ Worker.expire = async function(now) {
 };
 
 Worker.prototype.json = function() {
-  return Object.assign(
-    {
-      workerType:       this.workerType,
-      provisionerId:    this.provisionerId,
-      workerId:         this.workerId,
-      workerGroup:      this.workerGroup,
-      recentTasks:      this.recentTasks,
-      expires:          this.expires.toJSON(),
-      firstClaim:       this.firstClaim.toJSON(),
-    },
-    this.quarantineUntil.getTime() > new Date().getTime() ?
-      {quarantineUntil:  this.quarantineUntil.toJSON()} :
-      null
-  );
+  return {
+    workerType:       this.workerType,
+    provisionerId:    this.provisionerId,
+    workerId:         this.workerId,
+    workerGroup:      this.workerGroup,
+    recentTasks:      this.recentTasks,
+    expires:          this.expires.toJSON(),
+    firstClaim:       this.firstClaim.toJSON(),
+    quarantineUntil:  this.quarantineUntil.getTime() > new Date().getTime() ?
+      this.quarantineUntil.toJSON() :
+      null,
+  };
 };
 
 exports.Worker = Worker;
