@@ -2351,8 +2351,7 @@ api.declare({
   query: {
     continuationToken: /./,
     limit: /^[0-9]+$/,
-    // Matches with the ISO 8601 string format
-    quarantineUntil: /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/,
+    quarantined: /^(true|false)$/,
   },
   name:       'listWorkers',
   stability:  API.stability.experimental,
@@ -2361,9 +2360,9 @@ api.declare({
   description: [
     'Get a list of all active workers of a workerType.',
     '',
-    '`listWorkers` allows a response to be filtered by the `quarantineUntil` property.',
-    'To filter the query, you should call the end-point with `quarantineUntil` as a query-string option.',
-    'The return value will contain quarantined workers after the `quarantineUntil` date.',
+    '`listWorkers` allows a response to be filtered by quarantined and non quarantined workers.',
+    'To filter the query, you should call the end-point with `quarantined` as a query-string option with a',
+    'true or false value.',
     '',
     'The response is paged. If this end-point returns a `continuationToken`, you',
     'should call the end-point again with the `continuationToken` as a query-string',
@@ -2372,19 +2371,22 @@ api.declare({
   ].join('\n'),
 }, async function(req, res) {
   const continuation = req.query.continuationToken || null;
-  const quarantineUntil = req.query.quarantineUntil || null;
+  const quarantined = req.query.quarantined || null;
   const provisionerId = req.params.provisionerId;
   const workerType = req.params.workerType;
   const limit = Math.min(1000, parseInt(req.query.limit || 1000, 10));
+  const now = new Date();
 
   const workerQuery = {
     provisionerId,
     workerType,
-    expires: Entity.op.greaterThan(new Date()),
+    expires: Entity.op.greaterThan(now),
   };
 
-  if (quarantineUntil) {
-    workerQuery.quarantineUntil = Entity.op.greaterThan(new Date(quarantineUntil));
+  if (quarantined === 'true') {
+    workerQuery.quarantineUntil = Entity.op.greaterThan(now);
+  } else if (quarantined === 'false') {
+    workerQuery.quarantineUntil = Entity.op.lessThan(now);
   }
 
   const [workers, provisioner] = await Promise.all([
@@ -2400,7 +2402,7 @@ api.declare({
       workerId: worker.workerId,
       firstClaim: worker.firstClaim.toJSON(),
       latestTask: worker.recentTasks.pop(),
-      quarantineUntil: worker.quarantineUntil.getTime() > new Date().getTime() ?
+      quarantineUntil: worker.quarantineUntil.getTime() > now.getTime() ?
         worker.quarantineUntil.toJSON() :
         null,
     })),

@@ -320,10 +320,11 @@ suite('provisioners and worker-types', () => {
     await Worker.create(worker);
 
     const result = await helper.queue.listWorkers(
-      provisionerId, workerType, {quarantineUntil: taskcluster.fromNowJSON('-1h')}
+      provisionerId, workerType, {quarantined: false}
     );
+
     const result2 = await helper.queue.listWorkers(
-      provisionerId, workerType, {quarantineUntil: taskcluster.fromNowJSON('12h')}
+      provisionerId, workerType, {quarantined: true}
     );
 
     assert(result.workers.length === 1, 'expected 1 worker');
