@@ -117,13 +117,13 @@ suite('provisioners and worker-types', () => {
         name: 'kill',
         title: 'Kill Provisioner',
         context: 'provisioner',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:provisionerId',
         description: 'Remove provisioner prov-B',
       }, {
         name: 'kill',
         title: 'Kill Worker Type',
         context: 'worker-type',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:provisionerId/:workerType',
         description: 'Remove worker type',
       }],
     };
@@ -266,13 +266,13 @@ suite('provisioners and worker-types', () => {
         name: 'kill',
         title: 'Kill Provisioner',
         context: 'provisioner',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:provisionerId',
         description: 'Remove provisioner prov-B',
       }, {
         name: 'kill',
         title: 'Kill Worker',
         context: 'worker',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:workerGroup/:workerId',
         description: 'Remove worker',
       }],
     };
@@ -434,13 +434,13 @@ suite('provisioners and worker-types', () => {
         name: 'kill',
         title: 'Kill Provisioner',
         context: 'provisioner',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:provisionerId',
         description: 'Remove provisioner prov-B',
       }, {
         name: 'kill',
         title: 'Kill Worker Type',
         context: 'worker-type',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:provisionerId/:workerType',
         description: 'Remove worker type',
       }],
     };
@@ -531,7 +531,7 @@ suite('provisioners and worker-types', () => {
         name: 'kill',
         title: 'Kill Provisioner',
         context: 'provisioner',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:provisionerId',
         description: 'Remove provisioner desc-provisioner',
       }],
     };
@@ -563,7 +563,7 @@ suite('provisioners and worker-types', () => {
       name: 'kill',
       title: 'Kill Provisioner',
       context: 'provisioner',
-      url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle',
+      url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/:provisionerId',
       description: 'Remove provisioner desc-provisioner',
     };
 
@@ -571,7 +571,7 @@ suite('provisioners and worker-types', () => {
       name: 'reboot',
       title: 'Reboot Provisioner',
       context: 'provisioner',
-      url: 'https://hardware-provisioner.mozilla-releng.net/v1/reboot',
+      url: 'https://hardware-provisioner.mozilla-releng.net/v1/reboot/:provisionerId',
       description: 'Reboot provisioner desc-provisioner',
     };
 
