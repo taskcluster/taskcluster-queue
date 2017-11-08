@@ -155,10 +155,10 @@ action-url-description: |
   When an action is triggered, a `POST` request is made using the `url`.
   Depending on the `context`, the following parameters will be substituted in the url:
 
-  | `context`   | Path parameters                                      |
-  |-------------|------------------------------------------------------|
-  | provisioner | :provisionerId                                       |
-  | worker-type | :provisionerId, :workerType                          |
-  | worker      | :provisionerId, :workerType, :workerGroup, :workerId |
+  | `context`   | Path parameters                                          |
+  |-------------|----------------------------------------------------------|
+  | provisioner | <provisionerId>                                          |
+  | worker-type | <provisionerId>, <workerType>                            |
+  | worker      | <provisionerId>, <workerType>, <workerGroup>, <workerId> |
 
   _Note: The request needs to be signed with the user's Taskcluster credentials._
