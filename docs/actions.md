@@ -36,11 +36,11 @@ is used by the front-end to know where to display the action.
 To trigger an action, use the action's `url` property to make a `POST` request to it.
 Depending on the action's `context`, substitute the following parameters in the `url`:
 
-| `context`   | Path parameters                                      |
-|-------------|------------------------------------------------------|
-| provisioner | :provisionerId                                       |
-| worker-type | :provisionerId, :workerType                          |
-| worker      | :provisionerId, :workerType, :workerGroup, :workerId |
+| `context`   | Path parameters                                          |
+|-------------|----------------------------------------------------------|
+| provisioner | <provisionerId>                                          |
+| worker-type | <provisionerId>, <workerType>                            |
+| worker      | <provisionerId>, <workerType>, <workerGroup>, <workerId> |
   
 _Example:_
 
@@ -50,7 +50,7 @@ For the following action:
     name: 'kill',
     title: 'Kill',
     context: 'worker',
-    url: 'https://ec2-manager.taskcluster.net/v1/region/:workerGroup/instance/:workerId',
+    url: 'https://ec2-manager.taskcluster.net/v1/region/<workerGroup>/instance/<workerId>',
     description: 'Terminate an EC2 instance.',
 }
 ```
