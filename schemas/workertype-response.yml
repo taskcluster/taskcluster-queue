@@ -77,7 +77,7 @@ properties:
           description: |
             Method to indicate the desired action to be performed for a given resource.
           type:   string
-          enum:   ["GET", "POST", "PUT", "DELETE", "PATCH"]
+          enum:   ["POST", "PUT", "DELETE", "PATCH"]
         description:
           title:   "Description"
           description: |
