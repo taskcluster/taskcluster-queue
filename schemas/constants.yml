@@ -132,7 +132,7 @@ dependency-relation:
 
 # Description of actions. They are defined on the provisioner
 action-description: |
-  Actions are defined on the provisioner and they are performed via a `POST` request using the `url`.
+  Actions are defined on the provisioner and they are performed via a request using the `url` and `method`.
   Depending on the `context`, the `url` will be filled with parameters. In addition, `context` is
   used by the front-end to know where to display the action. For example, `context=worker`
   will display the action on the worker explorer.
@@ -146,13 +146,13 @@ action-context-description: |
 
   | `context`   | Page displayed        |
   |-------------|-----------------------|
-  | provisioner | Worker Types Explorer |
+  | provisioner | Provisioner Explorer  |
   | worker-type | Workers Explorer      |
   | worker      | Worker Explorer       |
 
 # Description of the url property in an action.
 action-url-description: |
-  When an action is triggered, a `POST` request is made using the `url`.
+  When an action is triggered, a request is made using the `url` and `method`.
   Depending on the `context`, the following parameters will be substituted in the url:
 
   | `context`   | Path parameters                                          |
