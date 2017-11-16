@@ -80,7 +80,7 @@ properties:
           title:  "Context"
           description: {$const: action-context-description}
           type:   string
-          enum:   ["worker"]
+          enum:   ["worker-type"]
         url:
           title:  "URL"
           description: {$const: action-url-description}

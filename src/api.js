@@ -2232,7 +2232,7 @@ api.declare({
     this.Provisioner.load({provisionerId}, true),
   ]);
 
-  const actions = provisioner ? provisioner.actions.filter(action => action.context === 'worker-type') : [];
+  const actions = provisioner ? provisioner.actions.filter(action => action.context === 'provisioner') : [];
 
   const result = {
     workerTypes: workerTypes.entries.map(workerType => workerType.json()),
@@ -2390,7 +2390,7 @@ api.declare({
     await this.Provisioner.load({provisionerId}, true),
   ]);
 
-  const actions = provisioner ? provisioner.actions.filter(action => action.context === 'worker') : [];
+  const actions = provisioner ? provisioner.actions.filter(action => action.context === 'worker-type') : [];
 
   const result = {
     workers: workers.entries.map(worker => {

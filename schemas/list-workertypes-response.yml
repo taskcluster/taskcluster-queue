@@ -74,7 +74,7 @@ properties:
           title:  "Context"
           description: {$const: action-context-description}
           type:   string
-          enum:   ["worker-type"]
+          enum:   ["provisioner"]
         url:
           title:  "URL"
           description: {$const: action-url-description}
