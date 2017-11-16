@@ -147,7 +147,7 @@ suite('provisioners and worker-types', () => {
     assert(result.workerTypes.length === 1, 'expected workerTypes');
     assert(result.workerTypes[0].workerType === wType.workerType, `expected ${wType.workerType}`);
     assert(result.actions.length === 1, 'expected 1 action');
-    assert(result.actions[0].context === 'worker-type', 'expected action with context worker-type');
+    assert(result.actions[0].context === 'provisioner', 'expected action with context provisioner');
   });
 
   test('list worker-types (limit and continuationToken)', async () => {
@@ -273,11 +273,11 @@ suite('provisioners and worker-types', () => {
         description: 'Remove provisioner prov-B',
       }, {
         name: 'kill',
-        title: 'Kill Worker',
-        context: 'worker',
-        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/<workerGroup>/<workerId>',
+        title: 'Kill Worker Type',
+        context: 'worker-type',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/<workerType>',
         method: 'DELETE',
-        description: 'Remove worker',
+        description: 'Remove worker-type',
       }],
     };
 
@@ -300,7 +300,7 @@ suite('provisioners and worker-types', () => {
     assert(result.workers.length === 1, 'expected workers');
     assert(result.workers[0].workerId === worker.workerId, `expected ${worker.workerId}`);
     assert(result.actions.length === 1, 'expected 1 action');
-    assert(result.actions[0].context === 'worker', 'expected action with context worker');
+    assert(result.actions[0].context === 'worker-type', 'expected action with context worker-type');
   });
 
   test('queue.listWorkers returns filtered workers', async () => {
