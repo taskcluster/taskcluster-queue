@@ -71,7 +71,6 @@ properties:
         - workerGroup
         - workerId
         - firstClaim
-        - latestTask
   continuationToken:
     type:           string
     title:          "Continuation Token"
