@@ -2391,13 +2391,15 @@ api.declare({
         workerGroup: worker.workerGroup,
         workerId: worker.workerId,
         firstClaim: worker.firstClaim.toJSON(),
-        latestTask: worker.recentTasks.pop(),
       };
+      if (worker.recentTasks.length > 0) {
+        entry.latestTask = worker.recentTasks[worker.recentTasks.length - 1];
+      }
       if (worker.quarantineUntil.getTime() > now.getTime()) {
         entry.quarantineUntil = worker.quarantineUntil.toJSON();
       }
       return entry;
-    })
+    }),
   };
 
   if (workers.continuation) {
