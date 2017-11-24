@@ -2386,15 +2386,18 @@ api.declare({
   const workers = await this.Worker.scan(workerQuery, {continuation, limit});
 
   const result = {
-    workers: workers.entries.map(worker => ({
-      workerGroup: worker.workerGroup,
-      workerId: worker.workerId,
-      firstClaim: worker.firstClaim.toJSON(),
-      latestTask: worker.recentTasks.pop(),
-      quarantineUntil: worker.quarantineUntil.getTime() > now.getTime() ?
-        worker.quarantineUntil.toJSON() :
-        null,
-    })),
+    workers: workers.entries.map(worker => {
+      let entry = {
+        workerGroup: worker.workerGroup,
+        workerId: worker.workerId,
+        firstClaim: worker.firstClaim.toJSON(),
+        latestTask: worker.recentTasks.pop(),
+      };
+      if (worker.quarantineUntil.getTime() > now.getTime()) {
+        entry.quarantineUntil = worker.quarantineUntil.toJSON();
+      }
+      return entry;
+    })
   };
 
   if (workers.continuation) {
