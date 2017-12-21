@@ -73,7 +73,7 @@ suite('task.priority', () => {
     var lowTaskId  = slugid.v4();
 
     debug('### Creating low: %s and high: %s tasks',
-          lowTaskId, highTaskId);
+      lowTaskId, highTaskId);
     await Promise.all([
       helper.queue.createTask(highTaskId, makeTask('high')),
       helper.queue.createTask(lowTaskId, makeTask('low')),

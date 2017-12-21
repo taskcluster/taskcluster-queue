@@ -36,7 +36,7 @@ BlobStore.prototype.createContainer = function() {
     this.service.createContainerIfNotExists(this.container, (err, created) => {
       if (err) {
         debug('Failed to create container \'%s\', err: %s, as JSON: %j',
-              this.container, err, err);
+          this.container, err, err);
         return reject(err);
       }
       if (created) {

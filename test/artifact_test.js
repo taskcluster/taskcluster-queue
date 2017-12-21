@@ -458,16 +458,16 @@ suite('Artifacts', function() {
     debug('Fetching artifact from: %s', url);
     try {
       res = await request
-                    .get(url)
-                    .set('x-forwarded-for', fakeIp)
-                    .redirects(0)
-                    .end();
+        .get(url)
+        .set('x-forwarded-for', fakeIp)
+        .redirects(0)
+        .end();
     } catch (err) {
       res = err.response;
     }
     assume(res.statusCode).equals(303);
     assert(res.headers.location.indexOf('proxy-for-us-east-1'),
-           'Expected res.headers.location to contain proxy-for-us-east-1');
+      'Expected res.headers.location to contain proxy-for-us-east-1');
 
     debug('### Expire artifacts');
     // config/test.js hardcoded to expire artifact 4 days in the future
@@ -552,16 +552,16 @@ suite('Artifacts', function() {
     debug('Fetching artifact from: %s', url);
     try {
       res = await request
-                    .get(url)
-                    .set('x-forwarded-for', fakeIp)
-                    .redirects(0)
-                    .end();
+        .get(url)
+        .set('x-forwarded-for', fakeIp)
+        .redirects(0)
+        .end();
     } catch (err) {
       res = err.response;
     }
     assume(res.statusCode).equals(303);
     assert(res.headers.location.indexOf('proxy-for-us-east-1'),
-           'Expected res.headers.location to contain proxy-for-us-east-1');
+      'Expected res.headers.location to contain proxy-for-us-east-1');
 
     debug('### Expire artifacts');
     // config/test.js hardcoded to expire artifact 4 days in the future
