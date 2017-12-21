@@ -1,4 +1,4 @@
-var request     = require('superagent-promise');
+var request     = require('superagent');
 var url         = require('url');
 var debug       = require('debug')('test:azure-blob-uploader-sas');
 var assert      = require('assert');
@@ -43,7 +43,6 @@ BlobUploader.prototype.putBlock = function(blockId, block) {
   return request
     .put(url)
     .send(block)
-    .end()
     .then(function(res) {
       // Check for success
       if (!res.ok) {
@@ -80,7 +79,6 @@ BlobUploader.prototype.putBlockList = function(blockIds, contentType) {
     .put(url)
     .set('x-ms-blob-content-type',  contentType)
     .send(xml)
-    .end()
     .then(function(res) {
       // Check for success
       if (!res.ok) {

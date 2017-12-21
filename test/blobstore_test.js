@@ -5,7 +5,7 @@ suite('queue/tasks_store', function() {
   var BlobStore     = require('../src/blobstore');
   var _             = require('lodash');
   var url           = require('url');
-  var request       = require('superagent-promise');
+  var request       = require('superagent');
   var BlobUploader  = require('./azure-blob-uploader-sas');
   var debug         = require('debug')('test:blobstore_test');
   var config        = require('typed-env-config');
@@ -176,7 +176,6 @@ suite('queue/tasks_store', function() {
       var url = blobstore.createSignedGetUrl(key, {expiry: expiry});
       return request
         .get(url)
-        .end()
         .then(function(res) {
           assert(res.ok, 'Request failed');
           assert(res.body.message === 'Hello',
