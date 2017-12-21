@@ -560,7 +560,7 @@ let load = loader({
 
       // Expire task-group members using delay
       debug('Expiring task-group members at: %s, from before %s',
-            new Date(), now);
+        new Date(), now);
       let count = await TaskGroupMember.expire(now);
       debug('Expired %s task-group members', count);
 
@@ -579,7 +579,7 @@ let load = loader({
 
       // Expire task-group sizes using delay
       debug('Expiring task-group sizes at: %s, from before %s',
-            new Date(), now);
+        new Date(), now);
       let count = await TaskGroupActiveSet.expire(now);
       debug('Expired %s task-group sizes', count);
 
@@ -607,7 +607,7 @@ let load = loader({
     },
   },
 
-   // Create the task-requirement expiration process (periodic job)
+  // Create the task-requirement expiration process (periodic job)
   'expire-task-requirement': {
     requires: ['cfg', 'TaskRequirement', 'monitor'],
     setup: async ({cfg, TaskRequirement, monitor}) => {

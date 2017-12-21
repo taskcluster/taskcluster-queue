@@ -15,8 +15,8 @@ suite('Task Expiration (expire-tasks)', function() {
       workerType:       'test-worker',
       created:          taskcluster.fromNowJSON(),
       deadline:         taskcluster.fromNowJSON('1 day'),
-                        // Notice that in config/test.js we've configured
-                        // expire-tasks to expire 4 days before expires
+      // Notice that in config/test.js we've configured
+      // expire-tasks to expire 4 days before expires
       expires:          taskcluster.fromNowJSON(expiration),
       retries:          1,
       payload:          {},

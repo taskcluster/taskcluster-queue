@@ -23,12 +23,12 @@ var Bucket = function(options) {
   assert(options.bucket,      'bucket must be specified');
   assert(options.credentials, 'credentials must be specified');
   assert(!options.bucketCDN || typeof options.bucketCDN === 'string',
-         'Expected bucketCDN to be a hostname or empty string for none');
+    'Expected bucketCDN to be a hostname or empty string for none');
   assert(options.monitor,     'options.monitor is required');
   if (options.bucketCDN) {
     assert(/^https?:\/\//.test(options.bucketCDN), 'bucketCDN must be http(s)');
     assert(/[^\/]$/.test(options.bucketCDN),
-           'bucketCDN shouldn\'t end with slash');
+      'bucketCDN shouldn\'t end with slash');
   }
   // Store the monitor
   this.monitor = options.monitor;

@@ -175,13 +175,13 @@ suite('queue/tasks_store', function() {
       expiry.setMinutes(expiry.getMinutes() + 5);
       var url = blobstore.createSignedGetUrl(key, {expiry: expiry});
       return request
-                .get(url)
-                .end()
-                .then(function(res) {
-                  assert(res.ok, 'Request failed');
-                  assert(res.body.message === 'Hello',
-                         'message didn\'t message');
-                });
+        .get(url)
+        .end()
+        .then(function(res) {
+          assert(res.ok, 'Request failed');
+          assert(res.body.message === 'Hello',
+            'message didn\'t message');
+        });
     });
   });
 
