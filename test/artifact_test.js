@@ -10,9 +10,9 @@ suite('Artifacts', function() {
   var assert        = require('assert');
   var urljoin       = require('url-join');
   var BlobUploader  = require('./azure-blob-uploader-sas');
-  var Bucket        = require('../lib/bucket');
-  var BlobStore     = require('../lib/blobstore');
-  var data          = require('../lib/data');
+  var Bucket        = require('../src/bucket');
+  var BlobStore     = require('../src/blobstore');
+  var data          = require('../src/data');
   var taskcluster   = require('taskcluster-client');
   var {Netmask}     = require('netmask');
   var assume        = require('assume');
