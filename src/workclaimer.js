@@ -289,8 +289,8 @@ class WorkClaimer extends events.EventEmitter {
     ].join('/');
     let credentials = taskcluster.createTemporaryCredentials({
       clientId,
-      start:  new Date(Date.now() - 15 * 60 * 1000),
-      expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
+      start:  new Date(),
+      expiry: takenUntil,
       scopes: [
         'queue:reclaim-task:' + taskId + '/' + runId,
         'queue:resolve-task:' + taskId + '/' + runId,

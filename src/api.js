@@ -1650,9 +1650,20 @@ api.declare({
   }
 
   // Create temporary credentials for the task
+  let clientId = [
+    'task-client',
+    taskId,
+    `${runId}`,
+    'on',
+    run.workerGroup,
+    run.workerId,
+    'until',
+    `${takenUntil.getTime() / 1000}`,
+  ].join('/');
   let credentials = taskcluster.createTemporaryCredentials({
-    start:  new Date(Date.now() - 15 * 60 * 1000),
-    expiry: new Date(takenUntil.getTime() + 15 * 60 * 1000),
+    clientId,
+    start:  new Date(),
+    expiry: takenUntil,
     scopes: [
       'queue:reclaim-task:' + taskId + '/' + runId,
       'queue:resolve-task:' + taskId + '/' + runId,
