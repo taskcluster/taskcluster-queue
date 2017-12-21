@@ -2,7 +2,7 @@ suite('queue/QueueService', function() {
   var Promise       = require('promise');
   var slugid        = require('slugid');
   var assert        = require('assert');
-  var QueueService  = require('../lib/queueservice');
+  var QueueService  = require('../src/queueservice');
   var _             = require('lodash');
   var url           = require('url');
   var request       = require('superagent-promise');
