@@ -110,7 +110,7 @@ class HintPoller {
     this.destroyed = true;
     delete this.parent._hintPollers[this.provisionerId + '/' + this.workerType];
     assert(_.sumBy(this.requests, 'count') === 0,
-           'destroying while we have pending requests is not allowed');
+      'destroying while we have pending requests is not allowed');
   }
 }
 
@@ -166,7 +166,7 @@ class WorkClaimer extends events.EventEmitter {
       let hints = await hintPoller.requestClaim(count, aborted);
 
       // Try to claim all the hints
-      claims = await Promise.all(hints.map(async(hint) => {
+      claims = await Promise.all(hints.map(async (hint) => {
         try {
           // Try to claim task from hint
           let result = await this._monitor.timer('claimTask', this.claimTask(
