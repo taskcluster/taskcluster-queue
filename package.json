@@ -26,8 +26,6 @@
     "remotely-signed-s3": "^3.0.0",
     "request-ip": "^1.1.4",
     "slugid": "^1.1.0",
-    "superagent": "^1.1.0",
-    "superagent-promise": "^0.2.0",
     "taskcluster-client": "^1.6.3",
     "taskcluster-lib-api": "3.2.2",
     "taskcluster-lib-app": "^1.0.0",
@@ -46,6 +44,7 @@
   "devDependencies": {
     "eslint-config-taskcluster": "^3.0.0",
     "mocha": "^2.2.1",
+    "superagent": "^3.8.2",
     "taskcluster-lib-testing": "^1.0.0"
   },
   "engine-strict": true,
