@@ -50,7 +50,7 @@ suite('queue/tasks_store', function() {
       return blobstore.putIfNotExists(key, data);
     }).then(function() {
       assert(false, 'Expected error');
-    }).catch(function(err) {
+    }, function(err) {
       assert(err.code === 'BlobAlreadyExists', 'Should already exist');
     });
   });
@@ -177,8 +177,8 @@ suite('queue/tasks_store', function() {
         .get(url)
         .then(function(res) {
           assert(res.ok, 'Request failed');
-          assert(res.body.message === 'Hello',
-            'message didn\'t message');
+          assert.deepEqual(res.body, {message: 'Hello'},
+            'message wasn\'t preserved');
         });
     });
   });

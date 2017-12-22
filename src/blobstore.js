@@ -80,7 +80,9 @@ BlobStore.prototype.put = function(key, json) {
   return new Promise(function(accept, reject) {
     var payload = JSON.stringify(json);
     that.service.createBlockBlobFromText(that.container, key, payload, {
-      contentType:      'application/json',
+      contentSettings: {
+        contentType:      'application/json',
+      },
     }, function(err, result, response) {
       if (err) {
         return reject(err);
@@ -100,8 +102,10 @@ BlobStore.prototype.putIfNotExists = function(key, json) {
   return new Promise(function(accept, reject) {
     var payload = JSON.stringify(json);
     that.service.createBlockBlobFromText(that.container, key, payload, {
-      contentType:      'application/json',
-      accessConditions: {'if-none-match': '*'},
+      contentSettings: {
+        contentType:      'application/json',
+      },
+      accessConditions: {EtagNonMatch: '*'},
     }, function(err, result, response) {
       if (err) {
         return reject(err);
