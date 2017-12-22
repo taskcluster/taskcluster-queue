@@ -1,5 +1,4 @@
 let assert          = require('assert');
-let Promise         = require('promise');
 let path            = require('path');
 let _               = require('lodash');
 let taskcluster     = require('taskcluster-client');

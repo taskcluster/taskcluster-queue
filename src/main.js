@@ -3,7 +3,6 @@ let debug               = require('debug')('app:main');
 let _                   = require('lodash');
 let assert              = require('assert');
 let path                = require('path');
-let Promise             = require('promise');
 let taskcluster         = require('taskcluster-client');
 let v1                  = require('./api');
 let exchanges           = require('./exchanges');

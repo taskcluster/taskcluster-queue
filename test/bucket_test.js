@@ -1,5 +1,4 @@
 suite('queue/bucket_test', function() {
-  var Promise       = require('promise');
   var slugid        = require('slugid');
   var assert        = require('assert');
   var Bucket        = require('../src/bucket');

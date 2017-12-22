@@ -5,7 +5,6 @@ suite('Artifacts', function() {
   var assert        = require('assert');
   var slugid        = require('slugid');
   var _             = require('lodash');
-  var Promise       = require('promise');
   var request       = require('superagent');
   var assert        = require('assert');
   var urljoin       = require('url-join');

@@ -1,6 +1,5 @@
 let azure       = require('azure-storage');
 let _           = require('lodash');
-let Promise     = require('promise');
 let debug       = require('debug')('app:blobstore');
 let assert      = require('assert');
 let querystring = require('querystring');

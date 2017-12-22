@@ -1,5 +1,4 @@
 let _           = require('lodash');
-let Promise     = require('promise');
 let debug       = require('debug')('app:queue');
 let assert      = require('assert');
 let base32      = require('thirty-two');

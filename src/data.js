@@ -1,7 +1,6 @@
 let Entity  = require('azure-entities');
 let debug   = require('debug')('app:data');
 let assert  = require('assert');
-let Promise = require('promise');
 let _       = require('lodash');
 
 /** Entity for tracking tasks and associated state */

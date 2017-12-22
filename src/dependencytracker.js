@@ -1,6 +1,5 @@
 let debug   = require('debug')('app:dependency-tracker');
 let assert  = require('assert');
-let Promise = require('promise');
 let _       = require('lodash');
 let Entity  = require('azure-entities');
 
