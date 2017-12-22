@@ -414,7 +414,15 @@ let load = loader({
   server: {
     requires: ['cfg', 'api', 'monitor', 'docs'],
     setup: ({cfg, api, monitor, docs}) => {
-      let app = App(cfg.server);
+      let app = App({
+        port: cfg.server.port,
+        publicUrl: cfg.server.publicUrl,
+        env: cfg.server.env,
+        forceSSL: cfg.server.forceSSL,
+        trustProxy: cfg.server.trustProxy,
+        rootDocsLink: true,
+        docs,
+      });
       app.use('/v1', api);
       return app.createServer();
     },
