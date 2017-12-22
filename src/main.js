@@ -25,7 +25,6 @@ let validator           = require('taskcluster-lib-validate');
 let docs                = require('taskcluster-lib-docs');
 let App                 = require('taskcluster-lib-app');
 let remoteS3            = require('remotely-signed-s3');
-let aws                 = require('aws-sdk');
 
 // Create component loader
 let load = loader({
