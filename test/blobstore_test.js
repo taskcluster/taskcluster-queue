@@ -1,5 +1,4 @@
 suite('queue/tasks_store', function() {
-  var Promise       = require('promise');
   var slugid        = require('slugid');
   var assert        = require('assert');
   var BlobStore     = require('../src/blobstore');
