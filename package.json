@@ -31,8 +31,7 @@
     "taskcluster-lib-docs": "^3.0.2",
     "taskcluster-lib-loader": "^1.0.0",
     "taskcluster-lib-monitor": "^4.0.0",
-    "taskcluster-lib-testing": "^1.0.0",
-    "taskcluster-lib-validate": "^2.0.0",
+    "taskcluster-lib-validate": "^3.0.1",
     "thirty-two": "^0.0.2",
     "typed-env-config": "^1.0.0",
     "url-join": "^0.0.1",
@@ -44,7 +43,7 @@
     "eslint-config-taskcluster": "^3.0.0",
     "mocha": "^2.2.1",
     "superagent": "^3.8.2",
-    "taskcluster-lib-testing": "^1.0.0"
+    "taskcluster-lib-testing": "^2.0.2"
   },
   "engine-strict": true,
   "engines": {
