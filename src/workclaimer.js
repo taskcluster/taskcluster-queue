@@ -2,7 +2,6 @@ let assert      = require('assert');
 let _           = require('lodash');
 let events      = require('events');
 let taskcluster = require('taskcluster-client');
-let Promise     = require('promise');
 
 /**
  * HintPoller polls for hints for pending tasks.

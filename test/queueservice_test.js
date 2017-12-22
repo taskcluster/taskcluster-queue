@@ -1,5 +1,4 @@
 suite('queue/QueueService', function() {
-  var Promise       = require('promise');
   var slugid        = require('slugid');
   var assert        = require('assert');
   var QueueService  = require('../src/queueservice');

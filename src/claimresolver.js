@@ -1,4 +1,3 @@
-let Promise       = require('promise');
 let debug         = require('debug')('app:claim-resolver');
 let slugid        = require('slugid');
 let assert        = require('assert');
