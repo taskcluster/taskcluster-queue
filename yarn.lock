@@ -2505,7 +2505,7 @@ taskcluster-client@3.0.3:
     slugid "^1.1.0"
     superagent "~3.7.0"
 
-taskcluster-client@^1.0.1, taskcluster-client@^1.6.3:
+taskcluster-client@^1.0.1:
   version "1.6.3"
   resolved "https://registry.yarnpkg.com/taskcluster-client/-/taskcluster-client-1.6.3.tgz#46e08445b7fcb590d4effb35df3f21bab0bb6da2"
   dependencies:
@@ -2522,7 +2522,7 @@ taskcluster-client@^1.0.1, taskcluster-client@^1.6.3:
   optionalDependencies:
     sockjs-client "^1.0.3"
 
-taskcluster-client@^3.0.3, taskcluster-client@^3.1.0:
+taskcluster-client@^3.0.3, taskcluster-client@^3.1.0, taskcluster-client@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/taskcluster-client/-/taskcluster-client-3.1.1.tgz#8420c269146d4be0774a49e6685a972d3ae40c59"
   dependencies:
