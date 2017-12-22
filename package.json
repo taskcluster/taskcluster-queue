@@ -33,7 +33,6 @@
     "taskcluster-lib-validate": "^3.0.1",
     "thirty-two": "^1.0.2",
     "typed-env-config": "^1.0.0",
-    "url-join": "^0.0.1",
     "uuid": "^2.0.1"
   },
   "devDependencies": {
@@ -41,6 +40,7 @@
     "mocha": "^2.2.1",
     "superagent": "^3.8.2",
     "taskcluster-lib-testing": "^2.0.2",
+    "url-join": "^2.0.2",
     "xml2js": "^0.4.19",
     "xmlbuilder": "^9.0.4"
   },
