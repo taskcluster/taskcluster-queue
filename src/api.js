@@ -602,14 +602,26 @@ api.declare({
     return res.reportError(detail.code, detail.message, detail.details);
   }
 
+  // Always require extra scopes
+  taskScopes = [
+    // task.scopes
+    ...taskDef.scopes,
+    // Find scopes required for task specific routes
+    ...taskDef.routes.map(route => 'queue:route:' + route),
+  ]
+
   // Authenticate with legacy scopes first, but only if priority is lowest
   let {provisionerId, workerType, schedulerId, taskGroupId} = taskDef;
   let legacyAuthorized = taskDef.priority == 'lowest' && req.satisfies([[
     `queue:create-task:${provisionerId}/${workerType}`,
+    // Include task scopes
+    ...taskScopes
   ], [
     `queue:define-task:${provisionerId}/${workerType}`,
     `queue:task-group-id:${schedulerId}/${taskGroupId}`,
     `queue:schedule-task:${schedulerId}/${taskGroupId}/${taskId}`,
+    // Include task scopes
+    ...taskScopes
   ]], true);
 
   // Require 'queue:create-task:<priority>:<provisionerId>/<workerType>' for
@@ -620,17 +632,9 @@ api.declare({
   if (!legacyAuthorized && !req.satisfies(priorities.map(priority => [
     `queue:create-task:${priority}:${provisionerId}/${workerType}`,
     `queue:scheduler-id:${schedulerId}`,
+    // Include task scopes
+    ...taskScopes
   ]))) {
-    return;
-  }
-
-  // Always require extra scopes
-  if (!req.satisfies([[
-    // task.scopes
-    ...taskDef.scopes,
-    // Find scopes required for task specific routes
-    ...taskDef.routes.map(route => 'queue:route:' + route),
-  ]])) {
     return;
   }
 
