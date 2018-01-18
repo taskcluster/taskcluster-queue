@@ -546,21 +546,35 @@ api.declare({
   name:       'createTask',
   stability:  API.stability.stable,
   idempotent: true,
-  scopes:     [
-    // Legacy scope options to be removed, hence, no-longer documented
-    // [
-    //   'queue:create-task:<provisionerId>/<workerType>',
-    // ], [
-    //   'queue:define-task:<provisionerId>/<workerType>',
-    //   'queue:task-group-id:<schedulerId>/<taskGroupId>',
-    //   'queue:schedule-task:<schedulerId>/<taskGroupId>/<taskId>',
-    // ],
-    [
-      'queue:create-task:<priority>:<provisionerId>/<workerType>',
-      'queue:scheduler-id:<schedulerId>',
-    ],
-  ],
-  deferAuth:  true,
+  scopes: {AllOf: [
+    {for: 'scope', in: 'task.scopes', each: '<scope>'},
+    {for: 'route', in: 'task.routes', each: 'queue:route:<route>'},
+    {AnyOf: [
+      {AllOf: [
+        'queue:scheduler-id:<task.schedulerId>',
+        {AnyOf: [
+          {
+            for: 'priority',
+            in: 'priorities',
+            each: 'queue:create-task:<priority>:<task.provisionerId>/<task.workerType>',
+          },
+        ]},
+      ]},
+      {
+        if: 'lowestPriority', //legacy scopes!
+        then: {AnyOf: [
+          'queue:create-task:<task.provisionerId>/<task.workerType>',
+          {
+            AllOf: [
+              'queue:define-task:<task.provisionerId>/<task.workerType>',
+              'queue:task-group-id:<task.schedulerId>/<task.taskGroupId>',
+              'queue:schedule-task:<task.schedulerId>/<task.taskGroupId>/<taskId>',
+            ],
+          },
+        ]},
+      },
+    ]},
+  ]},
   input:      'create-task-request.json#',
   output:     'task-status-response.json#',
   title:      'Create New Task',
@@ -600,37 +614,15 @@ api.declare({
     return res.reportError(detail.code, detail.message, detail.details);
   }
 
-  // Authenticate with legacy scopes first, but only if priority is lowest
-  let {provisionerId, workerType, schedulerId, taskGroupId} = taskDef;
-  let legacyAuthorized = taskDef.priority == 'lowest' && req.satisfies([[
-    `queue:create-task:${provisionerId}/${workerType}`,
-  ], [
-    `queue:define-task:${provisionerId}/${workerType}`,
-    `queue:task-group-id:${schedulerId}/${taskGroupId}`,
-    `queue:schedule-task:${schedulerId}/${taskGroupId}/${taskId}`,
-  ]], true);
-
-  // Require 'queue:create-task:<priority>:<provisionerId>/<workerType>' for
-  // given priority or higher...
   let priorities = PRIORITY_LEVELS.slice(0, PRIORITY_LEVELS.indexOf(taskDef.priority) + 1);
   assert(priorities.length > 0, 'must have a non-empty list of priorities');
-  // If not authorized by legacy, we require most recent scopes
-  if (!legacyAuthorized && !req.satisfies(priorities.map(priority => [
-    `queue:create-task:${priority}:${provisionerId}/${workerType}`,
-    `queue:scheduler-id:${schedulerId}`,
-  ]))) {
-    return;
-  }
 
-  // Always require extra scopes
-  if (!req.satisfies([[
-    // task.scopes
-    ...taskDef.scopes,
-    // Find scopes required for task specific routes
-    ...taskDef.routes.map(route => 'queue:route:' + route),
-  ]])) {
-    return;
-  }
+  await req.authorize({
+    lowestPriority: taskDef.priority === 'lowest',
+    taskId,
+    priorities,
+    task: taskDef,
+  });
 
   // Ensure group membership is declared, and that schedulerId isn't conflicting
   if (!await ensureTaskGroup(this, taskId, taskDef, res)) {
@@ -758,20 +750,35 @@ api.declare({
   route:      '/task/:taskId/define',
   name:       'defineTask',
   stability:  API.stability.deprecated,
-  scopes:     [
-    // Legacy scope options to be removed, hence, no-longer documented
-    // ['queue:define-task:<provisionerId>/<workerType>'],
-    // ['queue:create-task:<provisionerId>/<workerType>'],
-    // [
-    //   'queue:define-task:<provisionerId>/<workerType>',
-    //   'queue:task-group-id:<schedulerId>/<taskGroupId>',
-    // ],
-    [
-      'queue:create-task:<priority>:<provisionerId>/<workerType>',
-      'queue:scheduler-id:<schedulerId>',
-    ],
-  ],
-  deferAuth:  true,
+  scopes:     {AllOf: [
+    {for: 'scope', in: 'task.scopes', each: '<scope>'},
+    {for: 'route', in: 'task.routes', each: 'queue:route:<route>'},
+    {AnyOf: [
+      {AllOf: [
+        'queue:scheduler-id:<task.schedulerId>',
+        {AnyOf: [
+          {
+            for: 'priority',
+            in: 'priorities',
+            each: 'queue:create-task:<priority>:<task.provisionerId>/<task.workerType>',
+          },
+        ]},
+      ]},
+      {
+        if: 'lowestPriority', //legacy scopes!
+        then: {AnyOf: [
+          'queue:define-task:<task.provisionerId>/<task.workerType>',
+          'queue:create-task:<task.provisionerId>/<task.workerType>',
+          {
+            AllOf: [
+              'queue:define-task:<task.provisionerId>/<task.workerType>',
+              'queue:task-group-id:<task.schedulerId>/<task.taskGroupId>',
+            ],
+          },
+        ]},
+      },
+    ]},
+  ]},
   input:      'create-task-request.json#',
   output:     'task-status-response.json#',
   title:      'Define Task',
@@ -789,38 +796,15 @@ api.declare({
     return res.reportError(detail.code, detail.message, detail.details);
   }
 
-  // Authenticate with legacy scopes first, but only if priority is lowest
-  let {provisionerId, workerType, schedulerId, taskGroupId} = taskDef;
-  let legacyAuthorized = taskDef.priority == 'lowest' && req.satisfies([[
-    `queue:define-task:${provisionerId}/${workerType}`,
-  ], [
-    `queue:create-task:${provisionerId}/${workerType}`,
-  ], [
-    `queue:define-task:${provisionerId}/${workerType}`,
-    `queue:task-group-id:${schedulerId}/${taskGroupId}`,
-  ]], true);
-
-  // Require 'queue:create-task:<priority>:<provisionerId>/<workerType>' for
-  // given priority or higher...
   let priorities = PRIORITY_LEVELS.slice(0, PRIORITY_LEVELS.indexOf(taskDef.priority) + 1);
   assert(priorities.length > 0, 'must have a non-empty list of priorities');
-  // If not authorized by legacy, we require most recent scopes
-  if (!legacyAuthorized && !req.satisfies(priorities.map(priority => [
-    `queue:create-task:${priority}:${provisionerId}/${workerType}`,
-    `queue:scheduler-id:${schedulerId}`,
-  ]))) {
-    return;
-  }
 
-  // Always require extra scopes
-  if (!req.satisfies([[
-    // task.scopes
-    ...taskDef.scopes,
-    // Find scopes required for task specific routes
-    ...taskDef.routes.map(route => 'queue:route:' + route),
-  ]])) {
-    return;
-  }
+  await req.authorize({
+    lowestPriority: taskDef.priority == 'lowest',
+    taskId,
+    priorities,
+    task: taskDef,
+  });
 
   // Ensure we have a self-dependency, this is how defineTask works now
   if (!_.includes(taskDef.dependencies, taskId)) {
@@ -937,16 +921,13 @@ api.declare({
   route:      '/task/:taskId/schedule',
   name:       'scheduleTask',
   stability:  API.stability.stable,
-  scopes:     [
-    [
-      // Legacy scope
+  scopes:     {AnyOf: [
+    'queue:schedule-task:<task.schedulerId>/<task.taskGroupId>/<taskId>',
+    {AllOf: [ // Legacy scopes
       'queue:schedule-task',
-      'assume:scheduler-id:<schedulerId>/<taskGroupId>',
-    ], [
-      'queue:schedule-task:<schedulerId>/<taskGroupId>/<taskId>',
-    ],
-  ],
-  deferAuth:  true,
+      'assume:scheduler-id:<task.schedulerId>/<task.taskGroupId>',
+    ]},
+  ]},
   input:      undefined, // No input accepted
   output:     'task-status-response.json#',
   title:      'Schedule Defined Task',
@@ -980,14 +961,10 @@ api.declare({
     );
   }
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     taskId,
-    schedulerId:    task.schedulerId,
-    taskGroupId:    task.taskGroupId,
-  })) {
-    return;
-  }
+    task,
+  });
 
   // Attempt to schedule task
   let status = await this.dependencyTracker.scheduleTask(task);
@@ -1013,16 +990,13 @@ api.declare({
   route:      '/task/:taskId/rerun',
   name:       'rerunTask',
   stability:  API.stability.deprecated,
-  scopes:     [
-    [
-      // Legacy scopes
+  scopes:     {AnyOf: [
+    'queue:rerun-task:<task.schedulerId>/<task.taskGroupId>/<taskId>',
+    {AllOf: [ // Legacy scopes
       'queue:rerun-task',
-      'assume:scheduler-id:<schedulerId>/<taskGroupId>',
-    ], [
-      'queue:rerun-task:<schedulerId>/<taskGroupId>/<taskId>',
-    ],
-  ],
-  deferAuth:  true,
+      'assume:scheduler-id:<task.schedulerId>/<task.taskGroupId>',
+    ]},
+  ]},
   input:      undefined, // No input accepted
   output:     'task-status-response.json#',
   title:      'Rerun a Resolved Task',
@@ -1055,14 +1029,10 @@ api.declare({
     });
   }
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     taskId,
-    schedulerId:    task.schedulerId,
-    taskGroupId:    task.taskGroupId,
-  })) {
-    return;
-  }
+    task,
+  });
 
   // Validate deadline
   if (task.deadline.getTime() < new Date().getTime()) {
@@ -1142,16 +1112,13 @@ api.declare({
   route:      '/task/:taskId/cancel',
   name:       'cancelTask',
   stability:  API.stability.stable,
-  scopes:     [
-    [
-      // Legacy scopes
+  scopes:     {AnyOf: [
+    'queue:cancel-task:<task.schedulerId>/<task.taskGroupId>/<taskId>',
+    {AllOf: [ // Legacy scopes
       'queue:cancel-task',
-      'assume:scheduler-id:<schedulerId>/<taskGroupId>',
-    ], [
-      'queue:cancel-task:<schedulerId>/<taskGroupId>/<taskId>',
-    ],
-  ],
-  deferAuth:  true,
+      'assume:scheduler-id:<task.schedulerId>/<task.taskGroupId>',
+    ]},
+  ]},
   input:      undefined, // No input accepted
   output:     'task-status-response.json#',
   title:      'Cancel Task',
@@ -1183,14 +1150,10 @@ api.declare({
     );
   }
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     taskId,
-    schedulerId:    task.schedulerId,
-    taskGroupId:    task.taskGroupId,
-  })) {
-    return;
-  }
+    task,
+  });
 
   // Validate deadline
   if (task.deadline.getTime() < new Date().getTime()) {
@@ -1273,16 +1236,13 @@ api.declare({
   route:      '/poll-task-url/:provisionerId/:workerType',
   name:       'pollTaskUrls',
   stability:  API.stability.stable,
-  scopes: [
-    [
-      // Legacy scopes
+  scopes: {AnyOf: [
+    'queue:poll-task-urls:<provisionerId>/<workerType>',
+    {AllOf: [// Legacy scopes
       'queue:poll-task-urls',
       'assume:worker-type:<provisionerId>/<workerType>',
-    ], [
-      'queue:poll-task-urls:<provisionerId>/<workerType>',
-    ],
-  ],
-  deferAuth:  true,
+    ]},
+  ]},
   output:     'poll-task-urls-response.json#',
   title:      'Get Urls to Poll Pending Tasks',
   description: [
@@ -1294,13 +1254,10 @@ api.declare({
   var provisionerId = req.params.provisionerId;
   var workerType    = req.params.workerType;
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     provisionerId,
     workerType,
-  })) {
-    return;
-  }
+  });
 
   // Construct signedUrl for accessing the azure queue for this
   // provisionerId and workerType
@@ -1334,13 +1291,10 @@ api.declare({
   route:      '/claim-work/:provisionerId/:workerType',
   name:       'claimWork',
   stability:  API.stability.stable,
-  scopes: [
-    [
-      'queue:claim-work:<provisionerId>/<workerType>',
-      'queue:worker-id:<workerGroup>/<workerId>',
-    ],
-  ],
-  deferAuth:  true,
+  scopes: {AllOf: [
+    'queue:claim-work:<provisionerId>/<workerType>',
+    'queue:worker-id:<workerGroup>/<workerId>',
+  ]},
   input:      'claim-work-request.json#',
   output:     'claim-work-response.json#',
   title:      'Claim Work',
@@ -1354,15 +1308,12 @@ api.declare({
   let workerId      = req.body.workerId;
   let count         = req.body.tasks;
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     workerGroup,
     workerId,
     provisionerId,
     workerType,
-  })) {
-    return;
-  }
+  });
 
   const worker = await this.Worker.load({
     provisionerId,
@@ -1404,18 +1355,17 @@ api.declare({
   route:      '/task/:taskId/runs/:runId/claim',
   name:       'claimTask',
   stability:  API.stability.stable,
-  scopes: [
-    [
-      // Legacy
-      'queue:claim-task',
-      'assume:worker-type:<provisionerId>/<workerType>',
-      'assume:worker-id:<workerGroup>/<workerId>',
-    ], [
-      'queue:claim-task:<provisionerId>/<workerType>',
+  scopes: {AnyOf: [
+    {AllOf: [
+      'queue:claim-task:<task.provisionerId>/<task.workerType>',
       'queue:worker-id:<workerGroup>/<workerId>',
-    ],
-  ],
-  deferAuth:  true,
+    ]},
+    {AllOf: [ // Legacy
+      'queue:claim-task',
+      'assume:worker-type:<task.provisionerId>/<task.workerType>',
+      'assume:worker-id:<workerGroup>/<workerId>',
+    ]},
+  ]},
   input:      'task-claim-request.json#',
   output:     'task-claim-response.json#',
   title:      'Claim Task',
@@ -1442,15 +1392,11 @@ api.declare({
     );
   }
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     workerGroup,
     workerId,
-    provisionerId:  task.provisionerId,
-    workerType:     task.workerType,
-  })) {
-    return;
-  }
+    task,
+  });
 
   // Check if task is past deadline
   if (task.deadline.getTime() <= Date.now()) {
@@ -1517,16 +1463,13 @@ api.declare({
   route:      '/task/:taskId/runs/:runId/reclaim',
   name:       'reclaimTask',
   stability:  API.stability.stable,
-  scopes: [
-    [
-      // Legacy
+  scopes: {AnyOf: [
+    'queue:reclaim-task:<taskId>/<runId>',
+    {AllOf: [ // Legacy
       'queue:claim-task',
-      'assume:worker-id:<workerGroup>/<workerId>',
-    ], [
-      'queue:reclaim-task:<taskId>/<runId>',
-    ],
-  ],
-  deferAuth:  true,
+      'assume:worker-id:<run.workerGroup>/<run.workerId>',
+    ]},
+  ]},
   output:     'task-reclaim-response.json#',
   title:      'Reclaim task',
   description: [
@@ -1581,15 +1524,11 @@ api.declare({
     );
   }
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     taskId,
     runId,
-    workerGroup:    run.workerGroup,
-    workerId:       run.workerId,
-  })) {
-    return;
-  }
+    run,
+  });
 
   // Check if task is past deadline
   if (task.deadline.getTime() <= Date.now()) {
@@ -1702,15 +1641,12 @@ var resolveTask = async function(req, res, taskId, runId, target) {
     );
   }
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     taskId,
     runId,
     workerGroup:    run.workerGroup,
     workerId:       run.workerId,
-  })) {
-    return;
-  }
+  });
 
   // Ensure that all blob artifacts which were created are present before
   // allowing resolution as 'completed'
@@ -1800,16 +1736,13 @@ api.declare({
   route:      '/task/:taskId/runs/:runId/completed',
   name:       'reportCompleted',
   stability:  API.stability.stable,
-  scopes: [
-    [
-      // Legacy
+  scopes: {AnyOf: [
+    'queue:resolve-task:<taskId>/<runId>',
+    {AllOf: [ // Legacy
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>',
-    ], [
-      'queue:resolve-task:<taskId>/<runId>',
-    ],
-  ],
-  deferAuth:  true,
+    ]},
+  ]},
   input:      undefined,  // No input at this point
   output:     'task-status-response.json#',
   title:      'Report Run Completed',
@@ -1832,16 +1765,13 @@ api.declare({
   route:      '/task/:taskId/runs/:runId/failed',
   name:       'reportFailed',
   stability:  API.stability.stable,
-  scopes: [
-    [
-      // Legacy
+  scopes: {AnyOf: [
+    'queue:resolve-task:<taskId>/<runId>',
+    {AllOf: [ // Legacy
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>',
-    ], [
-      'queue:resolve-task:<taskId>/<runId>',
-    ],
-  ],
-  deferAuth:  true,
+    ]},
+  ]},
   input:      undefined,  // No input at this point
   output:     'task-status-response.json#',
   title:      'Report Run Failed',
@@ -1867,16 +1797,13 @@ api.declare({
   route:      '/task/:taskId/runs/:runId/exception',
   name:       'reportException',
   stability:  API.stability.stable,
-  scopes: [
-    [
-      // Legacy
+  scopes: {AnyOf: [
+    'queue:resolve-task:<taskId>/<runId>',
+    {AllOf: [ // Legacy
       'queue:resolve-task',
       'assume:worker-id:<workerGroup>/<workerId>',
-    ], [
-      'queue:resolve-task:<taskId>/<runId>',
-    ],
-  ],
-  deferAuth:  true,
+    ]},
+  ]},
   input:      'task-exception-request.json#',
   output:     'task-status-response.json#',
   title:      'Report Task Exception',
@@ -1924,15 +1851,12 @@ api.declare({
     );
   }
 
-  // Authenticate request by providing parameters
-  if (!req.satisfies({
+  await req.authorize({
     taskId,
     runId,
     workerGroup:    run.workerGroup,
     workerId:       run.workerId,
-  })) {
-    return;
-  }
+  });
 
   await task.modify((task) => {
     var run = task.runs[runId];
@@ -2110,12 +2034,11 @@ api.declare({
   route:      '/provisioners/:provisionerId',
   name:       'declareProvisioner',
   stability:  API.stability.experimental,
-  scopes:     [
-    [
-      'queue:declare-provisioner:<provisionerId>#<property>',
-    ],
-  ],
-  deferAuth:  true,
+  scopes:     {AllOf: [{
+    for: 'property',
+    in: 'properties',
+    each: 'queue:declare-provisioner:<provisionerId>#<property>',
+  }]},
   output:     'provisioner-response.json#',
   input:      'update-provisioner-request.json#',
   title:      'Update a provisioner',
@@ -2138,13 +2061,10 @@ api.declare({
 
   const prov = await this.Provisioner.load({provisionerId}, true);
 
-  // Authenticate request by providing parameters
-  const requestAllowed = Object.keys(req.body)
-    .every(property => req.satisfies({provisionerId, property}));
-
-  if (!requestAllowed) {
-    return;
-  }
+  await req.authorize({
+    provisionerId,
+    properties: Object.keys(req.body),
+  });
 
   if (prov) {
     result =  await prov.modify((entity) => {
@@ -2282,12 +2202,13 @@ api.declare({
   route:      '/provisioners/:provisionerId/worker-types/:workerType',
   name:       'declareWorkerType',
   stability:  API.stability.experimental,
-  scopes:     [
-    [
-      'queue:declare-worker-type:<provisionerId>/<workerType>#<property>',
-    ],
-  ],
-  deferAuth:  true,
+  scopes:     {AllOf: [
+    {
+      for: 'property',
+      in: 'properties',
+      each: 'queue:declare-worker-type:<provisionerId>/<workerType>#<property>',
+    },
+  ]},
   output:     'workertype-response.json#',
   input:      'update-workertype-request.json#',
   title:      'Update a worker-type',
@@ -2306,13 +2227,11 @@ api.declare({
 
   const wType = await this.WorkerType.load({provisionerId, workerType}, true);
 
-  // Authenticate request by providing parameters
-  const requestAllowed = Object.keys(req.body)
-    .every(property => req.satisfies({provisionerId, workerType, property}));
-
-  if (!requestAllowed) {
-    return;
-  }
+  await req.authorize({
+    provisionerId,
+    workerType,
+    properties: Object.keys(req.body),
+  });
 
   if (wType) {
     result = await wType.modify((entity) => {
@@ -2457,11 +2376,9 @@ api.declare({
   route:  '/provisioners/:provisionerId/worker-types/:workerType/workers/:workerGroup/:workerId',
   name:   'quarantineWorker',
   stability: API.stability.experimental,
-  scopes: [
-    [
-      'queue:quarantine-worker:<provisionerId>/<workerType>/<workerGroup>/<workerId>',
-    ],
-  ],
+  scopes: {AllOf: [
+    'queue:quarantine-worker:<provisionerId>/<workerType>/<workerGroup>/<workerId>',
+  ]},
   input: 'quarantine-worker-request.json#',
   output: 'worker-response.json#',
   title: 'Quarantine a worker',
@@ -2496,12 +2413,13 @@ api.declare({
   route:      '/provisioners/:provisionerId/worker-types/:workerType/:workerGroup/:workerId',
   name:       'declareWorker',
   stability:  API.stability.experimental,
-  scopes:     [
-    [
-      'queue:declare-worker:<provisionerId>/<workerType>/<workerGroup>/<workerId>#<property>',
-    ],
-  ],
-  deferAuth:  true,
+  scopes:     {AllOf: [
+    {
+      for: 'property',
+      in: 'properties',
+      each: 'queue:declare-worker:<provisionerId>/<workerType>/<workerGroup>/<workerId>#<property>',
+    },
+  ]},
   output:     'worker-response.json#',
   input:      'update-worker-request.json#',
   title:      'Declare a worker',
@@ -2518,13 +2436,13 @@ api.declare({
 
   const worker = await this.Worker.load({provisionerId, workerType, workerGroup, workerId}, true);
 
-  // Authenticate request by providing parameters
-  const requestAllowed = Object.keys(req.body)
-    .every(property => req.satisfies({provisionerId, workerType, workerGroup, workerId, property}));
-
-  if (!requestAllowed) {
-    return;
-  }
+  await req.authorize({
+    provisionerId,
+    workerType,
+    workerGroup,
+    workerId,
+    properties: Object.keys(req.body),
+  });
 
   if (worker) {
     try {

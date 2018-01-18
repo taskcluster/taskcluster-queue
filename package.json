@@ -46,7 +46,7 @@
   },
   "engine-strict": true,
   "engines": {
-    "node": "8.2.1",
+    "node": "^8.2.1",
     "yarn": "^1.0.2"
   }
 }
