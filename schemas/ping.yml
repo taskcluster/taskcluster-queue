@@ -1,0 +1,18 @@
+$schema:            http://json-schema.org/draft-06/schema#
+title:              "Ping Request"
+description: Response containing information about the service uptime.
+type:               object
+properties:
+  alive:
+    description: | 
+      Denotes that the service is up and running.
+    type: boolean
+    enum: [true]
+  uptime:
+    description: |
+      Uptime of the server
+    type: number
+additionalProperties: false
+required:
+  - alive
+  - uptime
