@@ -208,7 +208,7 @@ api.declare({
       taskId: req.params.taskId,
     });
   }
-
+  console.log(task);
   // Reply with task status
   return res.reply({
     status: task.status(),
