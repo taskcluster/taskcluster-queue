@@ -174,10 +174,10 @@ api.declare({
       taskId: req.params.taskId,
     });
   }
-
+  console.log(task);
   // Create task definition
   let definition = await task.definition();
-
+  console.log(definition);
   return res.reply(definition);
 });
 
