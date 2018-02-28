@@ -13,6 +13,14 @@ properties:
     minLength:      {$const: identifier-min-length}
     maxLength:      {$const: identifier-max-length}
     pattern:        {$const: identifier-pattern}
+  clientId:
+    title:          "Client Id"
+    description: |
+      Unique identifier for a client, who creates the task
+    type:           string
+    minLength:      {$const: identifier-min-length}
+    maxLength:      {$const: identifier-max-length}
+    pattern:        {$const: identifier-pattern}
   workerType:
     title:          "Worker Type"
     description: |

@@ -11,6 +11,7 @@ let Task = Entity.configure({
   properties: {
     taskId:         Entity.types.SlugId,
     provisionerId:  Entity.types.String,
+    clientId:       Entity.types.String, 
     workerType:     Entity.types.String,
     schedulerId:    Entity.types.String,
     taskGroupId:    Entity.types.SlugId,
@@ -59,6 +60,7 @@ let Task = Entity.configure({
   properties: {
     taskId:         Entity.types.SlugId,
     provisionerId:  Entity.types.String,
+    clientId:       Entity.types.String,
     workerType:     Entity.types.String,
     schedulerId:    Entity.types.String,
     taskGroupId:    Entity.types.SlugId,
@@ -112,6 +114,7 @@ let Task = Entity.configure({
   properties: {
     taskId:             Entity.types.SlugId,
     provisionerId:      Entity.types.String,
+    clientId:           Entity.types.String,
     workerType:         Entity.types.String,
     schedulerId:        Entity.types.String,
     taskGroupId:        Entity.types.SlugId,
@@ -169,6 +172,7 @@ let Task = Entity.configure({
   properties: {
     taskId:             Entity.types.SlugId,
     provisionerId:      Entity.types.String,
+    clientId:           Entity.types.String,
     workerType:         Entity.types.String,
     schedulerId:        Entity.types.String,
     taskGroupId:        Entity.types.SlugId,
@@ -228,6 +232,7 @@ let Task = Entity.configure({
 Task.prototype.definition = function() {
   return Promise.resolve({
     provisionerId:  this.provisionerId,
+    clientId:       this.clientId,
     workerType:     this.workerType,
     schedulerId:    this.schedulerId,
     taskGroupId:    this.taskGroupId,
@@ -252,6 +257,7 @@ Task.prototype.status = function() {
   return {
     taskId:           this.taskId,
     provisionerId:    this.provisionerId,
+    clientId:         this.clientId, 
     workerType:       this.workerType,
     schedulerId:      this.schedulerId,
     taskGroupId:      this.taskGroupId,

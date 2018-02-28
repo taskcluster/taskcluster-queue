@@ -608,6 +608,8 @@ api.declare({
 }, async function(req, res) {
   var taskId  = req.params.taskId;
   var taskDef = req.body;
+  var clientId_default = await
+    req.clientId();
 
   // Patch default values and validate timestamps
   var detail = patchAndValidateTaskDef(taskId, taskDef);
@@ -662,6 +664,7 @@ api.declare({
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
+      clientId:           taskDef.clientId || clientId_default, 
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,
@@ -841,12 +844,13 @@ api.declare({
     taskDef.schedulerId,
     deadline
   );
-
+  var clientId_default = await req.clientId();
   // Try to create Task entity
   try {
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
+      clientId:           taskDef.clientId || clientId_default, 
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,

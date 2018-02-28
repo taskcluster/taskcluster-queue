@@ -12,6 +12,7 @@ suite('Create task', function() {
   var taskDef = {
     provisionerId:    'no-provisioner',
     workerType:       'test-worker',
+    clientId:         'test-client',
     schedulerId:      'my-scheduler',
     taskGroupId:      'dSlITZ4yQgmvxxAi4A8fHQ',
     // let's just test a large routing key too, 90 chars please :)
