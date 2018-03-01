@@ -276,7 +276,7 @@ let Task = Entity.configure({
     takenUntil:         Entity.types.Date,
   },
   migrate(item) {
-    item.clientId = 'default';
+    item.clientId = 'unknown';
     return item;
   },
 });

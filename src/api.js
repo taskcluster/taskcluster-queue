@@ -610,6 +610,12 @@ api.declare({
   var taskDef = req.body;
   var clientId = await req.clientId();
 
+  if (taskDef.hasOwnProperty(clientId) && taskDef.clientId !== clientId) {
+    return res.reportError('InputError', 'If supplied, clientId must be the clientId used to make the API call', {});
+  }
+
+  taskDef.clientId = clientId;
+
   // Patch default values and validate timestamps
   var detail = patchAndValidateTaskDef(taskId, taskDef);
   if (detail) {
@@ -663,7 +669,7 @@ api.declare({
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
-      clientId:           taskDef.clientId === clientId && taskDef.clientId || clientId, 
+      clientId:           clientId, 
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,
@@ -695,7 +701,7 @@ api.declare({
     let def   = await task.definition();
 
     // Compare the two task definitions
-    if (taskDef.hasOwnProperty('clientId') === def.hasOwnProperty('clientId') && !_.isEqual(taskDef, def)) {
+    if (!_.isEqual(taskDef, def)) {
       return res.reportError('RequestConflict', [
         'taskId {{taskId}} already used by another task.',
         'This could be the result of faulty idempotency!',
@@ -797,6 +803,13 @@ api.declare({
 }, async function(req, res) {
   var taskId  = req.params.taskId;
   var taskDef = req.body;
+  var clientId = await req.clientId();
+
+  if (taskDef.hasOwnProperty(clientId) && taskDef.clientId !== clientId) {
+    return res.reportError('InputError', 'If supplied, clientId must be the clientId used to make the API call', {});
+  }
+
+  taskDef.clientId = clientId;
 
   // Patch default values and validate timestamps
   var detail = patchAndValidateTaskDef(taskId, taskDef);
@@ -843,13 +856,13 @@ api.declare({
     taskDef.schedulerId,
     deadline
   );
-  var clientId = await req.clientId();
+
   // Try to create Task entity
   try {
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
-      clientId:           taskDef.clientId === clientId && taskDef.clientId || clientId,
+      clientId:           clientId,
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,

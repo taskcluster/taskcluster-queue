@@ -18,9 +18,7 @@ properties:
     description: |
       Unique identifier for a client, who creates the task
     type:           string
-    minLength:      {$const: identifier-min-length}
-    maxLength:      {$const: identifier-max-length}
-    pattern:        {$const: identifier-pattern}
+    pattern:        "^[A-Za-z0-9!@/:.+|_-]+$"
   workerType:
     title:          "Worker Type"
     description: |
