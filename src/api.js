@@ -608,8 +608,7 @@ api.declare({
 }, async function(req, res) {
   var taskId  = req.params.taskId;
   var taskDef = req.body;
-  var clientId_default = await
-    req.clientId();
+  var clientId = await req.clientId();
 
   // Patch default values and validate timestamps
   var detail = patchAndValidateTaskDef(taskId, taskDef);
@@ -664,7 +663,7 @@ api.declare({
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
-      clientId:           taskDef.clientId || clientId_default, 
+      clientId:           taskDef.clientId === clientId && taskDef.clientId || clientId, 
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,
@@ -696,7 +695,7 @@ api.declare({
     let def   = await task.definition();
 
     // Compare the two task definitions
-    if (!_.isEqual(taskDef, def)) {
+    if (taskDef.hasOwnProperty('clientId') === def.hasOwnProperty('clientId') && !_.isEqual(taskDef, def)) {
       return res.reportError('RequestConflict', [
         'taskId {{taskId}} already used by another task.',
         'This could be the result of faulty idempotency!',
@@ -844,13 +843,13 @@ api.declare({
     taskDef.schedulerId,
     deadline
   );
-  var clientId_default = await req.clientId();
+  var clientId = await req.clientId();
   // Try to create Task entity
   try {
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
-      clientId:           taskDef.clientId || clientId_default, 
+      clientId:           taskDef.clientId === clientId && taskDef.clientId || clientId,
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,

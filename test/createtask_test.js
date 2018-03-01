@@ -11,8 +11,8 @@ suite('Create task', function() {
   // Use the same task definition for everything
   var taskDef = {
     provisionerId:    'no-provisioner',
-    workerType:       'test-worker',
     clientId:         'test-client',
+    workerType:       'test-worker',
     schedulerId:      'my-scheduler',
     taskGroupId:      'dSlITZ4yQgmvxxAi4A8fHQ',
     // let's just test a large routing key too, 90 chars please :)

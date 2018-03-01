@@ -9,6 +9,7 @@ suite('Get task', function() {
 
   var taskDef = {
     provisionerId:    'no-provisioner',
+    clientId:         'test-client', 
     workerType:       'test-worker',
     schedulerId:      'my-scheduler',
     taskGroupId:      'dSlITZ4yQgmvxxAi4A8fHQ',
