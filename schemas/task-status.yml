@@ -196,6 +196,7 @@ additionalProperties: false
 required:
   - taskId
   - provisionerId
+  - clientId
   - workerType
   - schedulerId
   - taskGroupId
