@@ -13,6 +13,12 @@ properties:
     minLength:      {$const: identifier-min-length}
     maxLength:      {$const: identifier-max-length}
     pattern:        {$const: identifier-pattern}
+  clientId:
+    title:          "Client Id"
+    description: |
+      Unique identifier for the client that created this task.
+    type:           string
+    pattern:        "^[A-Za-z0-9!@/:.+|_-]+$"
   workerType:
     title:          "Worker Type"
     description: |
@@ -217,6 +223,7 @@ properties:
 additionalProperties: false
 required:
   - provisionerId
+  - clientId
   - workerType
   - schedulerId
   - taskGroupId

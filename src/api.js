@@ -381,10 +381,19 @@ api.declare({
 });
 
 /** Construct default values and validate dates */
-var patchAndValidateTaskDef = function(taskId, taskDef) {
+var patchAndValidateTaskDef = function(taskId, taskDef, clientId) {
   // Set taskGroupId to taskId if not provided
   if (!taskDef.taskGroupId) {
     taskDef.taskGroupId = taskId;
+  }
+
+  // If clientId is supplied, it should be the same as clientId who make the API call
+  if (taskDef.hasOwnProperty(clientId) && taskDef.clientId !== clientId) {
+    return {
+      code:       'InputError', 
+      message:    'If supplied, clientId must be the clientId used to make the API call', 
+      details:    {},
+    };
   }
 
   // Ensure: created < now < deadline (with drift up to 15 min)
@@ -608,9 +617,13 @@ api.declare({
 }, async function(req, res) {
   var taskId  = req.params.taskId;
   var taskDef = req.body;
+  // Get the caller clientId
+  var clientId = await req.clientId();
+
+  taskDef.clientId = clientId;
 
   // Patch default values and validate timestamps
-  var detail = patchAndValidateTaskDef(taskId, taskDef);
+  var detail = patchAndValidateTaskDef(taskId, taskDef, clientId);
   if (detail) {
     return res.reportError(detail.code, detail.message, detail.details);
   }
@@ -662,6 +675,7 @@ api.declare({
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
+      clientId:           clientId, 
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,
@@ -795,12 +809,15 @@ api.declare({
 }, async function(req, res) {
   var taskId  = req.params.taskId;
   var taskDef = req.body;
+  var clientId = await req.clientId();
 
   // Patch default values and validate timestamps
-  var detail = patchAndValidateTaskDef(taskId, taskDef);
+  var detail = patchAndValidateTaskDef(taskId, taskDef, clientId);
   if (detail) {
     return res.reportError(detail.code, detail.message, detail.details);
   }
+
+  taskDef.clientId = clientId;
 
   let priorities = PRIORITY_LEVELS.slice(0, PRIORITY_LEVELS.indexOf(taskDef.priority) + 1);
   assert(priorities.length > 0, 'must have a non-empty list of priorities');
@@ -847,6 +864,7 @@ api.declare({
     var task = await this.Task.create({
       taskId:             taskId,
       provisionerId:      taskDef.provisionerId,
+      clientId:           clientId,
       workerType:         taskDef.workerType,
       schedulerId:        taskDef.schedulerId,
       taskGroupId:        taskDef.taskGroupId,

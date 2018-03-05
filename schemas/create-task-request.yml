@@ -13,6 +13,15 @@ properties:
     minLength:      {$const: identifier-min-length}
     maxLength:      {$const: identifier-max-length}
     pattern:        {$const: identifier-pattern}
+  clientId:
+    title:          "Client Id"
+    description: |
+      Unique identifier for a client, who created the task.  This parameter is
+      optional when creating a task, and if provided must match the clientId
+      used in the request to create the task.  In most cases, it is simply be
+      ommitted from the request payload.
+    type:           string
+    pattern:        "^[A-Za-z0-9!@/:.+|_-]+$"
   workerType:
     title:          "Worker Type"
     description: |
