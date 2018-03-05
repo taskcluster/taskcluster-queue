@@ -16,7 +16,7 @@ properties:
   clientId:
     title:          "Client Id"
     description: |
-      Unique identifier for a client, who creates the task
+      Unique identifier for the client that created this task.
     type:           string
     pattern:        "^[A-Za-z0-9!@/:.+|_-]+$"
   workerType:
