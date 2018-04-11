@@ -945,16 +945,24 @@ suite('provisioners and worker-types', () => {
       });
     }
 
-    await helper.queue.claimWork(provisionerId, workerType, {
-      workerGroup,
-      workerId,
-      tasks: 30,
-    });
+    let claimed = 0;
+    let retries = 30;
+    while (claimed < 30) {
+      if (!retries--) {
+        throw new Error('Could not claim all 30 tasks after multiple attempts');
+      }
+      const res = await helper.queue.claimWork(provisionerId, workerType, {
+        workerGroup,
+        workerId,
+        tasks: 30,
+      });
+      claimed += res.tasks.length;
+    }
 
     const result = await helper.queue.getWorker(provisionerId, workerType, workerGroup, workerId);
     const recentTasks = result.recentTasks;
 
-    assert(result.recentTasks.length === 20, 'expected to have 20 tasks');
+    assert.equal(result.recentTasks.length, 20, 'expected to have 20 tasks');
 
     for (let i =0; i < 20; i++) {
       assert(recentTasks[i].taskId === taskIds[i + 10], `expected taskId ${taskIds[i + 10]}`);
