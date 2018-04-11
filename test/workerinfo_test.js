@@ -304,6 +304,7 @@ suite('provisioners and worker-types', () => {
 
   test('queue.quarantineWorker quarantines a worker', async () => {
     await makeProvisioner({});
+    await makeWorkerType({});
     const worker = await makeWorker({
       expires: new Date('3017-07-29'),
     });
@@ -344,10 +345,25 @@ suite('provisioners and worker-types', () => {
     assert(new Date(result.expires).getTime() === wType.expires.getTime(), `expected ${wType.expires}`);
   });
 
-  test('queue.getWorkerType returns 404 for nonexistent workerType', async () => {
+  test('queue.getWorkerType returns 404 for missing provisionerId', async () => {
+    const wType = await makeWorkerType({});
+
     let err;
     try {
-      await helper.queue.getWorkerType('prov-A', 'no-such');
+      await helper.queue.getWorkerType(wType.provisionerId, wType.workerType);
+    } catch (e) {
+      err = e;
+    }
+    assert(err, 'expected an error');
+    assert(err.statusCode === 404, 'expected 404');
+  });
+
+  test('queue.getWorkerType returns 404 for existing provisionerId, but nonexistent workerType', async () => {
+    const provisioner = await makeProvisioner({});
+
+    let err;
+    try {
+      await helper.queue.getWorkerType(provisioner.provisionerId, 'no-such');
     } catch (e) {
       err = e;
     }
@@ -402,6 +418,25 @@ suite('provisioners and worker-types', () => {
     assert(new Date(result.expires).getTime() === wType.expires.getTime(), `expected ${wType.expires}`);
   });
 
+  test('queue.declareWorkerType creates a provisioner and worker-type', async () => {
+    const provisionerId = 'prov1';
+    const workerType = 'wtype';
+    const updateProps = {
+      description: 'desc-wType',
+    };
+
+    await helper.queue.declareWorkerType(provisionerId, workerType, updateProps);
+
+    const provisioner = await helper.queue.getProvisioner(provisionerId);
+    assert(provisioner.provisionerId === provisionerId, `expected ${provisionerId}`);
+
+    const wType = await helper.queue.getWorkerType(provisionerId, workerType);
+    assert(wType.provisionerId === provisionerId, `expected ${provisionerId}`);
+    assert(wType.workerType === workerType, `expected ${workerType}`);
+    assert(wType.description === updateProps.description, `expected ${updateProps.description}`);
+    assert(wType.stability === 'experimental', 'expected experimental');
+  });
+
   test('queue.getProvisioner returns a provisioner', async () => {
     const provisioner = await makeProvisioner({});
 
@@ -412,6 +447,41 @@ suite('provisioners and worker-types', () => {
     assert(result.stability === provisioner.stability, `expected ${provisioner.stability}`);
     assert(result.actions.length === 0, 'expected no actions');
     assert(new Date(result.expires).getTime() === provisioner.expires.getTime(), `expected ${provisioner.expires}`);
+  });
+
+  test('queue.getProvisioner returns 404 when no such provisioner is found', async () => {
+    let err;
+    try {
+      const result = await helper.queue.getProvisioner('no-such');
+    } catch (e) {
+      err = e;
+    }
+    assert(err, 'expected an error');
+    assert(err.statusCode === 404, 'expected 404');
+  });
+
+  test('queue.declareProvisioner creates a provisioner', async () => {
+    const provisionerId = 'prov1';
+    const updateProps = {
+      description: 'desc-provisioner',
+      actions: [{
+        name: 'kill',
+        title: 'Kill Provisioner',
+        context: 'provisioner',
+        url: 'https://hardware-provisioner.mozilla-releng.net/v1/power-cycle/<provisionerId>',
+        method: 'DELETE',
+        description: 'Remove provisioner desc-provisioner',
+      }],
+    };
+
+    await helper.queue.declareProvisioner(provisionerId, updateProps);
+
+    const result = await helper.queue.getProvisioner(provisionerId);
+
+    assert(result.provisionerId === provisionerId, `expected ${provisionerId}`);
+    assert(result.description === updateProps.description, `expected ${updateProps.description}`);
+    assert(result.stability === 'experimental', 'expected experimental');
+    assert(result.actions[0].url === updateProps.actions[0].url, `expected action url ${updateProps.actions[0].url}`);
   });
 
   test('queue.declareProvisioner updates a provisioner', async () => {
@@ -535,6 +605,7 @@ suite('provisioners and worker-types', () => {
     const taskId2 = slugid.v4();
 
     await makeProvisioner({});
+    await makeWorkerType({});
     const worker = await makeWorker({
       recentTasks: [
         {taskId, runId: 0},
@@ -564,8 +635,62 @@ suite('provisioners and worker-types', () => {
 
   });
 
+  test('queue.getWorker returns 404 for a missing Worker', async () => {
+    await makeProvisioner({});
+    const wType = await makeWorkerType({});
+
+    let err;
+    try {
+      const result = await helper.queue.getWorker(
+        wType.provisionerId,
+        wType.workerType,
+        'no-such', 'no-such');
+    } catch (e) {
+      err = e;
+    }
+    assert(err, 'expected an error');
+    assert(err.statusCode === 404, 'expected 404');
+  });
+
+  test('queue.getWorker returns 404 for a missing WorkerType', async () => {
+    await makeProvisioner({});
+    const worker = await makeWorker({});
+
+    let err;
+    try {
+      const result = await helper.queue.getWorker(
+        worker.provisionerId,
+        worker.workerType,
+        worker.workerGroup,
+        worker.workerId);
+    } catch (e) {
+      err = e;
+    }
+    assert(err, 'expected an error');
+    assert(err.statusCode === 404, 'expected 404');
+  });
+
+  test('queue.getWorker returns 404 for a missing Provisioner', async () => {
+    await makeWorkerType({});
+    const worker = await makeWorker({});
+
+    let err;
+    try {
+      const result = await helper.queue.getWorker(
+        worker.provisionerId,
+        worker.workerType,
+        worker.workerGroup,
+        worker.workerId);
+    } catch (e) {
+      err = e;
+    }
+    assert(err, 'expected an error');
+    assert(err.statusCode === 404, 'expected 404');
+  });
+
   test('queue.declareWorker updates a worker', async () => {
     await makeProvisioner({});
+    await makeWorkerType({});
     const taskId = slugid.v4();
     const worker = await makeWorker({
       recentTasks: [{taskId, runId: 0}],
@@ -590,6 +715,38 @@ suite('provisioners and worker-types', () => {
     assert(result.recentTasks[0].taskId === taskId, `expected ${taskId}`);
     assert(result.recentTasks[0].runId === 0, 'expected 0');
     assert(new Date(result.expires).getTime() === updateProps.expires.getTime(), `expected ${updateProps.expires}`);
+  });
+
+  test('queue.declareWorker creates a worker, workerType, and Provisioner', async () => {
+    const provisionerId = 'prov1';
+    const workerType = 'wtype';
+    const workerGroup = 'wgroup';
+    const workerId = 'wid';
+
+    const updateProps = {
+      expires: new Date('3000-01-01'),
+    };
+
+    await helper.queue.declareWorker(
+      provisionerId, workerType, workerGroup, workerId, updateProps);
+
+    const worker = await helper.queue.getWorker(provisionerId, workerType, workerGroup, workerId);
+
+    assert(worker.provisionerId === provisionerId, `expected ${provisionerId}`);
+    assert(worker.workerType === workerType, `expected ${workerType}`);
+    assert(worker.workerGroup === workerGroup, `expected ${workerGroup}`);
+    assert(worker.workerId === workerId, `expected ${workerId}`);
+    assert(worker.recentTasks.length === 0);
+    assert(new Date(worker.expires).getTime() === updateProps.expires.getTime(), `expected ${updateProps.expires}`);
+
+    const provisioner = await helper.queue.getProvisioner(provisionerId);
+    assert(provisioner.provisionerId === provisionerId, `expected ${provisionerId}`);
+
+    const wType = await helper.queue.getWorkerType(provisionerId, workerType);
+    assert(wType.provisionerId === provisionerId, `expected ${provisionerId}`);
+    assert(wType.workerType === workerType, `expected ${workerType}`);
+    assert(wType.description === '', 'expected empty string');
+    assert(wType.stability === 'experimental', 'expected experimental');
   });
 
   test('queue.declareWorker cannot update quarantineUntil', async () => {
