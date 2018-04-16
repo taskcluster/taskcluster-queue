@@ -372,21 +372,30 @@ let Artifact = Entity.configure({
      * storageType: error
      *   reason:        Formalized reason for error artifact, see JSON schema.
      *   message:       Human readable error message to return
+     *
      * storageType: blob
-     *   contentType
-     *   contentEncoding
-     *   contentSha256: SHA256 hash of the un-encoded artifact
-     *   contentLength: Number of bytes of the un-encoded artifact
-     *   transferSha256: SHA256 hash of the content-encoding encoded artifact
-     *   transferLength: Number of bytes of the content-encoding encoded artifact
-     *   partsHash: Rather than storing the potentially large list of sha256/size
-     *              pairings for each part, we just need to store enough information
-     *              to determine if the operation would result in an idempotency
-     *              error
+     *   contentEncoding:   Content encoding, such as 'gzip',
+     *                      NOTE: This property is not present if contentEncoding is 'identity'.
+     *   contentSha256:     Hex encoded sha256 hash of the un-encoded artifact
+     *   contentLength:     Size of the un-encoded artifact
+     *   transferLength:    Size of the content-encoding encoded artifact,
+     *                      NOTE: This property is not present if contentEncoding is 'identity'.
+     *   transferSha256:    Hax encooded sha256 hash of the content-encoding encoded artifact,
+     *                      NOTE: This property is not present if contentEncoding is 'identity'.
+     *   provider:          Always 's3'
+     *   region:            Always 'us-west-2'
+     *   bucket:            Always configured public or private bucket
+     *   key:               Path to the artifact in S3
+     *   uploadId:          S3 multipart uploadId.
+     *                      NOTE: This property is not present when upload is completed.
+     *   etag:              S3 ETag value.
+     *                      NOTE: This property is not present until upload is completed.
+     *   partsHash:         Hash of (sha256, size) tuples for all parts.
+     *                      We store this to enable idempotency, when a request is retried.
      */
     details:        Entity.types.JSON,
     expires:        Entity.types.Date,
-    /** 
+    /**
      * Present is a number field which represents an artifact being present and
      * the upload being completed.  The handling logic for the artifact's
      * storage type will fully define what that means for a given storage type.
