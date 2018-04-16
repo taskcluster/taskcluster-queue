@@ -23,6 +23,7 @@ suite('Artifacts', function() {
   var urllib        = require('url');
   var http          = require('http');
   var https         = require('https');
+  var zlib          = require('zlib');
 
   // Static URL from which ip-ranges from AWS services can be fetched
   const AWS_IP_RANGES_URL = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
@@ -176,7 +177,7 @@ suite('Artifacts', function() {
 
     test('S3 single part complete flow', async () => {
       let taskId = slugid.v4();
-      
+
       debug('### Creating task');
       await helper.queue.createTask(taskId, taskDef);
 
@@ -212,11 +213,11 @@ suite('Artifacts', function() {
       let uploadOutcome = await client.runUpload(response.requests, uploadInfo);
 
       response = await helper.queue.completeArtifact(taskId, 0, 'public/singlepart.dat', {
-        etags: uploadOutcome.etags, 
+        etags: uploadOutcome.etags,
       });
 
       let secondResponse = await helper.queue.completeArtifact(taskId, 0, 'public/singlepart.dat', {
-        etags: uploadOutcome.etags, 
+        etags: uploadOutcome.etags,
       });
       assume(response).deeply.equals(secondResponse);
 
@@ -227,7 +228,7 @@ suite('Artifacts', function() {
       debug('Fetching artifact from: %s', artifactUrl);
       let artifact = await getWithoutRedirecting(artifactUrl);
 
-      let expectedUrl = 
+      let expectedUrl =
         `https://test-bucket-for-any-garbage.s3-us-west-2.amazonaws.com/${taskId}/0/public/singlepart.dat`;
       assume(artifact.headers).has.property('location', expectedUrl);
 
@@ -235,10 +236,71 @@ suite('Artifacts', function() {
 
     });
 
+    test('S3 single part complete flow, content-encoding: gzip', async () => {
+      const taskId = slugid.v4();
+      const data = crypto.randomBytes(/*12 * 1024 * 1024 +*/ 21);
+      const gzipped = zlib.gzipSync(data);
+
+      debug('### Creating task');
+      await helper.queue.createTask(taskId, taskDef);
+
+      debug('### Claiming task');
+      await helper.queue.claimTask(taskId, 0, {
+        workerGroup:    'my-worker-group',
+        workerId:       'my-worker',
+      });
+
+      debug('### Create artifact');
+      const {
+        requests,
+      } = await helper.queue.createArtifact(taskId, 0, 'public/singlepart.dat', {
+        storageType: 'blob',
+        expires: taskcluster.fromNowJSON('1 day'),
+        contentType: 'binary/octet-stream',
+        contentEncoding: 'gzip',
+        contentLength: data.length,
+        contentSha256: crypto.createHash('sha256').update(data).digest('hex'),
+        transferLength: gzipped.length,
+        transferSha256: crypto.createHash('sha256').update(gzipped).digest('hex'),
+        parts: [{
+          size: gzipped.length,
+          sha256: crypto.createHash('sha256').update(gzipped).digest('hex'),
+        }],
+      });
+
+      debug('### Put first part of artifact');
+      const {method, url, headers} = requests[0];
+      const res = await request(method, url).set(headers).send(gzipped);
+      const etag = res.headers['etag'];
+
+      debug('### Complete artifact upload');
+      await helper.queue.completeArtifact(taskId, 0, 'public/singlepart.dat', {
+        etags: [etag],
+      });
+
+      const artifactUrl = helper.queue.buildUrl(
+        helper.queue.getArtifact,
+        taskId, 0, 'public/singlepart.dat',
+      );
+      debug('### Fetching artifact from: %s', artifactUrl);
+      const res2 = await request.get(artifactUrl).responseType('blob');
+      debug('Downloaded artifact, statusCode: %s', res2.status);
+      const res2Hash = crypto.createHash('sha256').update(res2.body).digest('hex');
+      assert(res2Hash === crypto.createHash('sha256').update(data).digest('hex'));
+      assert(res2Hash === res2.headers['x-amz-meta-content-sha256']);
+      debug('Response headers: %j', res2.headers);
+
+      debug('### Downloading artifact with incorrect "Accept-Encoding"');
+      let e;
+      await request.get(artifactUrl).set('Accept-Encoding', 'identity').catch(err => e = err);
+      assert(e, 'expected an error');
+      assert(e.status === 406, 'expected 406');
+    });
+
     test('S3 multi part complete flow', async () => {
       let name = 'public/multipart.dat';
       let taskId = slugid.v4();
-      
+
       debug('### Creating task');
       await helper.queue.createTask(taskId, taskDef);
 
@@ -279,12 +341,12 @@ suite('Artifacts', function() {
       let uploadOutcome = await client.runUpload(response.requests, uploadInfo);
 
       response = await helper.queue.completeArtifact(taskId, 0, name, {
-        etags: uploadOutcome.etags, 
+        etags: uploadOutcome.etags,
       });
 
       // Ensure idempotency for completion of artifacts
       let secondResponse = await helper.queue.completeArtifact(taskId, 0, name, {
-        etags: uploadOutcome.etags, 
+        etags: uploadOutcome.etags,
       });
       assume(response).deeply.equals(secondResponse);
 
@@ -301,11 +363,11 @@ suite('Artifacts', function() {
 
       await verifyDownload(artifact.headers.location, bigfilehash, bigfilesize);
     });
-    
+
     test('S3 multi part idempotency', async () => {
       let name = 'public/multipart.dat';
       let taskId = slugid.v4();
-      
+
       debug('### Creating task');
       await helper.queue.createTask(taskId, taskDef);
 
@@ -348,7 +410,7 @@ suite('Artifacts', function() {
           return {sha256: x.sha256, size: x.size};
         }),
       });
-      
+
       let firstUploadId = qs.parse(urllib.parse(firstResponse.requests[0].url).query).uploadId;
       let secondUploadId = qs.parse(urllib.parse(secondResponse.requests[0].url).query).uploadId;
       assume(firstUploadId).equals(secondUploadId);
@@ -382,7 +444,7 @@ suite('Artifacts', function() {
       let uploadOutcome = await client.runUpload(secondResponse.requests, uploadInfo);
 
       let response = await helper.queue.completeArtifact(taskId, 0, name, {
-        etags: uploadOutcome.etags, 
+        etags: uploadOutcome.etags,
       });
     });
   });
