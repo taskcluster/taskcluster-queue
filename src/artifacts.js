@@ -504,6 +504,24 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
       key: artifact.details.key,
     };
 
+    // Check if Content-Encoding is supported by the given Accept-Encoding header
+    if (artifact.details.contentEncoding && !req.acceptsEncodings(artifact.details.contentEncoding)) {
+      return res.reportError('ContentEncodingNotAvailable', [
+        'Artifact `{{name}}` is **not available** in an accepted `Content-Encoding`.',
+        '',
+        'The incoming request specifies accepted encoding using the `Accept-Encoding`.',
+        'This header was set to `{{acceptEncoding}}`, but the artifact request was not',
+        'available in one of these encodings.',
+        '',
+        'To download this artifact the request must support `Content-Encoding: {{contentEncoding}}`,',
+        'the request can indicating by setting `Accept-Encoding` accordingly.',
+      ].join('\n'), {
+        name,
+        acceptEncoding: req.headers['accept-encoding'],
+        contentEncoding: artifact.details.contentEncoding,
+      });
+    }
+
     // TODO: We should consider doing a HEAD on all resources and verifying that
     // the ETag they have matches the one that we received when creating the artifact.
     // This is a bit of extra overhead, but it's one more check of consistency
@@ -661,28 +679,28 @@ api.declare({
     name,
   });
 
-  // Ensure that the run is running 
-  if (run.state !== 'running') { 
-    var allow = false; 
-    if (run.state === 'exception') { 
-      // If task was resolved exception, we'll allow artifacts to be uploaded 
-      // up to 25 min past resolution. This allows us to report exception as 
-      // soon as we know and then upload logs if possible. 
-      // Useful because exception usually implies something badly wrong. 
-      allow = new Date(run.resolved).getTime() > Date.now() - 25 * 60 * 1000; 
-    } 
-    if (!allow) { 
-      return res.reportError('RequestConflict', 
-        'Artifacts cannot be completed for a task after it is ' + 
-        'resolved, unless it is resolved \'exception\', and even ' + 
-        'in this case only up to 25 min past resolution.' + 
-        'This to ensure that artifacts have been uploaded before ' + 
-        'a task is \'completed\' and output is consumed by a ' + 
-        'dependent task\n\nTask status: {{status}}', { 
-          status:   task.status(), 
-        }); 
-    } 
-  } 
+  // Ensure that the run is running
+  if (run.state !== 'running') {
+    var allow = false;
+    if (run.state === 'exception') {
+      // If task was resolved exception, we'll allow artifacts to be uploaded
+      // up to 25 min past resolution. This allows us to report exception as
+      // soon as we know and then upload logs if possible.
+      // Useful because exception usually implies something badly wrong.
+      allow = new Date(run.resolved).getTime() > Date.now() - 25 * 60 * 1000;
+    }
+    if (!allow) {
+      return res.reportError('RequestConflict',
+        'Artifacts cannot be completed for a task after it is ' +
+        'resolved, unless it is resolved \'exception\', and even ' +
+        'in this case only up to 25 min past resolution.' +
+        'This to ensure that artifacts have been uploaded before ' +
+        'a task is \'completed\' and output is consumed by a ' +
+        'dependent task\n\nTask status: {{status}}', {
+          status:   task.status(),
+        });
+    }
+  }
 
   if (artifact.storageType !== 'blob') {
     return res.reportError('InputError',
