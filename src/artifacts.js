@@ -514,7 +514,7 @@ var replyWithArtifact = async function(taskId, runId, name, req, res) {
         'available in one of these encodings.',
         '',
         'To download this artifact the request must support `Content-Encoding: {{contentEncoding}}`,',
-        'the request can indicating by setting `Accept-Encoding` accordingly.',
+        'try setting `Accept-Encoding: {{contentEncoding}}` and handle decoding.',
       ].join('\n'), {
         name,
         acceptEncoding: req.headers['accept-encoding'],

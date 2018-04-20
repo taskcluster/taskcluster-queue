@@ -238,7 +238,7 @@ suite('Artifacts', function() {
 
     test('S3 single part complete flow, content-encoding: gzip', async () => {
       const taskId = slugid.v4();
-      const data = crypto.randomBytes(/*12 * 1024 * 1024 +*/ 21);
+      const data = crypto.randomBytes(12 * 1024 * 1024 + 21);
       const gzipped = zlib.gzipSync(data);
 
       debug('### Creating task');
@@ -262,13 +262,9 @@ suite('Artifacts', function() {
         contentSha256: crypto.createHash('sha256').update(data).digest('hex'),
         transferLength: gzipped.length,
         transferSha256: crypto.createHash('sha256').update(gzipped).digest('hex'),
-        parts: [{
-          size: gzipped.length,
-          sha256: crypto.createHash('sha256').update(gzipped).digest('hex'),
-        }],
       });
 
-      debug('### Put first part of artifact');
+      debug('### Put first and only part of artifact');
       const {method, url, headers} = requests[0];
       const res = await request(method, url).set(headers).send(gzipped);
       const etag = res.headers['etag'];

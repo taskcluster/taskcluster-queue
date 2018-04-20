@@ -377,14 +377,14 @@ let Artifact = Entity.configure({
      *   contentEncoding:   Content encoding, such as 'gzip',
      *                      NOTE: This property is not present if contentEncoding is 'identity'.
      *   contentSha256:     Hex encoded sha256 hash of the un-encoded artifact
-     *   contentLength:     Size of the un-encoded artifact
-     *   transferLength:    Size of the content-encoding encoded artifact,
+     *   contentLength:     Size of the un-encoded artifact as number of bytes
+     *   transferLength:    Size of the content-encoding encoded artifact as number of bytes,
      *                      NOTE: This property is not present if contentEncoding is 'identity'.
      *   transferSha256:    Hax encooded sha256 hash of the content-encoding encoded artifact,
      *                      NOTE: This property is not present if contentEncoding is 'identity'.
-     *   provider:          Always 's3'
-     *   region:            Always 'us-west-2'
-     *   bucket:            Always configured public or private bucket
+     *   provider:          Provider currently 's3'
+     *   region:            Region currently 'us-west-2'
+     *   bucket:            Bucket, currently configured public or private bucket
      *   key:               Path to the artifact in S3
      *   uploadId:          S3 multipart uploadId.
      *                      NOTE: This property is not present when upload is completed.
