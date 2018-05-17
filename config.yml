@@ -126,6 +126,8 @@ defaults:
   pulse:
     username:                 !env PULSE_USERNAME
     password:                 !env PULSE_PASSWORD
+    hostname:                 !env PULSE_HOSTNAME
+    vhost:                    !env PULSE_VHOST
 
   aws:
     # Credentials with access to artifact buckets and
