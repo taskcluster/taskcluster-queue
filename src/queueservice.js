@@ -79,7 +79,7 @@ class QueueService {
    *   prefix:               // Prefix for all pending-task queues, max 6 chars
    *   pendingPollTimeout:   // Timeout embedded in signed poll URL (ms)
    *   credentials: {
-   *     accountName:        // Azure storage account name
+   *     accountId:          // Azure storage account name
    *     accountKey:         // Azure storage account key
    *   },
    *   claimQueue:           // Queue name for the claim expiration queue
@@ -107,13 +107,13 @@ class QueueService {
     this.monitor            = options.monitor;
 
     this.client = new azure.Queue({
-      accountId:    options.credentials.accountName,
+      accountId:    options.credentials.accountId,
       accessKey:    options.credentials.accountKey,
       timeout:      AZURE_QUEUE_TIMEOUT,
     });
 
     // Store account name of use in SAS signed Urls
-    this.accountName = options.credentials.accountName;
+    this.accountId = options.credentials.accountId;
 
     // Promises that queues are created, return mapping from priority to
     // azure queue names.
@@ -636,13 +636,13 @@ class QueueService {
       return {
         signedPollUrl: url.format({
           protocol:       'https',
-          host:           `${this.accountName}.queue.core.windows.net`,
+          host:           `${this.accountId}.queue.core.windows.net`,
           pathname:       `/${queueName}/messages`,
           search:         `?visibilitytimeout=${pendingPollTimeout}&${sas}`,
         }),
         signedDeleteUrl: url.format({
           protocol:       'https',
-          host:           `${this.accountName}.queue.core.windows.net`,
+          host:           `${this.accountId}.queue.core.windows.net`,
           pathname:       `/${queueName}/messages/{{messageId}}`,
           search:         `?popreceipt={{popReceipt}}&${sas}`,
         }),
