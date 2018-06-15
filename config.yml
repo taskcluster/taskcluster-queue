@@ -142,11 +142,7 @@ defaults:
 # Configuration in production
 production:
   app:
-    publicBlobArtifactBucket:     'taskcluster-public-blobs'
-    privateBlobArtifactBucket:    'taskcluster-private-blobs'
     blobArtifactRegion:           'us-east-1'
-    publicArtifactBucket:         'taskcluster-public-artifacts'
-    privateArtifactBucket:        'taskcluster-private-artifacts'
     artifactContainer:            'artifacts'
     taskTableName:                'QueueTasks'
     artifactTableName:            'QueueArtifacts'
