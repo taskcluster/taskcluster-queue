@@ -133,7 +133,7 @@ defaults:
     # references/schemas.taskcluster.net if you wish to publish meta-data
     accessKeyId:      !env AWS_ACCESS_KEY_ID
     secretAccessKey:  !env AWS_SECRET_ACCESS_KEY
-    region:           us-west-2
+    region:           !env ARTIFACT_REGION
     apiVersion:       2014-01-01
 
   monitor:
@@ -142,7 +142,6 @@ defaults:
 # Configuration in production
 production:
   app:
-    blobArtifactRegion:           'us-east-1'
     artifactContainer:            'artifacts'
     taskTableName:                'QueueTasks'
     artifactTableName:            'QueueArtifacts'
