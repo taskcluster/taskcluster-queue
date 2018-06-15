@@ -161,7 +161,6 @@ production:
     useCloudMirror: !env:bool USE_PUBLIC_ARTIFACT_BUCKET_PROXY
   server:
     env:              production
-    forceSSL:         true
     trustProxy:       true
   monitor:
     mock:             false
