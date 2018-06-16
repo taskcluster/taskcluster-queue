@@ -171,11 +171,6 @@ test:
     publishMetaData:              false
     # For testing purposes we let claims expire very fast
     claimTimeout:                 1
-    publicBlobArtifactBucket:     'test-bucket-for-any-garbage'
-    privateBlobArtifactBucket:    'test-bucket-for-any-garbage2'
-    blobArtifactRegion:           'us-west-2'
-    publicArtifactBucket:         'test-bucket-for-any-garbage'
-    privateArtifactBucket:        'test-bucket-for-any-garbage2'
     artifactContainer:            'artifacts'
     queuePrefix:                  'hacks3'
     queuePrefix2:                 'hacks4' # For testing deletion of queues
@@ -200,10 +195,6 @@ test:
       parallelism:                1
     publicArtifactBucketProxies:
       'us-east-1':    'proxy-for-us-east-1'
-  taskcluster:
-    credentials:
-      clientId:       test-server
-      accessToken:    none
   monitoring:
     enable: false
   server:

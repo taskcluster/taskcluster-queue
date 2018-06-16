@@ -41,11 +41,15 @@
   "devDependencies": {
     "eslint-config-taskcluster": "^3.1.0",
     "mocha": "^4.0.1",
+    "mock-aws-s3": "^3.0.0",
+    "nock": "^9.3.3",
     "superagent": "^3.8.2",
-    "taskcluster-lib-testing": "^11.0.0",
+    "taskcluster-lib-testing": "^11.1.0",
+    "temporary": "^0.0.8",
     "url-join": "^2.0.2",
     "xml2js": "^0.4.19",
-    "xmlbuilder": "^9.0.4"
+    "xmlbuilder": "^9.0.4",
+    "zurvan": "^0.5.1"
   },
   "engine-strict": true,
   "engines": {
