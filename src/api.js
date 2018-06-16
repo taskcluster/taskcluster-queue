@@ -1271,7 +1271,7 @@ let _lastTime = 0;
 let _sleeping = null;
 let sleep20Seconds = () => {
   let time = Date.now();
-  if (time - _lastTime > 2000) {
+  if (!_sleeping || time - _lastTime > 2000) {
     _sleeping = new Promise(accept => setTimeout(accept, 20 * 1000));
   }
   return _sleeping;
