@@ -17,41 +17,40 @@ const {fakeauth, stickyLoader, Secrets} = require('taskcluster-lib-testing');
 const zurvan = require('zurvan');
 const timers = require('timers');
 
+const helper = module.exports;
+
 exports.load = stickyLoader(load);
 
 suiteSetup(async function() {
   exports.load.inject('profile', 'test');
   exports.load.inject('process', 'test');
-
-  // ensure we have *something* set for the rootUrl
-  const cfg = await exports.load('cfg');
-  if (!cfg.taskcluster.rootUrl) {
-    if (cfg.taskcluster.credentials.clientId) {
-      throw new Error('Set TASKCLUSTER_ROOT_URL to the Taskcluster deployment ' +
-        `where clientId ${cfg.taskcluster.credentials.clientId} is defined`);
-    }
-    helper.load.cfg('taskcluster.rootUrl', libUrls.testRootUrl());
-  }
 });
 
 // set up the testing secrets
 exports.secrets = new Secrets({
-  secretName: 'project/taskcluster/testing/taskcluster-secrets',
+  secretName: 'project/taskcluster/testing/taskcluster-queue',
   secrets: {
     taskcluster: [
-      {env: 'TASKCLUSTER_ROOT_URL', cfg: 'taskcluster.rootUrl', name: 'rootUrl'},
+      {env: 'TASKCLUSTER_ROOT_URL', cfg: 'taskcluster.rootUrl', name: 'rootUrl',
+        mock: libUrls.testRootUrl()},
       {env: 'TASKCLUSTER_CLIENT_ID', cfg: 'taskcluster.credentials.clientId', name: 'clientId'},
       {env: 'TASKCLUSTER_ACCESS_TOKEN', cfg: 'taskcluster.credentials.accessToken', name: 'accessToken'},
     ],
     aws: [
       {env: 'AWS_ACCESS_KEY_ID', cfg: 'aws.accessKeyId', name: 'accessKeyId'},
       {env: 'AWS_SECRET_ACCESS_KEY', cfg: 'aws.secretAccessKey', name: 'secretAccessKey'},
-      {env: 'PUBLIC_ARTIFACT_BUCKET', cfg: 'app.publicArtifactBucket', name: 'publicArtifactBucket'},
-      {env: 'PRIVATE_ARTIFACT_BUCKET', cfg: 'app.privateArtifactBucket', name: 'privateArtifactBucket'},
-      {env: 'ARTIFACT_REGION', cfg: 'aws.region', name: 'artifactRegion'},
-      {env: 'PUBLIC_BLOB_ARTIFACT_BUCKET', cfg: 'app.publicBlobArtifactBucket', name: 'publicBlobArtifactBucket'},
-      {env: 'PRIVATE_BLOB_ARTIFACT_BUCKET', cfg: 'app.privateBlobArtifactBucket', name: 'privateBlobArtifactBucket'},
-      {env: 'BLOB_ARTIFACT_REGION', cfg: 'app.blobArtifactRegion', name: 'blobArtifactRegion'},
+      {env: 'PUBLIC_ARTIFACT_BUCKET', cfg: 'app.publicArtifactBucket', name: 'publicArtifactBucket',
+        mock: 'fake-public'},
+      {env: 'PRIVATE_ARTIFACT_BUCKET', cfg: 'app.privateArtifactBucket', name: 'privateArtifactBucket',
+        mock: 'fake-private'},
+      {env: 'ARTIFACT_REGION', cfg: 'aws.region', name: 'artifactRegion',
+        mock: 'us-central-7'},
+      {env: 'PUBLIC_BLOB_ARTIFACT_BUCKET', cfg: 'app.publicBlobArtifactBucket', name: 'publicBlobArtifactBucket',
+        mock: 'fake-public-blob'},
+      {env: 'PRIVATE_BLOB_ARTIFACT_BUCKET', cfg: 'app.privateBlobArtifactBucket', name: 'privateBlobArtifactBucket',
+        mock: 'fake-private-blob'},
+      {env: 'BLOB_ARTIFACT_REGION', cfg: 'app.blobArtifactRegion', name: 'blobArtifactRegion',
+        mock: 'us-central-7'},
     ],
     azure: [
       {env: 'AZURE_ACCOUNT_ID', cfg: 'azure.accountId', name: 'accountId'},
@@ -60,8 +59,6 @@ exports.secrets = new Secrets({
   },
   load: exports.load,
 });
-
-const helper = module.exports;
 
 helper.rootUrl = 'http://localhost:60401';
 
