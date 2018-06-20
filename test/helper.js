@@ -3,8 +3,8 @@ const assume = require('assume');
 const path = require('path');
 const _ = require('lodash');
 const taskcluster = require('taskcluster-client');
+const libUrls = require('taskcluster-lib-urls');
 const mocha = require('mocha');
-const debug = require('debug')('test:helper');
 const builder = require('../src/api');
 const exchanges = require('../src/exchanges');
 const load = require('../src/main');
@@ -22,6 +22,16 @@ exports.load = stickyLoader(load);
 suiteSetup(async function() {
   exports.load.inject('profile', 'test');
   exports.load.inject('process', 'test');
+
+  // ensure we have *something* set for the rootUrl
+  const cfg = await exports.load('cfg');
+  if (!cfg.taskcluster.rootUrl) {
+    if (cfg.taskcluster.credentials.clientId) {
+      throw new Error('Set TASKCLUSTER_ROOT_URL to the Taskcluster deployment ' +
+        `where clientId ${cfg.taskcluster.credentials.clientId} is defined`);
+    }
+    helper.load.cfg('taskcluster.rootUrl', libUrls.testRootUrl());
+  }
 });
 
 // set up the testing secrets
