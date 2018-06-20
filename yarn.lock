@@ -2714,9 +2714,9 @@ taskcluster-lib-scopes@^10.0.0:
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/taskcluster-lib-scopes/-/taskcluster-lib-scopes-10.0.0.tgz#2b90666b8e5127a1d367b726de84c7829b57efef"
 
-taskcluster-lib-testing@^11.1.0:
-  version "11.1.0"
-  resolved "https://registry.yarnpkg.com/taskcluster-lib-testing/-/taskcluster-lib-testing-11.1.0.tgz#4b956664cecc9f9a98140b5391ec36b9a96b5b3b"
+taskcluster-lib-testing@^11.2.0:
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/taskcluster-lib-testing/-/taskcluster-lib-testing-11.2.0.tgz#c9bae5e312fedf7c867f9fb32d9eff5edb5fa52a"
   dependencies:
     aws-sdk "^2.144.0"
     azure-table-node "1.5.0"
