@@ -1,5 +1,5 @@
 /**
- * A fake version of the BlobStore class, loader component artifactStore.
+ * A fake version of the BlobStore class
  */
 class FakeBlobStore {
   createContainer() {

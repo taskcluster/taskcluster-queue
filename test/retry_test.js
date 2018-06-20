@@ -49,8 +49,8 @@ helper.secrets.mockSuite(__filename, ['taskcluster', 'aws', 'azure'], function(m
     debug(`claimed until ${r2.takenUntil}, ${new Date(r2.takenUntil) - new Date()}ms from now`);
     helper.checkNextMessage('task-running');
 
-    debug('### Start claimReaper');
-    let claimReaper = await helper.startPollingService('claim-reaper');
+    debug('### Start claim-resolver');
+    let claimResolver = await helper.startPollingService('claim-resolver');
 
     debug('### Wait for task-pending message after reaping');
     await testing.poll(async () => {
@@ -63,8 +63,8 @@ helper.secrets.mockSuite(__filename, ['taskcluster', 'aws', 'azure'], function(m
     // there should be no task-exception message in this case
     helper.checkNoNextMessage('task-exception');
 
-    debug('### Stop claimReaper');
-    await claimReaper.terminate();
+    debug('### Stop claimResolver');
+    await claimResolver.terminate();
 
     debug('### Task status');
     const r3 = await helper.queue.status(taskId);
@@ -78,8 +78,8 @@ helper.secrets.mockSuite(__filename, ['taskcluster', 'aws', 'azure'], function(m
     assume(r4.status.retriesLeft).equals(0);
     debug(`claimed until ${r4.takenUntil}, ${new Date(r2.takenUntil) - new Date()}ms from now`);
 
-    debug('### Start claimReaper (again)');
-    claimReaper = await helper.startPollingService('claim-reaper');
+    debug('### Start claimResolver (again)');
+    claimResolver = await helper.startPollingService('claim-resolver');
 
     debug('### Wait for task-exception message (again)');
     await testing.poll(async () => {
@@ -93,8 +93,8 @@ helper.secrets.mockSuite(__filename, ['taskcluster', 'aws', 'azure'], function(m
     }, Infinity);
     helper.checkNoNextMessage('task-exception');
 
-    debug('### Stop claimReaper (again)');
-    await claimReaper.terminate();
+    debug('### Stop claimResolver (again)');
+    await claimResolver.terminate();
 
     debug('### Task status (again)');
     const r5 = await helper.queue.status(taskId);
