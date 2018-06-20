@@ -180,8 +180,7 @@ exports.withQueueService = (mock, skipping) => {
 };
 
 /**
- * Inject a fake BlobStore class, at helper.blobStore.  Note
- * that this is loader component artifactStore.
+ * Inject a fake BlobStore class, at helper.blobStore.
  */
 exports.withBlobStore = (mock, skipping) => {
   suiteSetup(async function() {
@@ -191,7 +190,7 @@ exports.withBlobStore = (mock, skipping) => {
 
     if (mock) {
       helper.blobStore = new FakeBlobStore();
-      helper.load.inject('artifactStore', helper.blobStore);
+      helper.load.inject('blobStore', helper.blobStore);
     }
   });
 
@@ -242,7 +241,7 @@ exports.withEntities = (mock, skipping) => {
     {
       name: 'Artifact',
       context: async () => ({
-        blobStore: await helper.load('artifactStore'),
+        blobStore: await helper.load('blobStore'),
         publicBucket: await helper.load('publicArtifactBucket'),
         privateBucket: await helper.load('privateArtifactBucket'),
         monitor: await helper.load('monitor'),

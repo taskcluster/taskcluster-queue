@@ -126,8 +126,8 @@ let load = loader({
     },
   },
 
-  // Create artifactStore
-  artifactStore: {
+  // Create blobStore
+  blobStore: {
     requires: ['cfg'],
     setup: async ({cfg}) => {
       let store = new BlobStore({
@@ -144,10 +144,10 @@ let load = loader({
   Artifact: {
     requires: [
       'cfg', 'monitor', 'process',
-      'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
+      'blobStore', 'publicArtifactBucket', 'privateArtifactBucket',
       's3Controller',
     ],
-    setup: async ({cfg, monitor, process, artifactStore, publicArtifactBucket,
+    setup: async ({cfg, monitor, process, blobStore, publicArtifactBucket,
       privateArtifactBucket, s3Controller}) => {
       let Artifact = data.Artifact.setup({
         tableName:        cfg.app.artifactTableName,
@@ -158,7 +158,7 @@ let load = loader({
           credentials: cfg.taskcluster.credentials,
         }),
         context: {
-          blobStore:      artifactStore,
+          blobStore,
           publicBucket:   publicArtifactBucket,
           privateBucket:  privateArtifactBucket,
           monitor:        monitor.prefix('data.Artifact'),
@@ -422,7 +422,7 @@ let load = loader({
     requires: [
       'cfg', 'publisher', 'schemaset', 'Task', 'Artifact',
       'TaskGroup', 'TaskGroupMember', 'TaskGroupActiveSet', 'queueService',
-      'artifactStore', 'publicArtifactBucket', 'privateArtifactBucket',
+      'blobStore', 'publicArtifactBucket', 'privateArtifactBucket',
       'regionResolver', 'monitor', 'dependencyTracker', 'TaskDependency',
       'workClaimer', 'Provisioner', 'workerInfo', 'WorkerType', 'Worker',
       's3Controller', 's3Runner',
@@ -443,7 +443,7 @@ let load = loader({
         publisher:        ctx.publisher,
         claimTimeout:     ctx.cfg.app.claimTimeout,
         queueService:     ctx.queueService,
-        blobStore:        ctx.artifactStore,
+        blobStore:        ctx.blobStore,
         publicBucket:     ctx.publicArtifactBucket,
         privateBucket:    ctx.privateArtifactBucket,
         regionResolver:   ctx.regionResolver,
@@ -485,8 +485,8 @@ let load = loader({
     setup: options => require('./scan')(options),
   },
 
-  // Create the claim-reaper process
-  'claim-reaper': {
+  // Create the claim-resolver process
+  'claim-resolver': {
     requires: [
       'cfg', 'Task', 'queueService', 'publisher', 'monitor',
       'dependencyTracker',
@@ -496,9 +496,9 @@ let load = loader({
     }) => {
       let resolver = new ClaimResolver({
         Task, queueService, publisher, dependencyTracker,
-        pollingDelay:   cfg.app.claim.pollingDelay,
-        parallelism:    cfg.app.claim.parallelism,
-        monitor:        monitor.prefix('claim-reaper'),
+        pollingDelay:   cfg.app.claimResolver.pollingDelay,
+        parallelism:    cfg.app.claimResolver.parallelism,
+        monitor:        monitor.prefix('claim-resolver'),
       });
       resolver.start();
       return resolver;
@@ -506,7 +506,7 @@ let load = loader({
   },
 
   // Create the deadline reaper process
-  'deadline-reaper': {
+  'deadline-resolver': {
     requires: [
       'cfg', 'Task', 'queueService', 'publisher', 'monitor',
       'dependencyTracker',
@@ -516,9 +516,9 @@ let load = loader({
     }) => {
       let resolver = new DeadlineResolver({
         Task, queueService, publisher, dependencyTracker,
-        pollingDelay:   cfg.app.deadline.pollingDelay,
-        parallelism:    cfg.app.deadline.parallelism,
-        monitor:        monitor.prefix('deadline-reaper'),
+        pollingDelay:   cfg.app.deadlineResolver.pollingDelay,
+        parallelism:    cfg.app.deadlineResolver.parallelism,
+        monitor:        monitor.prefix('deadline-resolver'),
       });
       resolver.start();
       return resolver;

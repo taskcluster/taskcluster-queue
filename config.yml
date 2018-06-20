@@ -62,16 +62,16 @@ defaults:
     # Number of ms before deadline expiration message arrives, past deadline
     deadlineDelay:                60000
 
-    # Configuration for deadline-reaper
-    deadline:
+    # Configuration for deadline-resolver
+    deadlineResolver:
       # Number of ms to sleep after polling from an empty queue
       pollingDelay:               5000
       # Number of event loops to run in parallel, each taking up to 32 message
       # in parallel. Hence, 4 implies 4 * 32 = 128 messages in parallel
       parallelism:                1
 
-    # Configuration for claim-reaper
-    claim:
+    # Configuration for claim-resolver
+    claimResolver:
       # Number of ms to sleep after polling from an empty queue
       pollingDelay:               5000
       # Number of event loops to run in parallel, each taking up to 32 message
@@ -184,10 +184,10 @@ test:
     # testing. In production this should be "- x hours" or so...
     taskExpirationDelay:          '4 days'
     taskGroupExpiresExtension:    0 # should always be positive in production
-    deadline:
+    deadlineResolver:
       pollingDelay:               250
       parallelism:                1
-    claim:
+    claimResolver:
       pollingDelay:               250
       parallelism:                1
     dependencyResolver:
