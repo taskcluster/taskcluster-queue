@@ -99,7 +99,6 @@ helper.secrets.mockSuite(__filename, ['azure'], function(mock, skipping) {
     }, Infinity);
   }, mock));
 
-  // skipped intermittent - https://bugzilla.mozilla.org/show_bug.cgi?id=1453514
   test('putClaimMessage, pollClaimQueue', helper.runWithFakeTime(async () => {
     const taskId      = slugid.v4();
     const takenUntil  = new Date(new Date().getTime() + 2 * 1000);
