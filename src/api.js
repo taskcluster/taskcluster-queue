@@ -1872,41 +1872,53 @@ api.declare({
     workerId:       run.workerId,
   });
 
-  await task.modify((task) => {
-    var run = task.runs[runId];
+  try {
+    await task.modify((task) => {
+      var run = task.runs[runId];
 
-    // No modification if run isn't running or the run isn't last
-    if (task.runs.length - 1 !== runId || run.state !== 'running') {
-      return;
+      // No modification if run isn't running or the run isn't last
+      if (task.runs.length - 1 !== runId || run.state !== 'running') {
+        return;
+      }
+
+      // Update run
+      run.state           = 'exception';
+      run.reasonResolved  = reason;
+      run.resolved        = new Date().toJSON();
+
+      // Clear takenUntil on task
+      task.takenUntil     = new Date(0);
+
+      // Add retry, if this is a worker-shutdown and we have retries left
+      if (reason === 'worker-shutdown' && task.retriesLeft > 0) {
+        task.retriesLeft -= 1;
+        task.runs.push({
+          state:            'pending',
+          reasonCreated:    'retry',
+          scheduled:        new Date().toJSON(),
+        });
+      }
+      // Add task-retry, if this was an intermittent-task and we have retries
+      if (reason === 'intermittent-task' && task.retriesLeft > 0) {
+        task.retriesLeft -= 1;
+        task.runs.push({
+          state:            'pending',
+          reasonCreated:    'task-retry',
+          scheduled:        new Date().toJSON(),
+        });
+      }
+    });
+  } catch (err) {
+    if (err.code !== 'EntityWriteCongestionError') {
+      throw err;
     }
-
-    // Update run
-    run.state           = 'exception';
-    run.reasonResolved  = reason;
-    run.resolved        = new Date().toJSON();
-
-    // Clear takenUntil on task
-    task.takenUntil     = new Date(0);
-
-    // Add retry, if this is a worker-shutdown and we have retries left
-    if (reason === 'worker-shutdown' && task.retriesLeft > 0) {
-      task.retriesLeft -= 1;
-      task.runs.push({
-        state:            'pending',
-        reasonCreated:    'retry',
-        scheduled:        new Date().toJSON(),
-      });
-    }
-    // Add task-retry, if this was an intermittent-task and we have retries
-    if (reason === 'intermittent-task' && task.retriesLeft > 0) {
-      task.retriesLeft -= 1;
-      task.runs.push({
-        state:            'pending',
-        reasonCreated:    'task-retry',
-        scheduled:        new Date().toJSON(),
-      });
-    }
-  });
+    return res.reportError('InternalServerError',
+      'Run {{runId}} on task {{taskId}} could not modify task entity', {
+        taskId,
+        runId,
+      },
+    );
+  }
 
   // Find the run that we (may) have modified
   run = task.runs[runId];
