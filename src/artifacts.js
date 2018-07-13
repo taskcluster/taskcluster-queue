@@ -796,6 +796,7 @@ builder.declare({
   route:      '/task/:taskId/runs/:runId/artifacts/:name(*)',
   name:       'getArtifact',
   stability:  APIBuilder.stability.stable,
+  output:     'blob',
   scopes: {
     if: 'private',
     then: {
@@ -902,6 +903,7 @@ builder.declare({
   route:      '/task/:taskId/artifacts/:name(*)',
   name:       'getLatestArtifact',
   stability:  APIBuilder.stability.stable,
+  output:     'blob',
   scopes: {
     if: 'private',
     then: {
