@@ -2630,9 +2630,9 @@ taskcluster-client@^5.0.0:
     superagent "~3.8.1"
     taskcluster-lib-urls "^1.0.0"
 
-taskcluster-lib-api@12.0.2:
-  version "12.0.2"
-  resolved "https://registry.yarnpkg.com/taskcluster-lib-api/-/taskcluster-lib-api-12.0.2.tgz#af496b644694995002dbb383492f0219ddea7167"
+taskcluster-lib-api@^12.4.0:
+  version "12.4.0"
+  resolved "https://registry.yarnpkg.com/taskcluster-lib-api/-/taskcluster-lib-api-12.4.0.tgz#591dd52e71ff52aa41e8093687e7fb1f868c45c4"
   dependencies:
     ajv "^5.3.0"
     aws-sdk "^2.151.0"
@@ -2644,7 +2644,7 @@ taskcluster-lib-api@12.0.2:
     promise "^8.0.1"
     slugid "^1.1.0"
     taskcluster-client "^10.0.0"
-    taskcluster-lib-scopes "^10.0.0"
+    taskcluster-lib-scopes "^10.0.1"
     type-is "^1.6.15"
     uuid "^3.1.0"
 
@@ -2709,9 +2709,9 @@ taskcluster-lib-monitor@^10.0.0:
     statsum "^0.6.0"
     taskcluster-client "^10.0.0"
 
-taskcluster-lib-scopes@^10.0.0:
-  version "10.0.0"
-  resolved "https://registry.yarnpkg.com/taskcluster-lib-scopes/-/taskcluster-lib-scopes-10.0.0.tgz#2b90666b8e5127a1d367b726de84c7829b57efef"
+taskcluster-lib-scopes@^10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/taskcluster-lib-scopes/-/taskcluster-lib-scopes-10.0.1.tgz#f3921b2b86e7c09581b045b9b880a4c35fd243e0"
 
 taskcluster-lib-testing@^11.2.0:
   version "11.2.0"
