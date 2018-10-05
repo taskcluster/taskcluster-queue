@@ -1316,12 +1316,47 @@ builder.declare({
   let workerId      = req.body.workerId;
   let count         = req.body.tasks;
 
+  let hasAuthed = false;
+  let hasLoadedWT = false;
+  let checkedQuar = false;
+  let hasMonitored = false;
+  let hasClaimed = false;
+  let hasMarkedWorkerSeen = false;
+  let hasMarkedTaskSeen = false;
+  let hasAborted = false;
+
+  // Bug 1481178 is a situation where we're getting a lot of timeouts happening
+  // in the claim-work endpoint.  The logging which happens is not giving us
+  // enough information to diagnose the problem, so we're going to log a lot
+  // more detailed information in the meantime.  We want to see what's
+  // happening each time one of these situations occurs.  We know that a
+  // handler which has been alive for more than 25 seconds is almost certainly
+  // jammed and needs attention
+  let loggingTimeout = setTimeout(function() {
+    console.log('BUG 1481178: handler alive for 25s, likely timeout', JSON.stringify({
+      provisionerId,
+      workerType,
+      workerGroup,
+      workerId,
+      count,
+      hasAuthed,
+      hasLoadedWT,
+      checkedQuar,
+      hasMonitored,
+      hasClaimed,
+      hasMarkedWorkerSeen,
+      hasMarkedTaskSeen,
+      hasAborted,
+    }));
+  }, 25000 * 1000);
+
   await req.authorize({
     workerGroup,
     workerId,
     provisionerId,
     workerType,
   });
+  hasAuthed = true;
 
   const worker = await this.Worker.load({
     provisionerId,
@@ -1329,6 +1364,7 @@ builder.declare({
     workerGroup,
     workerId,
   }, true);
+  hasLoadedWT = true;
 
   // Don't record tasks when worker is quarantined
   if (worker && worker.quarantineUntil.getTime() > new Date().getTime()) {
@@ -1336,25 +1372,33 @@ builder.declare({
       tasks: [],
     });
   }
+  checkedQuar = true;
 
   // Count claimWork calls - useful for primitive monitoring
   this.monitor.count(`claim-work.${provisionerId}.${workerType}`, count);
+  hasMonitored = true;
 
   // Allow request to abort their claim request, if the connection closes
   let aborted = new Promise(accept => {
     sleep20Seconds().then(accept);
+    hasAborted = true;
     res.once('close', accept);
   });
 
-  let [result] = await Promise.all([
-    this.workClaimer.claim(
-      provisionerId, workerType, workerGroup, workerId, count, aborted,
-    ),
-    this.workerInfo.seen(provisionerId, workerType, workerGroup, workerId),
-  ]);
+  // NOTE: Re-do this in Promise.all([claim, seen]), this was only removed because of
+  // bug 1481178
+  let result = await this.workClaimer.claim(
+    provisionerId, workerType, workerGroup, workerId, count, aborted,
+  );
+  hasClaimed = true;
+
+  await this.workerInfo.seen(provisionerId, workerType, workerGroup, workerId);
+  hasMarkedWorkerSeen = true;
 
   await this.workerInfo.taskSeen(provisionerId, workerType, workerGroup, workerId, result);
+  hasMarkedTaskSeen = true;
 
+  clearTimeout(loggingTimeout);
   return res.reply({
     tasks: result,
   });
