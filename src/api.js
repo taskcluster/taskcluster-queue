@@ -1749,10 +1749,6 @@ builder.declare({
   stability:  APIBuilder.stability.stable,
   scopes: {AnyOf: [
     'queue:resolve-task:<taskId>/<runId>',
-    {AllOf: [ // Legacy
-      'queue:resolve-task',
-      'assume:worker-id:<workerGroup>/<workerId>',
-    ]},
   ]},
   input:      undefined,  // No input at this point
   output:     'task-status-response.yml',
@@ -1763,6 +1759,7 @@ builder.declare({
 }, function(req, res) {
   var taskId = req.params.taskId;
   var runId  = parseInt(req.params.runId, 10);
+
   // Backwards compatibility with very old workers, should be dropped in the
   // future
   var target = req.body.success === false ? 'failed' : 'completed';
@@ -1778,10 +1775,6 @@ builder.declare({
   stability:  APIBuilder.stability.stable,
   scopes: {AnyOf: [
     'queue:resolve-task:<taskId>/<runId>',
-    {AllOf: [ // Legacy
-      'queue:resolve-task',
-      'assume:worker-id:<workerGroup>/<workerId>',
-    ]},
   ]},
   input:      undefined,  // No input at this point
   output:     'task-status-response.yml',
@@ -1810,10 +1803,6 @@ builder.declare({
   stability:  APIBuilder.stability.stable,
   scopes: {AnyOf: [
     'queue:resolve-task:<taskId>/<runId>',
-    {AllOf: [ // Legacy
-      'queue:resolve-task',
-      'assume:worker-id:<workerGroup>/<workerId>',
-    ]},
   ]},
   input:      'task-exception-request.yml',
   output:     'task-status-response.yml',
@@ -1861,13 +1850,6 @@ builder.declare({
       },
     );
   }
-
-  await req.authorize({
-    taskId,
-    runId,
-    workerGroup:    run.workerGroup,
-    workerId:       run.workerId,
-  });
 
   await task.modify((task) => {
     var run = task.runs[runId];
